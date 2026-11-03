@@ -1,0 +1,44 @@
+{
+  "release": "20261103-office-plan-canvas",
+  "sourceCommit": "08bb0d90f123da99ce9a49a486adf03cb7941446",
+  "capturedOn": "2026-11-03",
+  "environment": "Clean local browser; synthetic read-only API responses; no player accounts or community content",
+  "shots": [
+    {
+      "file": "overview.jpg",
+      "route": "/",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "file": "item-details.jpg",
+      "route": "/#item/reciver_cold_Sledgehammer",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "file": "quest-graph.jpg",
+      "route": "/#quest/WarehouseManager",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "file": "office-map.jpg",
+      "route": "/#maps/Origin08_1999",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "file": "weapon-workshop.jpg",
+      "route": "/#workshop",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "file": "mechanics.jpg",
+      "route": "/#mechanic/defense",
+      "width": 1440,
+      "height": 1000
+    }
+  ]
+}

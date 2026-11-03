@@ -8,7 +8,7 @@
     ".gitignore": "9ae6a9dd8ad82bed7862ce54a7081ec5b776509a2182a92fd9612d70956725eb",
     "LICENSE": "c0ea4a896d2c8c394b29f9427589996db826cd501c512279ff0ed3ef48fabbe5",
     "NOTICE.md": "036c2eb27b0d3bdd6cefee89315cc5bcdbedf4c8ecd7b7991b431be6090fca4c",
-    "README.md": "23ef2d98d9e1b7746665b0b675a625df5e0975795fe31627a92cd6d6f2f830fa",
+    "README.md": "ed94f9b3cee7c771671eda40ca6a6e65b80867dd7a531358a4ee23b6d90d0bfc",
     "app/chatgpt-auth.ts": "4265a2e7c2dcb3a6f4b7026f762bf5b6e4caec76cc13c0a45987ee9a9f2e42cc",
     "app/layout.tsx": "33a9deb26d77807162c87bf90c54dacfbc8c7d14c5e783ae2166813d958c70d2",
     "app/page.tsx": "2d3ca016f9d5f06df33d50de3ad81ac5a579309bddb65379a8df271fe9272f08",
@@ -20781,6 +20781,14 @@
     "scripts/sites-env.sh": "df86ebfc27d2f00860036658e933ac0ddd7b5f6879aa5d51218f0863c7e1fb60",
     "tsconfig.json": "7199c6e4e400921e8049729840165a39f1476fa97901bed00239e7697bfe8da4",
     "vendor/shadcn-tailwind-4.13.0.LICENSE.md": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f",
-    "vite.config.ts": "6f6d890794fbe23f3e35cceb327f49d5977432a5aaf715e040a6408932da395b"
+    "vite.config.ts": "6f6d890794fbe23f3e35cceb327f49d5977432a5aaf715e040a6408932da395b",
+    "docs/images/item-details.jpg": "6c32b00bae792d3117e20d1731fe1e3d9245a102f6060f750b27d894dcdae334",
+    "docs/images/license.svg": "1b4c102b6b9f8062961b1db77032de83e495ba2c5a86d398f05be26ea583251c",
+    "docs/images/mechanics.jpg": "ba65450f9f6e6cb7d8bc6b07c9b7710e490dde34290401999095d178a250f233",
+    "docs/images/office-map.jpg": "843430668d1824a76ebeffbf003eba5ea82a2807acfee1ab2229c9021d4fc629",
+    "docs/images/overview.jpg": "0cdcfc83c70003b9843fc35427609e332284beb0ce44da91bf8584bf184845b7",
+    "docs/images/quest-graph.jpg": "10be2b3220a434605c7b65b7107ca3095c1c2f7ceedbec5765fc7dfe7437ce51",
+    "docs/images/screenshots.json": "922fdde0c97faa5f8c9f5b4fcb96bfe26e13b14b1fb93255ba0fa271ba0967a4",
+    "docs/images/weapon-workshop.jpg": "93ac7ce64b18ebc49d0f549ff22954d2f977701f08038d4dd9541ababd97eb15"
   }
 }
