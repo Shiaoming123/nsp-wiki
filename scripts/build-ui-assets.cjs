@@ -4,10 +4,10 @@ const {readFontAssets}=require('../lib/font-assets.cjs');
 const root = path.resolve(__dirname, '../public');
 const sources = {
   css: ['ui-tokens.css','fonts.css','styles.css','guides.css','loot.css','corruption.css','workshop.css','design.css','maps/map-viewer.css','maps/floor-guide.css','maps/floor-tower.css','maps/floor-plan.css','tiers.css','posts.css','item-community.css','feedback.css','npc-recipes.css','welcome.css','seo.css','ui-refinement.css','updates.css','navigation.css','mechanics.css','traffic.css','terminal.css','library.css','exploration.css','components.css','typography.css'],
-  navigation: ['typography.js','welcome.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js'],
-  community: ['typography.js','welcome.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js','vendor/post-markdown.js','community-auth.js','item-community.js','feedback.js'],
+  navigation: ['typography.js','welcome.js','scroll-motion.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js'],
+  community: ['typography.js','welcome.js','scroll-motion.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js','vendor/post-markdown.js','community-auth.js','item-community.js','feedback.js'],
   workshop: ['workshop.js','workshop-engine.js','workshop-assembly.js','workshop-model.js','workshop-report.js','workshop-image.js','workshop-state.js'],
-  js: ['typography.js','welcome.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js','vendor/post-markdown.js','community-auth.js','site-notice.js','item-community.js','app.js','tiers.js','posts.js','corruption.js','feedback.js','enemy-variants.js','quest-supplies.js','quest-progress.js','quest-semantics.js','npc-recipes.js','updates.js','loot.js','guides.js','scroll-tools.js']
+  js: ['typography.js','welcome.js','scroll-motion.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js','vendor/post-markdown.js','community-auth.js','site-notice.js','item-community.js','app.js','tiers.js','posts.js','corruption.js','feedback.js','enemy-variants.js','quest-supplies.js','quest-progress.js','quest-semantics.js','npc-recipes.js','updates.js','loot.js','guides.js','scroll-tools.js']
 };
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const owned = /^(?:(?:wiki-ui|community-ui|navigation-ui)\.[a-f0-9]{20}\.(?:js|css)|workshop-ui\.[a-f0-9]{20}\.js)$/;

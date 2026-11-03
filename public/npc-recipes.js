@@ -199,14 +199,15 @@
     feedback.onclick = () => window.WikiFeedback?.prefill({name: record.name, route: route(kind, record.id)});
     actions.append(feedback); heading.append(actions); body.append(heading);
     if (kind === 'npcs') showNpc(body, record); else showRecipe(body, record, data);
-    document.getElementById('detail-content').replaceChildren(body);
+    window.WikiNavigation.cancelDialogClose(dialog);
+    window.WikiNavigation.replaceDetail(kind+':'+record.id,[body]);
     dialog.querySelector('.detail-top>span').textContent = labels[kind];
     if (!dialog.open) dialog.showModal();
     const origin = itemOrigin;
     dialog.scrollTop = origin?.parentRoute === route(kind, record.id) ? origin.scroll : 0;
   }
   async function mount(root, {kind, id, isCurrent = () => true, overlayOnly=false}) {
-    if(itemOrigin?.parentRoute===location.hash&&itemOrigin.content&&isCurrent()){const dialog=document.getElementById('detail');document.getElementById('detail-content').replaceChildren(...itemOrigin.content);dialog.querySelector('.detail-top>span').textContent=labels[kind];if(!dialog.open)dialog.showModal();dialog.scrollTop=itemOrigin.scroll;return;}
+    if(itemOrigin?.parentRoute===location.hash&&itemOrigin.content&&isCurrent()){const dialog=document.getElementById('detail');window.WikiNavigation.replaceDetail(kind+':'+id,itemOrigin.content,true);dialog.querySelector('.detail-top>span').textContent=labels[kind];if(!dialog.open)dialog.showModal();dialog.scrollTop=itemOrigin.scroll;return;}
     const data = await load(kind);
     if (kind === 'npcs' && id && data.npcs.find(n => n.id === id)?.recipeIds?.length) await load('recipes');
     if (kind === 'recipes' && id) await load('npcs');

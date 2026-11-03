@@ -288,11 +288,12 @@
     return fragment;
   }
   function showItem(item) {
+    window.WikiNavigation.cancelDialogClose($('detail'));
     state.selected = item.id;
     $('detail').querySelector('.detail-top>span').textContent = item.archived ? '历史物品' : '物品档案';
     const card=itemDetails(item),article=el('a','static-guide-link item-guide-link','打开完整攻略页');
     article.href='/items/'+encodeURIComponent(item.id)+'/';card.querySelector('.detail-hero h2').after(article);
-    $('detail-content').replaceChildren(card);
+    window.WikiNavigation.replaceDetail('item:'+item.id,[card]);
     if (!$('detail').open) $('detail').showModal(); $('detail').scrollTop = 0;window.WikiTraffic?.itemViewed(item.id);
   }
   let welcomeRoutePending=false;
@@ -307,10 +308,11 @@
     if (item) { $('status').hidden = true; showItem(item); }
     else { if ($('detail').open) $('detail').close(); $('status').hidden = false; $('status').className = 'status error'; $('status').textContent = '此物品链接不存在。请从目录选择物品。'; }
   }
-  function closeDetail() { const selected = state.selected; if ($('detail').open) $('detail').close(); window.WikiTraffic?.itemClosed(); if(window.Guide?.restoreDetail()){state.selected=null;return;} if (/^#(item|quest|enemy|affix|npc|recipe)\//.test(location.hash)) { const route = window.Guide?.baseRoute || '#items'; history.replaceState(null, '', location.pathname + location.search + route); window.Guide?.route().then(()=>window.Guide.restoreFocus(selected)); } state.selected = null; }
-  $('close-detail').addEventListener('click', closeDetail);
-  $('detail').addEventListener('cancel', event => { event.preventDefault(); closeDetail(); });
-  $('detail').addEventListener('click', event => { if (event.target === $('detail')) { const rect = $('detail').getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closeDetail(); } });
+  function closeDetail() { window.WikiNavigation.cancelDialogClose($('detail')); const selected = state.selected; if ($('detail').open) $('detail').close(); window.WikiTraffic?.itemClosed(); if(window.Guide?.restoreDetail()){state.selected=null;return;} if (/^#(item|quest|enemy|affix|npc|recipe)\//.test(location.hash)) { const route = window.Guide?.baseRoute || '#items'; history.replaceState(null, '', location.pathname + location.search + route); window.Guide?.route().then(()=>window.Guide.restoreFocus(selected)); } state.selected = null; }
+  const requestCloseDetail=()=>window.WikiNavigation.closeDialog($('detail'),closeDetail);
+  $('close-detail').addEventListener('click', requestCloseDetail);
+  $('detail').addEventListener('cancel', event => { event.preventDefault(); requestCloseDetail(); });
+  $('detail').addEventListener('click', event => { if (event.target === $('detail')) { const rect = $('detail').getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) requestCloseDetail(); } });
   $('search').addEventListener('input', event => { if (!state.data) return; state.query = event.target.value; state.open = true; render(); });
   $('subcategory').addEventListener('change', event => { state.subcategory = event.target.value; render(); });
   $('item-sort').addEventListener('change', event => { state.sort=event.target.value;render(); });

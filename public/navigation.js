@@ -5,15 +5,75 @@
   const channels=()=>[...document.querySelectorAll('.channel-navigation .nav-channel')];
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   let pageAnimation;
-  function cancelPageTransition(){pageAnimation?.cancel();pageAnimation=null;}
-  function enterPage(section){
-    cancelPageTransition();
-    if(reduced.matches||!['home','items','enemies','npcs','recipes','corruption','mirror','mechanics','updates','traffic','feedback','tiers'].includes(section))return;
-    const root=document.getElementById(section==='items'?'item-page':'guide-root');if(!root||root.hidden||!root.animate)return;
-    const style=getComputedStyle(document.documentElement);
-    pageAnimation=root.animate([{opacity:.84,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)'}],{duration:parseFloat(style.getPropertyValue('--motion-page'))||200,easing:style.getPropertyValue('--motion-easing').trim()||'ease-out'});
+  let detailAnimation;
+  function cancelDetailTransition(){detailAnimation?.cancel();detailAnimation=null;}
+  function replaceDetail(key,nodes,restoring=false){
+    const content=document.getElementById('detail-content'),dialog=document.getElementById('detail');
+    const changed=content.dataset.motionKey!==key,show=dialog.open||restoring;
+    cancelDialogClose(dialog);cancelDetailTransition();window.WikiScrollMotion?.cancel();content.replaceChildren(...nodes);content.dataset.motionKey=key;
+    if(changed&&show&&!reduced.matches&&!document.hidden&&content.animate)detailAnimation=content.animate([{opacity:.65},{opacity:1}],{duration:motionTime('--motion-normal',180),easing:getComputedStyle(document.documentElement).getPropertyValue('--motion-easing').trim()||'ease-out'});
   }
-  reduced.addEventListener('change',()=>{if(reduced.matches)cancelPageTransition();});
+  const closingDialogs=new Map();
+  let finishDisclosure=()=>{};
+  function motionTime(token,fallback){
+    const value=getComputedStyle(document.documentElement).getPropertyValue(token).trim().match(/^(\d*\.?\d+)(ms|s)$/);
+    return value?Number(value[1])*(value[2]==='s'?1000:1):fallback;
+  }
+  function cancelDialogClose(dialog){
+    const pending=closingDialogs.get(dialog);if(!pending)return;
+    closingDialogs.delete(dialog);dialog.removeAttribute('data-motion-closing');dialog.style.removeProperty('--dialog-exit-backdrop-opacity');pending.animation.cancel();
+  }
+  function closeDialog(dialog,finish=()=>dialog.close()){
+    if(closingDialogs.has(dialog))return;
+    if(reduced.matches||document.hidden||!dialog.open||!dialog.isConnected||!dialog.animate){finish();return;}
+    const opacity=getComputedStyle(dialog).opacity;
+    let animation;
+    const complete=()=>{
+      if(closingDialogs.get(dialog)?.animation!==animation)return;
+      cancelDialogClose(dialog);if(dialog.open&&dialog.isConnected)finish();
+    };
+    try{
+      animation=dialog.animate([{opacity},{opacity:0}],{duration:motionTime('--motion-fast',120),easing:'ease-out',fill:'forwards'});
+      dialog.style.setProperty('--dialog-exit-backdrop-opacity',getComputedStyle(dialog,'::backdrop').opacity);
+      closingDialogs.set(dialog,{animation,complete});dialog.setAttribute('data-motion-closing','');
+      animation.finished.then(complete,complete);
+    }catch{if(animation)cancelDialogClose(dialog);finish();}
+  }
+  function settleMotion(){cancelPageTransition();cancelDetailTransition();finishDisclosure();for(const pending of [...closingDialogs.values()])pending.complete();}
+  document.addEventListener('close',event=>{if(!event.target.open){cancelDialogClose(event.target);if(event.target.id==='detail')cancelDetailTransition();}},true);
+  window.addEventListener('hashchange',()=>{cancelDetailTransition();finishDisclosure();for(const dialog of [...closingDialogs.keys()])cancelDialogClose(dialog);});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)settleMotion();});
+  window.addEventListener('pagehide',settleMotion);
+  function cancelPageTransition(){pageAnimation?.cancel();pageAnimation=null;}
+  function enterPage(section,readingRoot){
+    cancelPageTransition();
+    if(reduced.matches||document.hidden||!['home','items','enemies','npcs','recipes','corruption','mirror','mechanics','updates','traffic','feedback','tiers','loot','workshop','reading'].includes(section))return;
+    const root=readingRoot||document.getElementById(section==='items'?'item-page':'guide-root');if(!root||root.hidden||!root.animate)return;
+    const style=getComputedStyle(document.documentElement);
+    pageAnimation=root.animate([{opacity:.65},{opacity:1}],{duration:motionTime('--motion-page',200),easing:style.getPropertyValue('--motion-easing').trim()||'ease-out'});
+  }
+  reduced.addEventListener('change',()=>{if(reduced.matches)settleMotion();});
+  function installDisclosure(details){
+    if(!details)return;
+    const summary=details.querySelector('summary');let animation,target=details.open;
+    const finish=()=>{const current=animation;animation=null;current?.cancel();details.open=target;details.style.removeProperty('height');details.style.removeProperty('overflow');details.removeAttribute('data-motion-expanded');};
+    finishDisclosure=()=>{if(animation)finish();};window.addEventListener('resize',finishDisclosure);
+    summary.addEventListener('click',event=>{
+      if(event.defaultPrevented)return;
+      const height=details.getBoundingClientRect().height;
+      target=animation?!target:!details.open;
+      event.preventDefault();animation?.cancel();animation=null;details.style.removeProperty('height');details.style.removeProperty('overflow');
+      details.open=false;const closed=details.getBoundingClientRect().height;
+      details.open=true;const opened=details.getBoundingClientRect().height;
+      // Only this short disclosure animates layout; long reading sections stay native.
+      if(reduced.matches||document.hidden||!details.animate||opened-closed>Math.min(480,innerHeight*.65)){finish();return;}
+      details.style.overflow='hidden';details.dataset.motionExpanded=String(target);
+      try{
+        const current=details.animate([{height:height+'px'},{height:(target?opened:closed)+'px'}],{duration:motionTime('--motion-normal',180),easing:getComputedStyle(document.documentElement).getPropertyValue('--motion-easing').trim()||'ease-out',fill:'forwards'});
+        animation=current;current.finished.then(()=>{if(animation===current)finish();},()=>{if(animation===current)finish();});
+      }catch{finish();}
+    });
+  }
   function sync(section){
     document.body.dataset.wikiPage=section;
     let current;
@@ -62,25 +122,29 @@
     const surface=root.querySelector('[data-search-surface]');if(surface)installSearch(surface);
   }
   function setup(){
+    installDisclosure(document.getElementById('version-notes'));
+    if(!window.WIKI_STATIC_BUILD&&document.body.classList.contains('seo-page'))enterPage('reading',document.querySelector('main>article'));
     for(const channel of channels())channel.addEventListener('toggle',()=>{if(channel.open)for(const other of channels())if(other!==channel)other.open=false;});
     document.addEventListener('click',event=>{if(event.target.closest('.channel-navigation a,.channel-links a')||!event.target.closest('.channel-navigation'))for(const c of channels())c.open=false;});
     document.addEventListener('keydown',event=>{if(event.key==='Escape')for(const c of channels())if(c.open){c.open=false;c.querySelector('summary').focus();event.preventDefault();}});
     const dialog=make('dialog','site-search-dialog');dialog.setAttribute('aria-labelledby','site-search-title');
     const heading=make('div','site-search-heading'),title=make('h2','','搜索攻略');title.id='site-search-title';
-    const close=make('button','close-button','×');close.type='button';close.setAttribute('aria-label','关闭搜索');close.onclick=()=>dialog.close();heading.append(title,close);
+    const close=make('button','close-button','×');close.type='button';close.setAttribute('aria-label','关闭搜索');close.onclick=()=>closeDialog(dialog);heading.append(title,close);
     const surface=make('div','home-search');surface.dataset.searchSurface='';const label=make('label','','名称或关键词'),input=make('input');input.id='site-search-input';input.type='search';input.placeholder='例如：魔法帽、防御';label.htmlFor=input.id;
     const status=make('p','guide-note');status.setAttribute('role','status');const results=make('div','site-search-results');surface.append(label,input,status,results);dialog.append(heading,surface);document.body.append(dialog);
     const search=installSearch(surface);let trigger;
-    const open=event=>{trigger=event?.currentTarget||document.activeElement;search.scope.value=document.body.dataset.wikiChannel||'';search.scope.dispatchEvent(new Event('change'));if(!dialog.open)dialog.showModal();search.input.focus();};
+    const open=event=>{cancelDialogClose(dialog);trigger=event?.currentTarget||document.activeElement;search.scope.value=document.body.dataset.wikiChannel||'';search.scope.dispatchEvent(new Event('change'));if(!dialog.open)dialog.showModal();search.input.focus();};
     for(const b of document.querySelectorAll('[data-site-search]')){b.hidden=false;b.onclick=open;}
-    dialog.addEventListener('close',()=>{if(trigger?.isConnected)trigger.focus({preventScroll:true});});
-    dialog.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();dialog.close();}});
+    dialog.addEventListener('close',()=>{if(!dialog.open&&trigger?.isConnected)trigger.focus({preventScroll:true});});
+    dialog.addEventListener('cancel',event=>{event.preventDefault();closeDialog(dialog);});
+    dialog.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeDialog(dialog);}});
+    dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)closeDialog(dialog);}});
     window.addEventListener('hashchange',()=>{if(dialog.open)dialog.close();});
     results.addEventListener('click',event=>{if(event.target.closest('a'))dialog.close();});
     document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.defaultPrevented&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)&&!document.querySelector('dialog[open]')){event.preventDefault();open();}});
     const aliases={item:'items',quest:'quests',enemy:'enemies',npc:'npcs',recipe:'recipes',affix:'corruption',mechanic:'mechanics',history:'updates'};
     const section=location.pathname==='/'?(location.hash.slice(1).split('/')[0]||'home'):location.pathname.split('/')[1];sync(aliases[section]||section);if(section==='home'&&document.getElementById('guide-root')){document.getElementById('guide-root').hidden=false;document.getElementById('item-page').hidden=true;renderHome(document.getElementById('guide-root'));}
   }
-  window.WikiNavigation={sync,renderHome,cancelPageTransition,enterPage};
+  window.WikiNavigation={sync,renderHome,cancelPageTransition,enterPage,closeDialog,cancelDialogClose,replaceDetail};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
 })();

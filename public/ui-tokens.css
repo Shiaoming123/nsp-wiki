@@ -13,6 +13,7 @@
   --radius-control:6px; --radius-card:10px; --radius-terminal:3px; --radius-terminal-panel:4px; --border-width:1px;
   --control-min:44px; --focus-width:3px; --focus-offset:3px;
   --motion-fast:120ms; --motion-normal:180ms; --motion-page:200ms; --motion-easing:cubic-bezier(.2,.8,.2,1);
+  --scroll-response:70ms; --scroll-distance-multiplier:1; --scroll-max-distance:480;
   --elevation-card:inset 0 1px #ffffff0a; --elevation-overlay:0 8px 24px #0005;
   --control-edge-depth:3px; --control-hover:#3b4942;
   --overlay-scrim:#0b110ed9; --error-text:#ffd0c3;

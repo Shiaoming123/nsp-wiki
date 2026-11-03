@@ -77,7 +77,8 @@
     search.oninput=()=>{expanded=false;drawItems();};select.onchange=()=>{expanded=false;drawItems();};more.onclick=()=>{expanded=true;drawItems();};
     tools.append(search,select);related.append(tools,count,grid,more);drawItems();
     body.append(related);
-    document.getElementById('detail-content').replaceChildren(body);
+    window.WikiNavigation.cancelDialogClose(dialog);
+    window.WikiNavigation.replaceDetail('affix:'+affix.id,[body]);
     window.AffixCommunity?.mount(body,affix.id);
     dialog.querySelector('.detail-top>span').textContent = '腐化词条 · EA';
     if (!dialog.open) dialog.showModal();

@@ -14,6 +14,7 @@ export function mountFloorTower(container,{atlasTexture,atlas,floors,current=1,o
   const transitGroup=new THREE.Group(),routeGroup=new THREE.Group();scene.add(transitGroup,routeGroup);
   const reducedMotion=matchMedia('(prefers-reduced-motion:reduce)');let activeRouteIds=[],summaryContext='',summaryEdges=new Map();
   let renderer,texture,pixels,observer,frame=0,disposed=false,firstShow=true,gestureMoved=false,pinch=null,lastPointer=null,projectedFloors=[];
+  let wheelZoom=null;
   let labelsDirty=true,labelRecalculations=0,sizeUpdates=0,renderWidth=0,renderHeight=0,transitLayoutDirty=true,transitContext='',routeLayoutUpdates=0;
   const gap=4.8,frameWidth=20,frameDepth=20*244/360,totalHeight=Math.max(0,(floors.length-1)*gap);
   let commonWidth=frameWidth,commonDepth=frameDepth;
@@ -276,13 +277,14 @@ export function mountFloorTower(container,{atlasTexture,atlas,floors,current=1,o
     frame=0;if(disposed||!state.available||!state.visible||document.hidden)return;
     const width=Math.max(1,root.clientWidth),height=Math.max(1,root.clientHeight);
     if(width!==renderWidth||height!==renderHeight){renderer.setSize(width,height,false);camera.aspect=width/height;renderWidth=width;renderHeight=height;sizeUpdates++;labelsDirty=true;}
+    if(wheelZoom){const z=wheelZoom,target=clampDistance(z.target),dt=Math.min(40,z.time?time-z.time:16.67);z.time=time;state.distance+=(target-state.distance)*(1-Math.exp(-dt/65));if(Math.abs(state.distance-target)<target*.0002){state.distance=target;wheelZoom=null;}labelsDirty=true;}
     updateCamera();refreshTransit();if(labelsDirty){updateLabels(width,height);labelRecalculations++;}if(labelsDirty||transitLayoutDirty){layoutTransit(width,height);transitLayoutDirty=false;}labelsDirty=false;
     if(transitState.animationActive)for(const route of transitRoutes.filter(r=>r.group.visible))for(const dot of route.flow){const progress=(time*.00012)%1;dot.position.copy(alongRoute(route,dot.userData.direction===1?progress:1-progress).point);dot.scale.setScalar(camera.position.distanceTo(dot.position)*2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))/height*4/.21);}
-    renderer.render(scene,camera);state.renderedFrames++;if(transitState.animationActive)invalidate();
+    renderer.render(scene,camera);state.renderedFrames++;if(transitState.animationActive||wheelZoom)invalidate();
   }
-  function focusCenter(){if(disposed)return;target.set(0,totalHeight/2,0);refreshLimits();state.distance=clampDistance(fittedDistance());clampTarget();labelsDirty=true;invalidate();}
+  function focusCenter(){wheelZoom=null;if(disposed)return;target.set(0,totalHeight/2,0);refreshLimits();state.distance=clampDistance(fittedDistance());clampTarget();labelsDirty=true;invalidate();}
   function reset(){if(disposed)return;state.yaw=-.48;state.pitch=THREE.MathUtils.degToRad(38);focusCenter();}
-  function clearGesture(){
+  function clearGesture(){wheelZoom=null;
     const canvas=renderer?.domElement;for(const id of pointers.keys())if(canvas?.hasPointerCapture(id))canvas.releasePointerCapture(id);
     pointers.clear();pinch=null;lastPointer=null;gestureMoved=false;root.classList.remove('is-dragging','is-panning');
     transitState.routeFocus=null;setHovered(null);refreshTransit();
@@ -327,7 +329,7 @@ export function mountFloorTower(container,{atlasTexture,atlas,floors,current=1,o
     }
     buildTransit();
     const canvasElement=renderer.domElement;
-    listen(canvasElement,'pointerdown',event=>{
+    listen(canvasElement,'pointerdown',event=>{wheelZoom=null;
       if(!state.visible)return;event.preventDefault();canvasElement.focus({preventScroll:true});canvasElement.setPointerCapture(event.pointerId);pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
       if(pointers.size===1){gestureMoved=false;lastPointer={id:event.pointerId,x:event.clientX,y:event.clientY,startX:event.clientX,startY:event.clientY,pan:event.button===2||event.shiftKey};}
       else{gestureMoved=true;const [a,b]=[...pointers.values()];pinch={distance:Math.hypot(a.x-b.x,a.y-b.y),x:(a.x+b.x)/2,y:(a.y+b.y)/2};}
@@ -350,23 +352,23 @@ export function mountFloorTower(container,{atlasTexture,atlas,floors,current=1,o
     });
     listen(canvasElement,'pointercancel',clearGesture);listen(canvasElement,'lostpointercapture',event=>{if(pointers.has(event.pointerId))clearGesture();});listen(window,'blur',clearGesture);
     listen(canvasElement,'pointerleave',()=>{if(!pointers.size)setHovered(null);});listen(canvasElement,'contextmenu',event=>event.preventDefault());
-    listen(canvasElement,'wheel',event=>{event.preventDefault();state.distance=clampDistance(state.distance*Math.exp(event.deltaY*.001));labelsDirty=true;invalidate();},{passive:false});
+    listen(canvasElement,'wheel',event=>{event.preventDefault();const delta=Math.max(-120,Math.min(120,event.deltaY*(event.deltaMode===1?16:event.deltaMode===2?root.clientHeight:1))),target=clampDistance((wheelZoom&&wheelZoom.direction===Math.sign(delta)?wheelZoom.target:state.distance)*Math.exp(delta*.0005));if(reducedMotion.matches)state.distance=target;else wheelZoom={target,direction:Math.sign(delta),time:wheelZoom?.time||0};labelsDirty=true;invalidate();},{passive:false});
     listen(canvasElement,'keydown',event=>{
-      if(event.ctrlKey||event.metaKey||event.altKey)return;let handled=true;
+      if(event.ctrlKey||event.metaKey||event.altKey)return;wheelZoom=null;let handled=true;
       if(event.key==='ArrowLeft')state.yaw-=Math.PI/18;else if(event.key==='ArrowRight')state.yaw+=Math.PI/18;else if(event.key==='ArrowUp')state.pitch=Math.min(THREE.MathUtils.degToRad(80),state.pitch+.08);else if(event.key==='ArrowDown')state.pitch=Math.max(THREE.MathUtils.degToRad(25),state.pitch-.08);else if(event.key==='+'||event.key==='=')state.distance=clampDistance(state.distance*.85);else if(event.key==='-')state.distance=clampDistance(state.distance/ .85);else if(event.key==='Home')reset();else handled=false;
       if(handled){event.preventDefault();event.stopPropagation();labelsDirty=true;invalidate();}
     });
     listen(canvasElement,'webglcontextlost',event=>{event.preventDefault();state.available=false;cancelFrame();clearGesture();for(const l of layers)l.label.hidden=true;notify('楼层环绕视图已失去图形上下文，可通过楼层选择继续查看地图。');});
     listen(document,'visibilitychange',()=>{if(document.hidden){cancelFrame();clearGesture();}else invalidate();});
-    listen(reducedMotion,'change',()=>{refreshTransit();invalidate();});
-    observer=new ResizeObserver(()=>{if(root.clientWidth&&root.clientHeight)refreshLimits();labelsDirty=true;invalidate();});observer.observe(root);state.available=true;colorLayers();reset();
+    listen(reducedMotion,'change',()=>{if(wheelZoom){state.distance=clampDistance(wheelZoom.target);wheelZoom=null;}refreshTransit();invalidate();});
+    observer=new ResizeObserver(()=>{wheelZoom=null;if(root.clientWidth&&root.clientHeight)refreshLimits();labelsDirty=true;invalidate();});observer.observe(root);state.available=true;colorLayers();reset();
   }catch(error){state.available=false;notify(error);}
   return {
-    setCurrent(id){if(disposed||!floors.some(f=>f.id===Number(id)))return;if(state.current!==Number(id))transitState.routeFocus=null;state.current=Number(id);colorLayers();refreshTransit();invalidate();},
+    setCurrent(id){wheelZoom=null;if(disposed||!floors.some(f=>f.id===Number(id)))return;if(state.current!==Number(id))transitState.routeFocus=null;state.current=Number(id);colorLayers();refreshTransit();invalidate();},
     setVisible(value){if(disposed)return;state.visible=Boolean(value)&&state.available;root.hidden=!state.visible;if(!state.visible){cancelFrame();clearGesture();setHovered(null);}else{if(firstShow){firstShow=false;reset();}else refreshLimits();labelsDirty=true;invalidate();}refreshTransit();},
     reset,focusCenter,pickAt,setTransitSelection,setTransitKind,setTransitRoute,
     setTransitEnabled(value){if(disposed)return;transitState.enabled=Boolean(value);if(!transitState.enabled){transitState.hoveredNode=null;transitState.routeFocus=null;}refreshTransit();invalidate();},
-    metrics:()=>({...state,yaw:THREE.MathUtils.radToDeg(state.yaw),pitch:THREE.MathUtils.radToDeg(state.pitch),target:target.toArray(),textures:renderer?.info.memory.textures||0,geometries:renderer?.info.memory.geometries||0,rafPending:frame?1:0,projectedFloors,labelRecalculations,sizeUpdates,
+    metrics:()=>({...state,zoomPending:Boolean(wheelZoom),yaw:THREE.MathUtils.radToDeg(state.yaw),pitch:THREE.MathUtils.radToDeg(state.pitch),target:target.toArray(),textures:renderer?.info.memory.textures||0,geometries:renderer?.info.memory.geometries||0,rafPending:frame?1:0,projectedFloors,labelRecalculations,sizeUpdates,
       targetLimits:{min:[...targetLimits.min],max:[...targetLimits.max]},distanceLimits:{...distanceLimits},haloVisible:layers.filter(l=>l.halo.visible).map(l=>l.floor.id),haloColor:accent,transit:transitMetrics(),
       floors:layers.map(l=>({id:l.floor.id,width:l.width,depth:l.depth,y:l.group.position.y,mapPosition:l.map.position.toArray(),haloPosition:l.halo.position.toArray(),haloVisible:l.halo.visible,haloStrength:l.halo.material.uniforms.strength.value,haloDepthTest:l.halo.material.depthTest,haloDepthWrite:l.halo.material.depthWrite,frameVisible:false,projectedCenter:projectedFloors.find(p=>p.id===l.floor.id)}))}),
     dispose

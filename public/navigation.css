@@ -1,4 +1,6 @@
 /* Shared masthead and search. Home composition remains in terminal.css. */
+.scroll-motion-toggle{flex:none;align-self:start;font-size:12px;min-height:44px;white-space:nowrap;}
+:is(.site-search-dialog,#detail){overscroll-behavior-y:contain;}
 .site-header:has(.channel-navigation){position:relative;display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:12px;padding:10px 24px;max-width:none;background:var(--deep);border-bottom:1px solid var(--border);box-shadow:none;}
 .site-header:has(.channel-navigation)::after{display:none;}
 .site-header .brand{font-size:21px;gap:10px;}
@@ -62,6 +64,11 @@ body:not([data-wiki-page=home]):not([data-wiki-page=items])>#main-content>#site-
 .site-search-results:not(:empty){animation:shell-fade-in var(--motion-fast) var(--motion-easing);}
 :is(.site-search-dialog,#detail)[open]{animation:shell-dialog-in var(--motion-normal) var(--motion-easing);}
 :is(.site-search-dialog,#detail)[open]::backdrop{animation:shell-fade-in var(--motion-fast) var(--motion-easing);}
+@keyframes shell-fade-out{from{opacity:var(--dialog-exit-backdrop-opacity,1);}to{opacity:0;}}
+:is(.site-search-dialog,#detail)[data-motion-closing]::backdrop{animation:shell-fade-out var(--motion-fast) ease-out both;}
+.version-notes>summary::after{content:'';flex:none;width:6px;height:6px;margin-left:12px;border-right:1px solid currentColor;border-bottom:1px solid currentColor;transform:rotate(45deg);transition:transform var(--motion-normal) var(--motion-easing);}
+.version-notes[open]>summary::after,.version-notes[data-motion-expanded=true]>summary::after{transform:rotate(225deg);}
+.version-notes[data-motion-expanded=false]>summary::after{transform:rotate(45deg);}
 .notice-disclosure[open]>.notice-body{animation:shell-fade-in var(--motion-fast) var(--motion-easing);}
 /* Preserve the established full map workspace. */
 body[data-wiki-page=maps]>.site-header .channel-links{display:none;}
@@ -84,6 +91,7 @@ body[data-wiki-page=maps] #guide-root{padding:0;margin:0;}
  .site-search-result{flex-direction:column;align-items:flex-start;gap:4px;padding:12px;}.site-search-result small{max-width:none;text-align:left;}
 }
 @media(prefers-reduced-motion:reduce){
+ .version-notes>summary::after{transition:none;}
  .nav-channel[open] .channel-menu,.site-search-results:not(:empty),:is(.site-search-dialog,#detail)[open],:is(.site-search-dialog,#detail)[open]::backdrop,.notice-disclosure[open]>.notice-body{animation:none;}
  .channel-navigation *,.site-search-dialog *{scroll-behavior:auto;transition:none;}
 }
