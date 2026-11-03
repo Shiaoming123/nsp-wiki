@@ -36,14 +36,21 @@
     if(!enabled||reduced.matches||event.defaultPrevented||!event.cancelable||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||event.deltaX||!coarse||!amount){cancel();return;}
     const el=scroller(event.target instanceof Element?event.target:event.target.parentElement);if(!el){cancel();return;}
     const style=getComputedStyle(document.documentElement),time=style.getPropertyValue('--scroll-response').trim().match(/^(\d*\.?\d+)(ms|s)$/);
-    const response=Math.max(30,Math.min(160,time?Number(time[1])*(time[2]==='s'?1000:1):70));
+    let response=Math.max(30,Math.min(160,time?Number(time[1])*(time[2]==='s'?1000:1):70));
     const multiplier=Math.max(.2,Math.min(2,parseFloat(style.getPropertyValue('--scroll-distance-multiplier'))||1)),limit=Math.max(80,Math.min(800,parseFloat(style.getPropertyValue('--scroll-max-distance'))||480));
     const units=event.deltaMode===1?parseFloat(getComputedStyle(el).lineHeight)||20:event.deltaMode===2?el.clientHeight:1;
     const delta=event.deltaY*units*multiplier,position=el.scrollTop,max=el.scrollHeight-el.clientHeight;
     if(max<=0||delta>0&&max-position<Math.min(Math.abs(delta),limit)||delta<0&&position<Math.min(Math.abs(delta),limit)){cancel();return;}
     event.preventDefault();
     const continued=active?.el===el&&Math.sign(active.target-position)===Math.sign(delta);
-    const target=Math.max(0,Math.min(max,position+Math.max(-limit,Math.min(limit,(continued?active.target-position:0)+delta))));
+    let target=Math.max(0,Math.min(max,position+Math.max(-limit,Math.min(limit,(continued?active.target-position:0)+delta))));
+    if(el===document.scrollingElement&&document.body.dataset.wikiPage==='home'&&delta>0){
+      const section=document.querySelector('.home-videos');
+      if(section){const stop=Math.min(max,section.getBoundingClientRect().top+position-24),reach=Math.min(160,innerHeight*.18);
+        // Settle only on a downward approach; scrolling inside or back out stays free.
+        if(position<stop-24&&stop-position<=limit&&Math.abs(target-stop)<reach){target=stop;response=Math.max(response,110);}
+      }
+    }
     active={el,target,position,written:position,time:active?.el===el?active.time:0,response};if(!raf)raf=requestAnimationFrame(frame);
   }
   document.addEventListener('wheel',wheel,{passive:false});

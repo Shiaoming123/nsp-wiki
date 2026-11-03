@@ -6,6 +6,56 @@
   },
   "records": [
     {
+      "id": "wiki-20261104-workshop-video",
+      "kind": "wiki",
+      "date": "2026-11-04",
+      "version": "20261104-workshop-video",
+      "title": "首页视频入口与返回体验",
+      "publication": "主站已发布",
+      "verification": "慢网返回与网页交互验证",
+      "summary": "首页新增实战视频入口并支持分区轻吸附；慢网下立即打开视频资料后，也能正确返回原位置。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "wiki",
+          "title": "保留首页阅读状态",
+          "before": "首页刚显示、资料尚未就绪时打开视频资料，关闭后可能误切到物品页。",
+          "after": "按实际显示的页面保存返回状态，保留首页、卡片焦点与滚动位置；完整保留本次工坊布局和四组实战视频攻略。"
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261103-workshop-video",
+      "kind": "wiki",
+      "date": "2026-11-03",
+      "version": "20261103-workshop-video",
+      "title": "武器工坊布局与实战视频攻略",
+      "publication": "主站已发布",
+      "verification": "网页交互与资料保真验证",
+      "summary": "扩大武器装配区，紧凑对齐配装与词条信息；首页和敌怪资料新增实战视频攻略。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "wiki",
+          "title": "武器工坊布局",
+          "before": "槽位图可视区域偏小，配件库与报告存在空白和对齐问题。",
+          "after": "装配台与配件库并排，槽位图自动全览；信息区和整套配装统一对齐，长词条可完整阅读。"
+        },
+        {
+          "module": "wiki",
+          "title": "实战视频攻略",
+          "before": "敌怪资料与首页缺少视频演示入口。",
+          "after": "牛虻、纵火博士、半马人及落叶小队详情提供折叠视频；首页瀑布流展示封面、作者和时长，点击进入资料观看或跳转B站。"
+        }
+      ]
+    },
+    {
       "id": "wiki-20261103-wiki-motion",
       "kind": "wiki",
       "date": "2026-11-03",

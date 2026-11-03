@@ -6,11 +6,19 @@
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   let pageAnimation;
   let detailAnimation;
+  function clearGuideVideos(root){for(const fold of root.querySelectorAll('details[data-bilibili-bvid]')){fold.open=false;fold.querySelector('.enemy-video-player iframe')?.remove();}}
+  document.addEventListener('toggle',event=>{
+    const fold=event.target;if(!fold.matches?.('details[data-bilibili-bvid]'))return;
+    const host=fold.querySelector('.enemy-video-player');if(!host)return;
+    if(!fold.open){host.replaceChildren();return;}
+    if(window.WIKI_STATIC_BUILD||host.childElementCount||!/^BV[A-Za-z0-9]{10}$/.test(fold.dataset.bilibiliBvid))return;
+    const frame=make('iframe');frame.src='https://player.bilibili.com/player.html?bvid='+encodeURIComponent(fold.dataset.bilibiliBvid)+'&p=1&poster=1&autoplay=0';frame.title=fold.querySelector('summary a')?.textContent||'B站视频攻略';frame.allow='fullscreen; picture-in-picture';frame.allowFullscreen=true;frame.loading='lazy';frame.referrerPolicy='strict-origin-when-cross-origin';host.append(frame);
+  },true);
   function cancelDetailTransition(){detailAnimation?.cancel();detailAnimation=null;}
   function replaceDetail(key,nodes,restoring=false){
     const content=document.getElementById('detail-content'),dialog=document.getElementById('detail');
     const changed=content.dataset.motionKey!==key,show=dialog.open||restoring;
-    cancelDialogClose(dialog);cancelDetailTransition();window.WikiScrollMotion?.cancel();content.replaceChildren(...nodes);content.dataset.motionKey=key;
+    cancelDialogClose(dialog);cancelDetailTransition();window.WikiScrollMotion?.cancel();clearGuideVideos(content);content.replaceChildren(...nodes);content.dataset.motionKey=key;
     if(changed&&show&&!reduced.matches&&!document.hidden&&content.animate)detailAnimation=content.animate([{opacity:.65},{opacity:1}],{duration:motionTime('--motion-normal',180),easing:getComputedStyle(document.documentElement).getPropertyValue('--motion-easing').trim()||'ease-out'});
   }
   const closingDialogs=new Map();
@@ -24,6 +32,7 @@
     closingDialogs.delete(dialog);dialog.removeAttribute('data-motion-closing');dialog.style.removeProperty('--dialog-exit-backdrop-opacity');pending.animation.cancel();
   }
   function closeDialog(dialog,finish=()=>dialog.close()){
+    clearGuideVideos(dialog);
     if(closingDialogs.has(dialog))return;
     if(reduced.matches||document.hidden||!dialog.open||!dialog.isConnected||!dialog.animate){finish();return;}
     const opacity=getComputedStyle(dialog).opacity;
@@ -40,10 +49,10 @@
     }catch{if(animation)cancelDialogClose(dialog);finish();}
   }
   function settleMotion(){cancelPageTransition();cancelDetailTransition();finishDisclosure();for(const pending of [...closingDialogs.values()])pending.complete();}
-  document.addEventListener('close',event=>{if(!event.target.open){cancelDialogClose(event.target);if(event.target.id==='detail')cancelDetailTransition();}},true);
+  document.addEventListener('close',event=>{if(!event.target.open){clearGuideVideos(event.target);cancelDialogClose(event.target);if(event.target.id==='detail')cancelDetailTransition();}},true);
   window.addEventListener('hashchange',()=>{cancelDetailTransition();finishDisclosure();for(const dialog of [...closingDialogs.keys()])cancelDialogClose(dialog);});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)settleMotion();});
-  window.addEventListener('pagehide',settleMotion);
+  window.addEventListener('pagehide',()=>{clearGuideVideos(document);settleMotion();});
   function cancelPageTransition(){pageAnimation?.cancel();pageAnimation=null;}
   function enterPage(section,readingRoot){
     cancelPageTransition();

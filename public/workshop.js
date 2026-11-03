@@ -202,6 +202,10 @@ export function mountWorkshop(root) {
       mutate(next=>{const parent=engine.nodeAt(next,parentPath),entry=parent.children.find(child=>child.slotIndex===index),replacement=engine.createNode(itemId);replacement.affixes=[...affixIds];if(entry)entry.node=replacement;else parent.children.push({slotIndex:index,node:replacement});},'slot-'+pathKey([...parentPath,index]));
     }
     function visibleSlots(){return engine.slots(build).filter(slot=>assemblyData.items[engine.nodeAt(build,slot.path).itemId]?.slots[slot.index]?.cardVisible);}
+    function slotLabel(slot){
+      const label=value=>value.label&&value.label!=='无'?value.label:'配件槽',matches=visibleSlots().filter(value=>label(value)===label(slot));
+      return label(slot)+(matches.length>1?' '+(matches.findIndex(value=>value.index===slot.index&&pathKey(value.path)===pathKey(slot.path))+1):'');
+    }
     function partArt(itemId,className){const meta=assemblyData.items[itemId],sprite=assemblyData.sprites[meta?.sprite];return art(sprite?.url||getItem(itemId)?.icon,className);}
     function dropTarget(tile,slot){
       tile.addEventListener('dragover',event=>{if(event.dataTransfer.types.includes('application/x-nsp-workshop')){event.preventDefault();event.dataTransfer.dropEffect='copy';tile.classList.add('drop-target');}});
@@ -234,11 +238,11 @@ export function mountWorkshop(root) {
         const main=!slot,selected=main?selectedSlot===null:selectedSlot===slot.index&&pathKey(selectedPath)===pathKey(slot.path);
         const card=button('',main?()=>{selectedPath=[];selectedSlot=null;draw();}:event=>chooseSlot(slot,event),main?'workshop-core gunsmith-card':'workshop-slot gunsmith-card');
         card.dataset.focus=main?'main':'slot-'+pathKey(path);card.dataset.path=pathKey(path);card.setAttribute('aria-pressed',String(selected));
-        card.append(el('span','gunsmith-card-label',main?'机匣 / 主武器':slot.label||'配件槽'));
+        card.append(el('span','gunsmith-card-label',main?'机匣 / 主武器':slotLabel(slot)));
         if(host)card.append(partArt(host.itemId,'gunsmith-card-art'),el('span','gunsmith-card-name',itemName(host.itemId)));
         else card.append(el('span','gunsmith-card-plus','＋'),el('span','gunsmith-card-name','待装配'));
         if(slot?.required){const required=el('span','gunsmith-required','◆');required.title='必需部件';card.append(required);}
-        card.title=main?itemName(build.itemId):(slot.label||'部件')+' · '+(host?itemName(host.itemId):'空槽');
+        card.title=main?itemName(build.itemId):slotLabel(slot)+' · '+(host?itemName(host.itemId):'空槽');
         if(host?.affixes.length){const labels=el('span','gunsmith-card-affixes');for(const id of host.affixes){const label=el('span','workshop-affix-label',affixes[id]?.name||'词条');label.dataset.affixId=id;labels.append(label);}card.append(labels);}
         if(slot){dropTarget(card,slot);if(validation.errors.some(error=>pathKey(error.path)===pathKey(path)))card.classList.add('conflict');}
         wrapper.append(card);cards.push({card,path,parent:slot?.path,direction:slot?assemblyData.items[engine.nodeAt(build,slot.path).itemId].slots[slot.index].direction:null});
@@ -253,13 +257,14 @@ export function mountWorkshop(root) {
         return wrapper;
       }
       tree.append(branch(build,[]));
-      const tools=el('div','workshop-diagram-tools'),label=el('span','','槽位图 · 滚动查看'),minus=button('−',()=>resize(.8)),fit=button('全览',()=>{diagramView.zoom=null;measure(true);}),plus=button('＋',()=>resize(1.25));
+      const tools=el('div','workshop-diagram-tools'),label=el('span','','槽位图'),minus=button('−',()=>resize(.8)),fit=button('全览',()=>{diagramView.zoom=null;measure(true);}),plus=button('＋',()=>resize(1.25));
       minus.setAttribute('aria-label','缩小槽位图');plus.setAttribute('aria-label','放大槽位图');tools.append(label,minus,fit,plus);
-      function resize(factor){diagramView.zoom=Math.max(.35,Math.min(2,(diagramView.zoom||1)*factor));measure();}
+      function resize(factor){diagramView.zoom=Math.max(.1,Math.min(2,(diagramView.zoom||1)*factor));measure();}
       function measure(center=false){
-        if(disposed||!tree.isConnected)return;
-        const initial=diagramView.zoom===null,width=tree.offsetWidth,height=tree.offsetHeight,fit=Math.min(1,(viewport.clientWidth-20)/width,(viewport.clientHeight-20)/height),zoom=diagramView.zoom??(center?fit:Math.max(.75,fit));
+        if(disposed||!tree.isConnected||!viewport.clientWidth||!viewport.clientHeight)return;
+        const width=tree.offsetWidth,height=tree.offsetHeight,fit=Math.min(1,(viewport.clientWidth-20)/width,(viewport.clientHeight-20)/height),zoom=Math.max(.1,Math.min(2,diagramView.zoom??fit));
         diagramView.zoom=zoom;tree.style.transform=`scale(${zoom})`;stage.style.width=`${Math.max(viewport.clientWidth,width*zoom+20)}px`;stage.style.height=`${Math.max(viewport.clientHeight,height*zoom+20)}px`;
+        label.textContent='槽位图 · '+Math.round(zoom*100)+'%';
         tree.style.left=`${Math.max(10,(viewport.clientWidth-width*zoom)/2)}px`;tree.style.top=`${Math.max(10,(viewport.clientHeight-height*zoom)/2)}px`;
         tree.querySelector('svg.gunsmith-links')?.remove();const links=svgNode('svg',{width,height,'aria-hidden':'true'});links.classList.add('gunsmith-links');const base=tree.getBoundingClientRect(),ratio=base.width/width,map=new Map(cards.map(value=>[pathKey(value.path),value.card]));
         for(const entry of cards){if(!entry.parent)continue;const parent=map.get(pathKey(entry.parent));if(!parent)continue;const p=parent.getBoundingClientRect(),c=entry.card.getBoundingClientRect();let from,to;
@@ -270,7 +275,6 @@ export function mountWorkshop(root) {
           from=[(from[0]-base.x)/ratio,(from[1]-base.y)/ratio];to=[(to[0]-base.x)/ratio,(to[1]-base.y)/ratio];const vertical=['top','bottom'].includes(entry.direction),mid=(from[vertical?1:0]+to[vertical?1:0])/2;
           links.append(svgNode('polyline',{points:vertical?`${from} ${from[0]},${mid} ${to[0]},${mid} ${to}`:`${from} ${mid},${from[1]} ${mid},${to[1]} ${to}`,fill:'none'}));
         }tree.prepend(links);
-        if(initial&&!center){const main=cards[0].card.getBoundingClientRect(),view=viewport.getBoundingClientRect();diagramView.left=Math.max(0,main.x-view.x+viewport.scrollLeft+(main.width-viewport.clientWidth)/2);diagramView.top=Math.max(0,main.y-view.y+viewport.scrollTop+(main.height-viewport.clientHeight)/2);}
         viewport.scrollLeft=center?0:diagramView.left;viewport.scrollTop=center?0:diagramView.top;
       }
       diagramFrame=requestAnimationFrame(()=>{measure();diagramObserver=new ResizeObserver(()=>measure());diagramObserver.observe(viewport);});
@@ -308,7 +312,7 @@ export function mountWorkshop(root) {
       const inspector=el('aside','workshop-inspector');inspector.append(panel);workspace.append(assembly,inspector);inspectorRoot=isMelee?null:inspector;
       const editNode=selectedSlot===null?node():node()?.children.find(child=>child.slotIndex===selectedSlot)?.node,editPath=selectedSlot===null?selectedPath:[...selectedPath,selectedSlot];
       if(editNode)drawAffixes(editNode,editPath);else{const empty=el('section','workshop-affixes');empty.append(el('h2','','部件设置'),el('p','guide-note','装入部件后，可设置其腐化词条。'));(inspectorRoot||workspace).append(empty);}
-      if(!isMelee)drawParts();
+      if(!isMelee){drawParts();workspace.append(inspector);}
     }
 
     function drawAffixes(host,path){
@@ -344,20 +348,24 @@ export function mountWorkshop(root) {
       if(!paletteSlot){workspace.append(parts);return;}
       const parent=engine.nodeAt(build,paletteSlot.path),slot=visibleSlots().find(slot=>pathKey(slot.path)===pathKey(paletteSlot.path)&&slot.index===paletteSlot.index);
       if(!parent||!slot){paletteSlot=null;return;}
+      const context=el('p','workshop-parts-context');context.append(el('strong','',slotLabel(slot)),el('span','',slot.installed?'已装：'+itemName(slot.installed.itemId):'待装配'));parts.append(context);
       const search=el('input');search.type='search';search.placeholder='搜索当前槽位的兼容配件';search.setAttribute('aria-label',search.placeholder);search.value=partQuery;
       const count=el('p','guide-note'),grid=el('div','workshop-part-grid');
+      count.setAttribute('role','status');grid.tabIndex=0;grid.setAttribute('aria-label',slotLabel(slot)+'的兼容配件，可滚动查看');
       function drawCandidates(){
         grid.replaceChildren();const candidates=engine.candidates(build,paletteSlot.path,paletteSlot.index,{includeAffixPresets:true}).filter(candidate=>itemName(candidate.itemId).toLocaleLowerCase().includes(partQuery.trim().toLocaleLowerCase()));
         count.textContent=`${slot.label||'配件槽'} · ${candidates.length} 件兼容部件`;
         for(const candidate of candidates){const item=getItem(candidate.itemId),preset=candidate.affixes||[],card=button('',()=>equip(candidate.itemId,preset),'workshop-part');card.draggable=true;card.dataset.itemId=candidate.itemId;card.dataset.presetAffixes=JSON.stringify(preset);
-          card.append(art(item?.icon,'workshop-part-art'),el('span','',itemName(candidate.itemId)));
+          card.append(art(item?.icon,'workshop-part-art'),el('span','workshop-part-name',itemName(candidate.itemId)));
           if(preset.length)card.append(el('span','workshop-preset','预设：'+preset.map(id=>affixes[id].name).join('、')+` · ${preset.length}/${data.items[candidate.itemId].affixLimit}`));
           card.title=itemName(candidate.itemId)+(preset.length?' · 预设：'+preset.map(id=>affixes[id].name).join('、'):'')+(slot.installed?' · 更换（含下属部件）':' · 点击或拖动装配');card.setAttribute('aria-label',card.title);
           card.querySelectorAll('img').forEach(image=>{image.draggable=false;});
-          card.addEventListener('dragstart',event=>{event.dataTransfer.setData('application/x-nsp-workshop',JSON.stringify({itemId:candidate.itemId,affixes:preset,rulesIdentity:rulesIdentity}));event.dataTransfer.effectAllowed='copy';});const entry=el('div','workshop-part-entry');entry.append(card,itemProperties(candidate.itemId));grid.append(entry);
+          const installed=slot.installed?.itemId===candidate.itemId&&JSON.stringify(slot.installed.affixes||[])===JSON.stringify(preset);card.setAttribute('aria-pressed',String(installed));
+          if(installed)card.append(el('span','workshop-part-state','已装配'));
+          card.addEventListener('dragstart',event=>{event.dataTransfer.setData('application/x-nsp-workshop',JSON.stringify({itemId:candidate.itemId,affixes:preset,rulesIdentity:rulesIdentity}));event.dataTransfer.effectAllowed='copy';});const entry=el('div','workshop-part-entry');entry.classList.toggle('is-equipped',installed);entry.append(card,itemProperties(candidate.itemId));grid.append(entry);
         }if(!candidates.length)grid.append(el('p','guide-note','没有兼容配件，可检查主件口径及词条。'));
       }
-      const tabs=el('div','workshop-slot-tabs');for(const target of visibleSlots()){const tab=button(target.label||'部件',event=>chooseSlot(target,event));tab.setAttribute('aria-pressed',String(pathKey(target.path)===pathKey(paletteSlot.path)&&target.index===paletteSlot.index));tab.title=(target.path.length?itemName(engine.nodeAt(build,target.path).itemId)+' · ':'')+(target.label||'部件');tabs.append(tab);}
+      const tabs=el('div','workshop-slot-tabs');tabs.setAttribute('aria-label','选择装配槽位');for(const target of visibleSlots()){const tab=button(slotLabel(target),event=>chooseSlot(target,event));tab.setAttribute('aria-pressed',String(pathKey(target.path)===pathKey(paletteSlot.path)&&target.index===paletteSlot.index));tab.title=itemName(engine.nodeAt(build,target.path).itemId)+' · '+slotLabel(target);tabs.append(tab);}
       search.oninput=()=>{partQuery=search.value;drawCandidates();};const tools=el('div','workshop-parts-tools');tools.append(search,count);parts.append(tabs,tools,grid);workspace.append(parts);drawCandidates();
     }
     async function saveCurrent(){

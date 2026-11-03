@@ -56,14 +56,21 @@
 .workshop-page .workshop-section-head{border-color:var(--border);}
 .workshop-page :is(.workshop-overview,.workshop-comparison){padding:20px;margin:20px 0;}
 .workshop-page :is(.workshop-overview,.workshop-comparison) h2{font-size:20px;font-weight:600;line-height:1.5;margin:0 0 12px;}
-.workshop-page .workshop-overview{max-width:1120px;font-size:14px;line-height:1.8;}
-.workshop-overview>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;}
-.workshop-overview>div>:is(h2,p,dl){grid-column:1/-1;margin:0;}
-.workshop-page .workshop-overview-part{min-width:0;padding:12px 12px 12px calc(12px + var(--part-depth)*12px);border:1px solid var(--border);border-radius:var(--radius-terminal);background:var(--panel);}
-.workshop-overview-part h3{font-size:16px;line-height:1.6;overflow-wrap:anywhere;}
-.workshop-overview:not(:has(.workshop-overview-part~.workshop-overview-part)){max-width:760px;}
-.workshop-overview-part:not(:has(~.workshop-overview-part)):first-of-type:last-of-type{grid-column:1/-1;}
-.workshop-page .workshop-overview-stats{gap:8px 24px;margin-top:8px;}
+.workshop-page .workshop-overview{max-width:none;font-size:14px;line-height:1.8;}
+.workshop-overview>div{display:flex;flex-direction:column;gap:0;}
+.workshop-overview>div>:is(h2,p,dl){margin:0;}
+.workshop-page .workshop-overview-part{display:grid;grid-template-columns:264px minmax(0,1fr);gap:4px 24px;min-width:0;padding:12px 0;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;}
+.workshop-overview-part h3{grid-column:1;font-size:15px;font-weight:500;line-height:1.7;overflow-wrap:anywhere;align-self:start;margin:0;}
+.workshop-overview-part h3 .tiny-art{width:32px;min-width:32px;height:28px;}
+.workshop-overview-part>p{grid-column:2;margin:0;line-height:1.7;}
+.workshop-overview-part>h3:only-child{grid-column:1/-1;}
+.workshop-overview-part .workshop-affix-label{font-size:14px;}
+.workshop-overview>div>.guide-note{padding:8px 0;}
+.workshop-page .workshop-overview-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:0 24px;margin:0;}
+.workshop-overview-stats>div{display:grid;grid-template-columns:6em minmax(0,1fr);justify-content:start;align-items:baseline;gap:12px;padding:8px 0;border-top:1px solid var(--border);}
+.workshop-overview-stats dd{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.workshop-overview-stats dd>.workshop-difference{display:inline;font-size:12px;}
+.workshop-overview-stats .workshop-difference::before{content:'Δ ';}
 .workshop-page .workshop-comparison{max-width:1120px;}
 .workshop-comparison:not(:has(.workshop-comparison-card)){max-width:760px;background:transparent;border:0;border-top:1px solid var(--border);border-radius:0;padding:16px 0;}
 .workshop-comparison:has(.workshop-comparison-card):not(:has(.workshop-comparison-card~.workshop-comparison-card)){max-width:464px;}
@@ -90,20 +97,84 @@
 .workshop-workspace.is-melee .workshop-inspector .native-stats{flex:none;max-height:none;}
 .workshop-workspace.is-melee .native-stat{min-height:28px;font-size:12px;}
 
-.workshop-page .workshop-overview:has(.workshop-overview-part:only-of-type){max-width:none;}
-.workshop-overview:has(.workshop-overview-part:only-of-type)>div{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px 24px;}
-.workshop-overview:has(.workshop-overview-part:only-of-type)>div>h2{grid-column:1;}
-.workshop-overview:has(.workshop-overview-part:only-of-type)>div>p:first-of-type{grid-column:2;justify-self:end;align-self:center;}
-.workshop-overview:has(.workshop-overview-part:only-of-type) .workshop-overview-part{grid-column:1;grid-row:span 2;}
-.workshop-overview:has(.workshop-overview-part:only-of-type)>div>p:has(+.workshop-overview-stats){grid-column:2;}
-.workshop-overview:has(.workshop-overview-part:only-of-type) .workshop-overview-stats{grid-column:2;grid-template-columns:repeat(2,minmax(0,1fr));margin:0;gap:8px 16px;}
-.workshop-overview:has(.workshop-overview-part:only-of-type) .workshop-overview-stats>div{display:grid;grid-template-columns:minmax(5em,max-content) minmax(0,1fr);align-items:baseline;justify-content:start;gap:8px;padding:8px 0;border-top:1px solid var(--border);}
-.workshop-overview:has(.workshop-overview-part:only-of-type) .workshop-overview-stats dd{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 8px;}
-.workshop-overview:has(.workshop-overview-part:only-of-type) .workshop-difference{display:inline;}
-.workshop-overview:has(.workshop-overview-part:only-of-type) .workshop-difference::before{content:'Δ ';}
 .workshop-page .workshop-comparison:not(:has(.workshop-comparison-card)){max-width:none;}
-@media(max-width:1100px){.workshop-overview:has(.workshop-overview-part:only-of-type) .workshop-overview-stats{grid-template-columns:minmax(0,1fr);}}
+@media(max-width:1100px){.workshop-page .workshop-overview-stats{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:760px){
- .workshop-overview:has(.workshop-overview-part:only-of-type)>div{display:block;}
- .workshop-overview:has(.workshop-overview-part:only-of-type)>div>:not(:last-child){margin-bottom:12px;}
+ .workshop-page .workshop-overview-part{grid-template-columns:minmax(0,1fr);gap:8px;}
+ .workshop-overview-part>p{grid-column:1;}
+ .workshop-page .workshop-overview-stats{grid-template-columns:minmax(0,1fr);}
 }
+
+/* Keep the assembly and compatible parts in one drag-and-drop workspace. */
+.workshop-page .workshop-workspace:not(.is-melee){--ws-main-height:clamp(520px,68svh,680px);--ws-parts-height:288px;}
+.workshop-workspace:not(.is-melee) .workshop-gun-preview{height:76px;padding:8px 48px 20px;}
+.workshop-workspace:not(.is-melee) .workshop-section-head{height:40px;padding:8px 12px;}
+.workshop-page .workshop-diagram-tools{height:40px;padding:4px 8px;background:var(--deep);border-bottom:1px solid var(--border);gap:4px;}
+.workshop-page .workshop-diagram-tools>span{font-size:12px;color:var(--muted);}
+.workshop-page .workshop-diagram-tools button{height:32px;min-height:32px;min-width:36px;font-size:13px;}
+.workshop-page .gunsmith-card{background:var(--panel);background-image:none;border-color:var(--border);box-shadow:none;}
+.workshop-page .gunsmith-card[aria-pressed=true]{background:var(--selected);border-color:var(--accent);box-shadow:inset 3px 0 var(--accent);}
+.workshop-page .gunsmith-card:hover{border-color:var(--accent);}
+.workshop-page .gunsmith-card.drop-target{background:var(--selected);outline-color:var(--accent);}
+.workshop-page .workshop-issues{position:static;flex:none;margin:0;padding:8px 12px 8px 28px;max-height:88px;border-width:1px 0 0;}
+.workshop-page .workshop-parts{padding:12px;gap:8px;overflow:hidden;}
+.workshop-page .workshop-parts>h2{font-size:14px;line-height:1.5;margin:0;letter-spacing:0;}
+.workshop-parts-context{display:flex;flex:none;align-items:baseline;gap:8px;flex-wrap:wrap;margin:0;padding-bottom:8px;border-bottom:1px solid var(--border);font-size:12px;line-height:1.6;color:var(--muted);}
+.workshop-parts-context strong{font-size:16px;font-weight:500;color:var(--text);}
+.workshop-parts-context span{min-width:0;overflow-wrap:anywhere;}
+.workshop-page .workshop-slot-tabs{flex-wrap:wrap;gap:4px;padding:0;max-height:104px;overflow:auto;overscroll-behavior:contain;}
+.workshop-page .workshop-slot-tabs .secondary-button{font-size:12px;line-height:1.5;min-height:36px;padding:6px 8px;background:var(--panel);border-color:var(--border);}
+.workshop-page .workshop-slot-tabs button[aria-pressed=true]{background:var(--selected);border-color:var(--accent);color:var(--text);}
+.workshop-page .workshop-parts-tools{display:flex;flex-direction:column;align-items:stretch;gap:4px;margin:0;}
+.workshop-page .workshop-parts-tools input{flex:none;min-height:40px;font-size:13px;padding:8px 10px;background:var(--panel);border-color:var(--border);}
+.workshop-page .workshop-parts-tools .guide-note{max-width:none;white-space:normal;font-size:12px;line-height:1.5;color:var(--muted);}
+.workshop-page .workshop-part-grid{grid-template-columns:repeat(auto-fill,minmax(152px,1fr));grid-auto-rows:minmax(180px,max-content);gap:8px;padding:2px 4px 4px 2px;scrollbar-gutter:stable;}
+.workshop-page .workshop-part-entry{background:var(--panel);border-color:var(--border);border-radius:var(--radius-terminal);overflow:hidden;}
+.workshop-page .workshop-part{justify-content:start;gap:8px;padding:12px 8px 8px;background:transparent;transition:background-color var(--motion-fast) var(--motion-easing);}
+.workshop-page .workshop-part:hover{background:var(--selected);}
+.workshop-page .workshop-part-art{height:40px;min-height:40px;flex:none;}
+.workshop-page .workshop-part-art img{height:40px;max-height:40px;}
+.workshop-page .workshop-part>span.workshop-part-name{display:block;overflow:visible;font-size:13px;line-height:1.5;-webkit-line-clamp:unset;}
+.workshop-page .workshop-part .workshop-preset{font-size:11px;line-height:1.5;white-space:normal;overflow-wrap:anywhere;display:block;}
+.workshop-page .workshop-properties{min-height:36px;background:var(--deep);border-color:var(--border);color:var(--accent);font-size:12px;}
+.workshop-page .workshop-properties:hover{background:var(--selected);}
+.workshop-page .workshop-part-entry.is-equipped{border-color:var(--accent);}
+.workshop-page .workshop-part-state{font-size:11px;color:var(--accent);margin-top:auto;}
+.workshop-workspace:not(.is-melee) .workshop-inspector{height:auto;overflow:visible;align-self:start;}
+.workshop-workspace:not(.is-melee) .workshop-inspector .workshop-stats{height:auto;max-height:none;overflow:visible;min-height:0;flex:none;}
+.workshop-workspace:not(.is-melee) .workshop-inspector .native-stats{flex:none;max-height:320px;}
+.workshop-workspace:not(.is-melee) .workshop-inspector .workshop-affixes{max-height:420px;flex:none;}
+@media(min-width:1101px){
+ .workshop-workspace:not(.is-melee){grid-template-columns:minmax(0,1fr) 360px;grid-template-rows:var(--ws-main-height) auto;}
+ .workshop-workspace:not(.is-melee) .workshop-parts{grid-column:2;grid-row:1;}
+ .workshop-workspace:not(.is-melee) .workshop-inspector{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:minmax(0,1fr);align-items:start;height:auto;overflow:visible;}
+ .workshop-workspace:not(.is-melee) .workshop-inspector .workshop-stats{grid-column:1;grid-row:1;}
+ .workshop-workspace:not(.is-melee) .workshop-inspector .workshop-affixes{grid-column:1;grid-row:2;}
+ .workshop-workspace:not(.is-melee) .workshop-inspector .native-stat{min-height:28px;font-size:12px;}
+}
+@media(max-width:1100px){
+ .workshop-page .workshop-workspace:not(.is-melee){--ws-main-height:480px;--ws-parts-height:360px;}
+ .workshop-workspace:not(.is-melee){grid-template-columns:minmax(0,1fr);grid-template-rows:var(--ws-main-height) var(--ws-parts-height) auto;}
+ .workshop-workspace:not(.is-melee) .workshop-inspector{grid-column:1;grid-row:3;}
+ .workshop-page .workshop-part-grid{grid-template-columns:repeat(auto-fill,minmax(144px,1fr));}
+}
+@media(max-width:600px){
+ .workshop-page .workshop-workspace:not(.is-melee){--ws-main-height:480px;--ws-parts-height:440px;}
+ .workshop-page .workshop-parts{padding:12px 8px;}
+ .workshop-page .workshop-part-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+ .workshop-page .workshop-part>span.workshop-part-name{font-size:12px;}
+ .workshop-page .workshop-part{padding:8px;}
+}
+@media(prefers-reduced-motion:reduce){.workshop-page .workshop-part{transition:none;}}
+
+.workshop-workspace:not(.is-melee) .workshop-inspector .native-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 24px;align-content:start;}
+.workshop-workspace:not(.is-melee) .workshop-affixes{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;}
+.workshop-workspace:not(.is-melee) .workshop-affixes>.workshop-section-head{grid-column:1;height:auto;min-height:44px;border-bottom:0;}
+.workshop-workspace:not(.is-melee) .workshop-affixes>.workshop-properties{grid-column:2;grid-row:1;margin:8px;}
+.workshop-workspace:not(.is-melee) .workshop-affixes>:not(.workshop-section-head):not(.workshop-properties){grid-column:1/-1;}
+.workshop-workspace:not(.is-melee) .workshop-affix-tools{width:min(100%,760px);}
+.workshop-workspace:not(.is-melee) .workshop-affix-list{max-width:960px;}
+.workshop-workspace:not(.is-melee) .workshop-affix-list p{font-size:13px;}
+.workshop-workspace:not(.is-melee) .workshop-remove{justify-self:start;}
+@media(max-width:1279px){.workshop-workspace:not(.is-melee) .workshop-inspector .native-stats{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:760px){.workshop-workspace:not(.is-melee) .workshop-inspector .native-stats{grid-template-columns:minmax(0,1fr);}}
