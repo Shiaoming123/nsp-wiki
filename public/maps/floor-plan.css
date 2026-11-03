@@ -1,0 +1,25 @@
+.wm-floor-plan-view{position:relative;width:100%;height:100%;overflow:clip;overscroll-behavior:contain;outline-offset:-3px;touch-action:none;background:var(--deep);cursor:grab;user-select:none}
+.wm-floor-plan-view.is-panning,.wm-floor-plan-view.is-panning *{cursor:grabbing!important}
+.wm-floor-plan-view[hidden],.wm-floor-plan-view [hidden]{display:none!important}
+.wm-floor-plan-view:focus-visible{outline:2px solid var(--accent)}
+.wm-floor-plan-canvas{position:absolute;left:0;top:0;transform-origin:0 0;isolation:isolate;will-change:transform}
+.wm-plan-floor{position:absolute;min-width:0;transition:transform 140ms var(--ease-standard,ease-out);transform:translateY(0)}
+.wm-plan-floor.is-hovered{transform:translateY(-2px)}
+.wm-plan-number{position:absolute;transform:translateX(-50%);height:24px;margin:0;text-align:center;color:var(--muted);font:600 15px/24px var(--font-body);font-variant-numeric:tabular-nums;pointer-events:none;z-index:1}
+.wm-plan-number:is(.is-current,.is-hovered){color:var(--accent)}
+.wm-floor-ui .wm-plan-open{display:block;width:100%;min-width:0;min-height:0;padding:0;border:0;border-radius:0;background:transparent;background-image:none;box-shadow:none!important;outline-offset:5px;cursor:pointer}
+.wm-plan-image{display:block;width:100%;height:100%;overflow:visible;image-rendering:pixelated;transition:filter 140ms ease-out;filter:drop-shadow(0 0 1px transparent)}
+.wm-plan-floor.is-hovered .wm-plan-image{filter:drop-shadow(0 0 2px var(--accent)) drop-shadow(0 0 5px var(--accent))}
+.wm-plan-connections{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:1}
+.wm-plan-connections path{transition:opacity 120ms ease-out}
+.wm-plan-connections rect{fill:var(--deep);stroke:var(--plan-route-color,var(--border));stroke-width:1}
+.wm-plan-connections text{fill:var(--text);font:600 12px var(--font-body);font-variant-numeric:tabular-nums}
+.wm-floor-ui .wm-plan-marker{position:absolute;transform:translate(-50%,-50%);width:24px;height:24px;min-height:24px;margin:0;padding:0;border:0;border-radius:50%;background:transparent;box-shadow:none!important;color:var(--deep);font:600 10px/1 var(--font-body);z-index:2;display:grid;place-items:center}
+.wm-plan-marker::before{content:'';position:absolute;inset:8px;border:1px solid var(--deep);border-radius:50%;background:var(--transit-color);z-index:-1}
+.wm-plan-marker[aria-pressed=true]::before{outline:2px solid var(--text);outline-offset:2px}
+.wm-plan-marker:focus-visible{outline:2px solid var(--accent)!important;outline-offset:1px!important}
+.wm-plan-camera-controls{position:absolute;bottom:12px;right:12px;z-index:3;display:flex;align-items:center;gap:4px;padding:4px;border:1px solid var(--border);background:var(--deep);cursor:default}
+.wm-floor-ui .wm-plan-camera-controls button{min-height:32px;padding:4px 10px;font-size:12px;line-height:20px}
+.wm-floor-ui .wm-plan-camera-controls button:is([data-plan-camera=in],[data-plan-camera=out]){width:32px;padding:4px;font-size:18px}
+.wm-plan-zoom{min-width:40px;text-align:center;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){.wm-plan-floor,.wm-plan-image,.wm-plan-connections path{transition:none}.wm-plan-floor.is-hovered{transform:none}}

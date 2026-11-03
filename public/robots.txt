@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://nsp.henshiaoming.chatgpt.site/sitemap.xml

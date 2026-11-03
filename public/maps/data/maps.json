@@ -1,0 +1,92 @@
+[
+  {
+    "id": "Origin00_1961",
+    "title": "森林地区 · 时间线 1961",
+    "manifest": "maps/Origin00_1961/manifest.json.gz",
+    "dataBuild": "25989531",
+    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateHistoryHref": "#updates",
+    "metadataReviewBuild": "26157750",
+    "pointBuildId": "26240042"
+  },
+  {
+    "id": "Origin00_1963",
+    "title": "燃烧林 · 时间线 1963",
+    "manifest": "maps/Origin00_1963/manifest.json.gz",
+    "dataBuild": "25989531",
+    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateHistoryHref": "#updates",
+    "metadataReviewBuild": "26157750",
+    "pointBuildId": "26240042"
+  },
+  {
+    "id": "Origin00_1951",
+    "title": "森林地区 · 时间线 1951",
+    "manifest": "maps/Origin00_1951/manifest.json.gz",
+    "dataBuild": "25989531",
+    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateHistoryHref": "#updates",
+    "metadataReviewBuild": "26157750",
+    "pointBuildId": "26240042"
+  },
+  {
+    "id": "Origin12_1535",
+    "title": "灰桦山 15：35",
+    "manifest": "maps/Origin12_1535/manifest.json.gz",
+    "dataBuild": "25989531",
+    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateHistoryHref": "#updates",
+    "metadataReviewBuild": "26157750",
+    "pointBuildId": "26240042"
+  },
+  {
+    "id": "Origin12_1527",
+    "title": "灰桦山 15：27",
+    "manifest": "maps/Origin12_1527/manifest.json.gz",
+    "dataBuild": "25989531",
+    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateHistoryHref": "#updates",
+    "metadataReviewBuild": "26157750",
+    "pointBuildId": "26240042"
+  },
+  {
+    "id": "Origin08_1999",
+    "title": "白门街88号 · 时间线 1999",
+    "manifest": "maps/Origin08_1999/manifest.json.gz",
+    "dataBuild": "25989531",
+    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateHistoryHref": "#updates",
+    "metadataReviewBuild": "26157750",
+    "pointBuildId": "26240042"
+  },
+  {
+    "id": "Neutral_82",
+    "title": "“市场”",
+    "manifest": "maps/Neutral_82/manifest.json.gz",
+    "dataBuild": "25989531",
+    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateHistoryHref": "#updates",
+    "metadataReviewBuild": "26157750",
+    "pointBuildId": "26240042"
+  },
+  {
+    "id": "SafeHouse",
+    "title": "安全屋",
+    "manifest": "maps/SafeHouse/manifest.json.gz",
+    "dataBuild": "25989531",
+    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateHistoryHref": "#updates",
+    "metadataReviewBuild": "26157750",
+    "pointBuildId": "26240042"
+  },
+  {
+    "id": "NewbieLevel",
+    "title": "新手关卡",
+    "manifest": "maps/NewbieLevel/manifest.json.gz",
+    "dataBuild": "25989531",
+    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateHistoryHref": "#updates",
+    "metadataReviewBuild": "26157750",
+    "pointBuildId": "26240042"
+  }
+]

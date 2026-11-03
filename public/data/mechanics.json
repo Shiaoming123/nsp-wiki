@@ -1,0 +1,2778 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "buildId": "26160218",
+    "note": "按此版本游戏规则整理；示例用于解释单项计算，尚未进行游戏内伤害实测。",
+    "supplementBuilds": {
+      "skill-growth": "26240042",
+      "armor-plates": "26240042",
+      "maximum-health": "26240042"
+    }
+  },
+  "statTerms": {
+    "defense": "defense",
+    "stiffness": "impact-absorption",
+    "toughness": "puncture-deflection",
+    "hardness": "slash-resistance",
+    "stable": "phase-shift",
+    "impact": "impact-damage",
+    "puncture": "puncture-damage",
+    "slash": "slash-damage",
+    "disintegrate": "disintegration-damage",
+    "trueDamage": "true-damage",
+    "defPenetrat": "defense-penetration",
+    "spreadInit": "initial-spread",
+    "spread": "spread-growth",
+    "spreadLimit": "spread-limit",
+    "recoil": "recoil",
+    "reload": "reload-time",
+    "penetrate": "projectile-penetration",
+    "hp": "maximum-health"
+  },
+  "mechanics": [
+    {
+      "id": "defense",
+      "name": "防御",
+      "category": "受伤与防护",
+      "summary": "从冲击、穿刺、切割三种伤害的剩余合计中扣除固定点数。",
+      "appliesTo": [
+        "常规受伤计算中的冲击、穿刺、切割伤害"
+      ],
+      "doesNotApplyTo": [
+        "瓦解伤害",
+        "真实伤害",
+        "按防御数值直接当百分比减伤"
+      ],
+      "formula": {
+        "text": "先扣对应抗性，再按三种剩余伤害各自占比分摊生效防御；每种伤害不低于0。",
+        "steps": [
+          "防护保留比例＝把（1－防御穿透比例）限制在0至1之间。",
+          "四种伤害分别扣除“对应抗性×防护保留比例”，每种至少为0。",
+          "生效防御＝角色防御×防护保留比例。",
+          "三种物理伤害剩余合计大于0时，每种再扣除“该种伤害÷三种合计×生效防御”。瓦解和真实伤害不参与这次分摊。",
+          "合计伤害至少按1点，再乘（1＋最终伤害加成比例）；之后的扣血前事件仍可改变结果。"
+        ],
+        "limits": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "防护属性在这一步计算中没有统一百分比上限；负防护可能增加相应伤害。",
+          "防御被分摊一次，不是从每种伤害各减同样点数。",
+          "角色基础属性是汇总值；此基础公式不读取命中头部、躯干或四肢。但不能据此把特殊部位和额外效果也宣称全身通用。"
+        ]
+      },
+      "presets": [
+        {
+          "title": "固定减伤",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "impact": 20,
+            "defense": 3
+          },
+          "expected": {
+            "total": 17
+          },
+          "explanation": "20点冲击经3点防御后剩17，不是减少3%。"
+        },
+        {
+          "title": "减尽后仍有基础下限",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "impact": 2,
+            "defense": 30
+          },
+          "expected": {
+            "total": 1
+          },
+          "explanation": "伤害通道被减尽后，基础公式按至少1点进入最终倍率。"
+        },
+        {
+          "title": "一半防御穿透",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "impact": 20,
+            "defense": 3,
+            "penetrationPct": 50
+          },
+          "expected": {
+            "total": 18.5
+          },
+          "explanation": "50%防御穿透让3点防御只剩1.5点生效。"
+        }
+      ],
+      "calculator": {
+        "kind": "damage-defense",
+        "parameters": [
+          {
+            "key": "impact",
+            "label": "冲击伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "puncture",
+            "label": "穿刺伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "slash",
+            "label": "切割伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "disintegrate",
+            "label": "瓦解伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "trueDamage",
+            "label": "真实伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stiffness",
+            "label": "冲击吸收",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "toughness",
+            "label": "穿刺偏转",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "hardness",
+            "label": "切割抵抗",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stable",
+            "label": "相位转移",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "defense",
+            "label": "防御",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "penetrationPct",
+            "label": "防御穿透",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          },
+          {
+            "key": "finalBonusPct",
+            "label": "最终伤害加成",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "total": "本例计算结果",
+          "resistanceScale": "防护保留比例",
+          "effectiveDefense": "生效防御",
+          "beforeFinalMultiplier": "最终倍率前合计"
+        },
+        "rules": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "输入伤害必须非负；防护可以输入负数来观察负面属性的基础计算。",
+          "防御穿透对防护的忽略比例限定在0%至100%；低于0%按0%，超过100%按100%。",
+          "最低1点发生在最终伤害倍率之前；例如最终加成为-50%时，本例计算结果可低至0.5。这一步没有把最终倍率限制为非负。",
+          "沿用游戏的小数精度，保留小数；没有把每种伤害或扣血量取整。页面可格式化显示，但不可把格式化数值再参与计算。"
+        ]
+      }
+    },
+    {
+      "id": "impact-absorption",
+      "name": "冲击吸收",
+      "category": "受伤与防护",
+      "summary": "先从每次冲击伤害通道扣除固定点数。",
+      "appliesTo": [
+        "冲击伤害"
+      ],
+      "doesNotApplyTo": [
+        "其他三种普通伤害类型",
+        "真实伤害",
+        "概率闪避或百分比减伤"
+      ],
+      "formula": {
+        "text": "冲击伤害剩余＝至少0点的（入射冲击伤害－对应防护×防护保留比例）。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "抗性减3点",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "impact": 10,
+            "stiffness": 3
+          },
+          "expected": {
+            "total": 7
+          },
+          "explanation": "10点冲击伤害减去3点对应防护，剩7点。"
+        },
+        {
+          "title": "抗性高于伤害",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "impact": 2,
+            "stiffness": 3
+          },
+          "expected": {
+            "total": 1
+          },
+          "explanation": "对应通道先降至0；没有其他伤害时，基础公式仍按至少1点进入最终倍率。"
+        },
+        {
+          "title": "50%防御穿透",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "impact": 10,
+            "stiffness": 3,
+            "penetrationPct": 50
+          },
+          "expected": {
+            "total": 8.5
+          },
+          "explanation": "3点抗性只剩1.5点生效，伤害剩8.5点。"
+        }
+      ],
+      "calculator": {
+        "kind": "damage-defense",
+        "parameters": [
+          {
+            "key": "impact",
+            "label": "冲击伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "puncture",
+            "label": "穿刺伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "slash",
+            "label": "切割伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "disintegrate",
+            "label": "瓦解伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "trueDamage",
+            "label": "真实伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stiffness",
+            "label": "冲击吸收",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "toughness",
+            "label": "穿刺偏转",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "hardness",
+            "label": "切割抵抗",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stable",
+            "label": "相位转移",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "defense",
+            "label": "防御",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "penetrationPct",
+            "label": "防御穿透",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          },
+          {
+            "key": "finalBonusPct",
+            "label": "最终伤害加成",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "total": "本例计算结果",
+          "resistanceScale": "防护保留比例",
+          "effectiveDefense": "生效防御",
+          "beforeFinalMultiplier": "最终倍率前合计"
+        },
+        "rules": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "输入伤害必须非负；防护可以输入负数来观察负面属性的基础计算。",
+          "防御穿透对防护的忽略比例限定在0%至100%；低于0%按0%，超过100%按100%。",
+          "最低1点发生在最终伤害倍率之前；例如最终加成为-50%时，本例计算结果可低至0.5。这一步没有把最终倍率限制为非负。",
+          "沿用游戏的小数精度，保留小数；没有把每种伤害或扣血量取整。页面可格式化显示，但不可把格式化数值再参与计算。"
+        ]
+      }
+    },
+    {
+      "id": "puncture-deflection",
+      "name": "穿刺偏转",
+      "category": "受伤与防护",
+      "summary": "先从每次穿刺伤害通道扣除固定点数。",
+      "appliesTo": [
+        "穿刺伤害"
+      ],
+      "doesNotApplyTo": [
+        "其他三种普通伤害类型",
+        "真实伤害",
+        "概率闪避或百分比减伤"
+      ],
+      "formula": {
+        "text": "穿刺伤害剩余＝至少0点的（入射穿刺伤害－对应防护×防护保留比例）。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "抗性减3点",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "puncture": 10,
+            "toughness": 3
+          },
+          "expected": {
+            "total": 7
+          },
+          "explanation": "10点穿刺伤害减去3点对应防护，剩7点。"
+        },
+        {
+          "title": "抗性高于伤害",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "puncture": 2,
+            "toughness": 3
+          },
+          "expected": {
+            "total": 1
+          },
+          "explanation": "对应通道先降至0；没有其他伤害时，基础公式仍按至少1点进入最终倍率。"
+        },
+        {
+          "title": "50%防御穿透",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "puncture": 10,
+            "toughness": 3,
+            "penetrationPct": 50
+          },
+          "expected": {
+            "total": 8.5
+          },
+          "explanation": "3点抗性只剩1.5点生效，伤害剩8.5点。"
+        }
+      ],
+      "calculator": {
+        "kind": "damage-defense",
+        "parameters": [
+          {
+            "key": "impact",
+            "label": "冲击伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "puncture",
+            "label": "穿刺伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "slash",
+            "label": "切割伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "disintegrate",
+            "label": "瓦解伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "trueDamage",
+            "label": "真实伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stiffness",
+            "label": "冲击吸收",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "toughness",
+            "label": "穿刺偏转",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "hardness",
+            "label": "切割抵抗",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stable",
+            "label": "相位转移",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "defense",
+            "label": "防御",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "penetrationPct",
+            "label": "防御穿透",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          },
+          {
+            "key": "finalBonusPct",
+            "label": "最终伤害加成",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "total": "本例计算结果",
+          "resistanceScale": "防护保留比例",
+          "effectiveDefense": "生效防御",
+          "beforeFinalMultiplier": "最终倍率前合计"
+        },
+        "rules": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "输入伤害必须非负；防护可以输入负数来观察负面属性的基础计算。",
+          "防御穿透对防护的忽略比例限定在0%至100%；低于0%按0%，超过100%按100%。",
+          "最低1点发生在最终伤害倍率之前；例如最终加成为-50%时，本例计算结果可低至0.5。这一步没有把最终倍率限制为非负。",
+          "沿用游戏的小数精度，保留小数；没有把每种伤害或扣血量取整。页面可格式化显示，但不可把格式化数值再参与计算。"
+        ]
+      }
+    },
+    {
+      "id": "slash-resistance",
+      "name": "切割抵抗",
+      "category": "受伤与防护",
+      "summary": "先从每次切割伤害通道扣除固定点数。",
+      "appliesTo": [
+        "切割伤害"
+      ],
+      "doesNotApplyTo": [
+        "其他三种普通伤害类型",
+        "真实伤害",
+        "概率闪避或百分比减伤"
+      ],
+      "formula": {
+        "text": "切割伤害剩余＝至少0点的（入射切割伤害－对应防护×防护保留比例）。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "抗性减3点",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "slash": 10,
+            "hardness": 3
+          },
+          "expected": {
+            "total": 7
+          },
+          "explanation": "10点切割伤害减去3点对应防护，剩7点。"
+        },
+        {
+          "title": "抗性高于伤害",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "slash": 2,
+            "hardness": 3
+          },
+          "expected": {
+            "total": 1
+          },
+          "explanation": "对应通道先降至0；没有其他伤害时，基础公式仍按至少1点进入最终倍率。"
+        },
+        {
+          "title": "50%防御穿透",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "slash": 10,
+            "hardness": 3,
+            "penetrationPct": 50
+          },
+          "expected": {
+            "total": 8.5
+          },
+          "explanation": "3点抗性只剩1.5点生效，伤害剩8.5点。"
+        }
+      ],
+      "calculator": {
+        "kind": "damage-defense",
+        "parameters": [
+          {
+            "key": "impact",
+            "label": "冲击伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "puncture",
+            "label": "穿刺伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "slash",
+            "label": "切割伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "disintegrate",
+            "label": "瓦解伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "trueDamage",
+            "label": "真实伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stiffness",
+            "label": "冲击吸收",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "toughness",
+            "label": "穿刺偏转",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "hardness",
+            "label": "切割抵抗",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stable",
+            "label": "相位转移",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "defense",
+            "label": "防御",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "penetrationPct",
+            "label": "防御穿透",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          },
+          {
+            "key": "finalBonusPct",
+            "label": "最终伤害加成",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "total": "本例计算结果",
+          "resistanceScale": "防护保留比例",
+          "effectiveDefense": "生效防御",
+          "beforeFinalMultiplier": "最终倍率前合计"
+        },
+        "rules": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "输入伤害必须非负；防护可以输入负数来观察负面属性的基础计算。",
+          "防御穿透对防护的忽略比例限定在0%至100%；低于0%按0%，超过100%按100%。",
+          "最低1点发生在最终伤害倍率之前；例如最终加成为-50%时，本例计算结果可低至0.5。这一步没有把最终倍率限制为非负。",
+          "沿用游戏的小数精度，保留小数；没有把每种伤害或扣血量取整。页面可格式化显示，但不可把格式化数值再参与计算。"
+        ]
+      }
+    },
+    {
+      "id": "phase-shift",
+      "name": "相位转移",
+      "category": "受伤与防护",
+      "summary": "先从每次瓦解伤害通道扣除固定点数。",
+      "appliesTo": [
+        "瓦解伤害"
+      ],
+      "doesNotApplyTo": [
+        "其他三种普通伤害类型",
+        "真实伤害",
+        "概率闪避或百分比减伤"
+      ],
+      "formula": {
+        "text": "瓦解伤害剩余＝至少0点的（入射瓦解伤害－对应防护×防护保留比例）。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "抗性减3点",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "disintegrate": 10,
+            "stable": 3
+          },
+          "expected": {
+            "total": 7
+          },
+          "explanation": "10点瓦解伤害减去3点对应防护，剩7点。"
+        },
+        {
+          "title": "抗性高于伤害",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "disintegrate": 2,
+            "stable": 3
+          },
+          "expected": {
+            "total": 1
+          },
+          "explanation": "对应通道先降至0；没有其他伤害时，基础公式仍按至少1点进入最终倍率。"
+        },
+        {
+          "title": "50%防御穿透",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "disintegrate": 10,
+            "stable": 3,
+            "penetrationPct": 50
+          },
+          "expected": {
+            "total": 8.5
+          },
+          "explanation": "3点抗性只剩1.5点生效，伤害剩8.5点。"
+        }
+      ],
+      "calculator": {
+        "kind": "damage-defense",
+        "parameters": [
+          {
+            "key": "impact",
+            "label": "冲击伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "puncture",
+            "label": "穿刺伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "slash",
+            "label": "切割伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "disintegrate",
+            "label": "瓦解伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "trueDamage",
+            "label": "真实伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stiffness",
+            "label": "冲击吸收",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "toughness",
+            "label": "穿刺偏转",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "hardness",
+            "label": "切割抵抗",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stable",
+            "label": "相位转移",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "defense",
+            "label": "防御",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "penetrationPct",
+            "label": "防御穿透",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          },
+          {
+            "key": "finalBonusPct",
+            "label": "最终伤害加成",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "total": "本例计算结果",
+          "resistanceScale": "防护保留比例",
+          "effectiveDefense": "生效防御",
+          "beforeFinalMultiplier": "最终倍率前合计"
+        },
+        "rules": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "输入伤害必须非负；防护可以输入负数来观察负面属性的基础计算。",
+          "防御穿透对防护的忽略比例限定在0%至100%；低于0%按0%，超过100%按100%。",
+          "最低1点发生在最终伤害倍率之前；例如最终加成为-50%时，本例计算结果可低至0.5。这一步没有把最终倍率限制为非负。",
+          "沿用游戏的小数精度，保留小数；没有把每种伤害或扣血量取整。页面可格式化显示，但不可把格式化数值再参与计算。"
+        ]
+      }
+    },
+    {
+      "id": "impact-damage",
+      "name": "冲击伤害",
+      "category": "受伤与防护",
+      "summary": "先受冲击吸收削减，再与另两种物理伤害共同分摊防御。",
+      "appliesTo": [
+        "具有该伤害通道的攻击"
+      ],
+      "doesNotApplyTo": [
+        "不由武器外形或弹药名字推断类型",
+        "不等于真实伤害"
+      ],
+      "formula": {
+        "text": "先扣冲击吸收，再按剩余占比分摊防御；暴击和波动在防护之前处理。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "10点且无防护",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "impact": 10
+          },
+          "expected": {
+            "total": 10
+          },
+          "explanation": "输入已经包含暴击和波动。"
+        },
+        {
+          "title": "3点防御",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "impact": 10,
+            "defense": 3
+          },
+          "expected": {
+            "total": 7
+          },
+          "explanation": "只有一种物理伤害时，全部防御作用于这一通道。"
+        },
+        {
+          "title": "防御高于伤害",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "impact": 2,
+            "defense": 10
+          },
+          "expected": {
+            "total": 1
+          },
+          "explanation": "基础下限发生在最终伤害加成之前。"
+        }
+      ],
+      "calculator": {
+        "kind": "damage-defense",
+        "parameters": [
+          {
+            "key": "impact",
+            "label": "冲击伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "puncture",
+            "label": "穿刺伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "slash",
+            "label": "切割伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "disintegrate",
+            "label": "瓦解伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "trueDamage",
+            "label": "真实伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stiffness",
+            "label": "冲击吸收",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "toughness",
+            "label": "穿刺偏转",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "hardness",
+            "label": "切割抵抗",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stable",
+            "label": "相位转移",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "defense",
+            "label": "防御",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "penetrationPct",
+            "label": "防御穿透",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          },
+          {
+            "key": "finalBonusPct",
+            "label": "最终伤害加成",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "total": "本例计算结果",
+          "resistanceScale": "防护保留比例",
+          "effectiveDefense": "生效防御",
+          "beforeFinalMultiplier": "最终倍率前合计"
+        },
+        "rules": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "输入伤害必须非负；防护可以输入负数来观察负面属性的基础计算。",
+          "防御穿透对防护的忽略比例限定在0%至100%；低于0%按0%，超过100%按100%。",
+          "最低1点发生在最终伤害倍率之前；例如最终加成为-50%时，本例计算结果可低至0.5。这一步没有把最终倍率限制为非负。",
+          "沿用游戏的小数精度，保留小数；没有把每种伤害或扣血量取整。页面可格式化显示，但不可把格式化数值再参与计算。"
+        ]
+      }
+    },
+    {
+      "id": "puncture-damage",
+      "name": "穿刺伤害",
+      "category": "受伤与防护",
+      "summary": "先受穿刺偏转削减，再与另两种物理伤害共同分摊防御。",
+      "appliesTo": [
+        "具有该伤害通道的攻击"
+      ],
+      "doesNotApplyTo": [
+        "不由武器外形或弹药名字推断类型",
+        "不等于真实伤害"
+      ],
+      "formula": {
+        "text": "先扣穿刺偏转，再按剩余占比分摊防御；暴击和波动在防护之前处理。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "10点且无防护",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "puncture": 10
+          },
+          "expected": {
+            "total": 10
+          },
+          "explanation": "输入已经包含暴击和波动。"
+        },
+        {
+          "title": "3点防御",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "puncture": 10,
+            "defense": 3
+          },
+          "expected": {
+            "total": 7
+          },
+          "explanation": "只有一种物理伤害时，全部防御作用于这一通道。"
+        },
+        {
+          "title": "防御高于伤害",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "puncture": 2,
+            "defense": 10
+          },
+          "expected": {
+            "total": 1
+          },
+          "explanation": "基础下限发生在最终伤害加成之前。"
+        }
+      ],
+      "calculator": {
+        "kind": "damage-defense",
+        "parameters": [
+          {
+            "key": "impact",
+            "label": "冲击伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "puncture",
+            "label": "穿刺伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "slash",
+            "label": "切割伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "disintegrate",
+            "label": "瓦解伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "trueDamage",
+            "label": "真实伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stiffness",
+            "label": "冲击吸收",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "toughness",
+            "label": "穿刺偏转",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "hardness",
+            "label": "切割抵抗",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stable",
+            "label": "相位转移",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "defense",
+            "label": "防御",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "penetrationPct",
+            "label": "防御穿透",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          },
+          {
+            "key": "finalBonusPct",
+            "label": "最终伤害加成",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "total": "本例计算结果",
+          "resistanceScale": "防护保留比例",
+          "effectiveDefense": "生效防御",
+          "beforeFinalMultiplier": "最终倍率前合计"
+        },
+        "rules": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "输入伤害必须非负；防护可以输入负数来观察负面属性的基础计算。",
+          "防御穿透对防护的忽略比例限定在0%至100%；低于0%按0%，超过100%按100%。",
+          "最低1点发生在最终伤害倍率之前；例如最终加成为-50%时，本例计算结果可低至0.5。这一步没有把最终倍率限制为非负。",
+          "沿用游戏的小数精度，保留小数；没有把每种伤害或扣血量取整。页面可格式化显示，但不可把格式化数值再参与计算。"
+        ]
+      }
+    },
+    {
+      "id": "slash-damage",
+      "name": "切割伤害",
+      "category": "受伤与防护",
+      "summary": "先受切割抵抗削减，再与另两种物理伤害共同分摊防御。",
+      "appliesTo": [
+        "具有该伤害通道的攻击"
+      ],
+      "doesNotApplyTo": [
+        "不由武器外形或弹药名字推断类型",
+        "不等于真实伤害"
+      ],
+      "formula": {
+        "text": "先扣切割抵抗，再按剩余占比分摊防御；暴击和波动在防护之前处理。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "10点且无防护",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "slash": 10
+          },
+          "expected": {
+            "total": 10
+          },
+          "explanation": "输入已经包含暴击和波动。"
+        },
+        {
+          "title": "3点防御",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "slash": 10,
+            "defense": 3
+          },
+          "expected": {
+            "total": 7
+          },
+          "explanation": "只有一种物理伤害时，全部防御作用于这一通道。"
+        },
+        {
+          "title": "防御高于伤害",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "slash": 2,
+            "defense": 10
+          },
+          "expected": {
+            "total": 1
+          },
+          "explanation": "基础下限发生在最终伤害加成之前。"
+        }
+      ],
+      "calculator": {
+        "kind": "damage-defense",
+        "parameters": [
+          {
+            "key": "impact",
+            "label": "冲击伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "puncture",
+            "label": "穿刺伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "slash",
+            "label": "切割伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "disintegrate",
+            "label": "瓦解伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "trueDamage",
+            "label": "真实伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stiffness",
+            "label": "冲击吸收",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "toughness",
+            "label": "穿刺偏转",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "hardness",
+            "label": "切割抵抗",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stable",
+            "label": "相位转移",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "defense",
+            "label": "防御",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "penetrationPct",
+            "label": "防御穿透",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          },
+          {
+            "key": "finalBonusPct",
+            "label": "最终伤害加成",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "total": "本例计算结果",
+          "resistanceScale": "防护保留比例",
+          "effectiveDefense": "生效防御",
+          "beforeFinalMultiplier": "最终倍率前合计"
+        },
+        "rules": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "输入伤害必须非负；防护可以输入负数来观察负面属性的基础计算。",
+          "防御穿透对防护的忽略比例限定在0%至100%；低于0%按0%，超过100%按100%。",
+          "最低1点发生在最终伤害倍率之前；例如最终加成为-50%时，本例计算结果可低至0.5。这一步没有把最终倍率限制为非负。",
+          "沿用游戏的小数精度，保留小数；没有把每种伤害或扣血量取整。页面可格式化显示，但不可把格式化数值再参与计算。"
+        ]
+      }
+    },
+    {
+      "id": "disintegration-damage",
+      "name": "瓦解伤害",
+      "category": "受伤与防护",
+      "summary": "受相位转移削减，绕过基础防御。",
+      "appliesTo": [
+        "瓦解伤害通道"
+      ],
+      "doesNotApplyTo": [
+        "冲击、穿刺、切割的对应抗性",
+        "基础防御"
+      ],
+      "formula": {
+        "text": "瓦解剩余＝至少0点的（入射瓦解伤害－相位转移×防护保留比例）。之后与其他通道一起合计并应用最终倍率。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "高防御不挡瓦解",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "disintegrate": 10,
+            "defense": 100
+          },
+          "expected": {
+            "total": 10
+          },
+          "explanation": "100点基础防御不参与瓦解减伤。"
+        },
+        {
+          "title": "相位转移3点",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "disintegrate": 10,
+            "stable": 3,
+            "defense": 100
+          },
+          "expected": {
+            "total": 7
+          },
+          "explanation": "相位转移先减3，基础防御再高也不再削减瓦解。"
+        },
+        {
+          "title": "相位转移减尽",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "disintegrate": 2,
+            "stable": 3
+          },
+          "expected": {
+            "total": 1
+          },
+          "explanation": "瓦解通道降至0后，基础伤害下限仍另行处理。"
+        }
+      ],
+      "calculator": {
+        "kind": "damage-defense",
+        "parameters": [
+          {
+            "key": "impact",
+            "label": "冲击伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "puncture",
+            "label": "穿刺伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "slash",
+            "label": "切割伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "disintegrate",
+            "label": "瓦解伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "trueDamage",
+            "label": "真实伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stiffness",
+            "label": "冲击吸收",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "toughness",
+            "label": "穿刺偏转",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "hardness",
+            "label": "切割抵抗",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stable",
+            "label": "相位转移",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "defense",
+            "label": "防御",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "penetrationPct",
+            "label": "防御穿透",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          },
+          {
+            "key": "finalBonusPct",
+            "label": "最终伤害加成",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "total": "本例计算结果",
+          "resistanceScale": "防护保留比例",
+          "effectiveDefense": "生效防御",
+          "beforeFinalMultiplier": "最终倍率前合计"
+        },
+        "rules": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "输入伤害必须非负；防护可以输入负数来观察负面属性的基础计算。",
+          "防御穿透对防护的忽略比例限定在0%至100%；低于0%按0%，超过100%按100%。",
+          "最低1点发生在最终伤害倍率之前；例如最终加成为-50%时，本例计算结果可低至0.5。这一步没有把最终倍率限制为非负。",
+          "沿用游戏的小数精度，保留小数；没有把每种伤害或扣血量取整。页面可格式化显示，但不可把格式化数值再参与计算。"
+        ]
+      }
+    },
+    {
+      "id": "true-damage",
+      "name": "真实伤害",
+      "category": "受伤与防护",
+      "summary": "绕过四种抗性与基础防御，但不等于绕过所有特殊效果。",
+      "appliesTo": [
+        "真实伤害通道"
+      ],
+      "doesNotApplyTo": [
+        "四种抗性减伤",
+        "基础防御减伤",
+        "无视一切受伤事件或无敌的保证"
+      ],
+      "formula": {
+        "text": "真实伤害不进入抗性和防御分摊；仍在暴击／波动的伤害乘算、最终伤害倍率和扣血前事件链中。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "绕过高防护",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "trueDamage": 10,
+            "defense": 100,
+            "stable": 100
+          },
+          "expected": {
+            "total": 10
+          },
+          "explanation": "四抗性和基础防御不扣真实伤害。"
+        },
+        {
+          "title": "小于1的合计",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "trueDamage": 0.25
+          },
+          "expected": {
+            "total": 1
+          },
+          "explanation": "本公式会先把合计抬到至少1。"
+        },
+        {
+          "title": "最终加成50%",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "trueDamage": 10,
+            "finalBonusPct": 50
+          },
+          "expected": {
+            "total": 15
+          },
+          "explanation": "真实伤害仍受最终伤害加成。"
+        }
+      ],
+      "calculator": {
+        "kind": "damage-defense",
+        "parameters": [
+          {
+            "key": "impact",
+            "label": "冲击伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "puncture",
+            "label": "穿刺伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "slash",
+            "label": "切割伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "disintegrate",
+            "label": "瓦解伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "trueDamage",
+            "label": "真实伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stiffness",
+            "label": "冲击吸收",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "toughness",
+            "label": "穿刺偏转",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "hardness",
+            "label": "切割抵抗",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stable",
+            "label": "相位转移",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "defense",
+            "label": "防御",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "penetrationPct",
+            "label": "防御穿透",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          },
+          {
+            "key": "finalBonusPct",
+            "label": "最终伤害加成",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "total": "本例计算结果",
+          "resistanceScale": "防护保留比例",
+          "effectiveDefense": "生效防御",
+          "beforeFinalMultiplier": "最终倍率前合计"
+        },
+        "rules": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "输入伤害必须非负；防护可以输入负数来观察负面属性的基础计算。",
+          "防御穿透对防护的忽略比例限定在0%至100%；低于0%按0%，超过100%按100%。",
+          "最低1点发生在最终伤害倍率之前；例如最终加成为-50%时，本例计算结果可低至0.5。这一步没有把最终倍率限制为非负。",
+          "沿用游戏的小数精度，保留小数；没有把每种伤害或扣血量取整。页面可格式化显示，但不可把格式化数值再参与计算。"
+        ]
+      }
+    },
+    {
+      "id": "defense-penetration",
+      "name": "防御穿透",
+      "category": "受伤与防护",
+      "summary": "按比例同时忽略四种抗性和基础防御。",
+      "appliesTo": [
+        "冲击吸收、穿刺偏转、切割抵抗、相位转移和防御"
+      ],
+      "doesNotApplyTo": [
+        "不是子弹多穿一个敌人",
+        "不把伤害直接转换成真实伤害"
+      ],
+      "formula": {
+        "text": "生效防护＝防护原值×限制在0至1之间的（1－防御穿透比例）。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "没有穿透",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "impact": 10,
+            "stiffness": 2,
+            "defense": 3
+          },
+          "expected": {
+            "total": 5
+          },
+          "explanation": "先减2点吸收再减3点防御。"
+        },
+        {
+          "title": "50%穿透",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "impact": 10,
+            "stiffness": 2,
+            "defense": 3,
+            "penetrationPct": 50
+          },
+          "expected": {
+            "total": 7.5
+          },
+          "explanation": "两类防护都只生效一半。"
+        },
+        {
+          "title": "达到或超过100%",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "impact": 10,
+            "stiffness": 2,
+            "defense": 3,
+            "penetrationPct": 150
+          },
+          "expected": {
+            "total": 10
+          },
+          "explanation": "超过100%不会在这一步计算中再额外增伤。"
+        }
+      ],
+      "calculator": {
+        "kind": "damage-defense",
+        "parameters": [
+          {
+            "key": "impact",
+            "label": "冲击伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "puncture",
+            "label": "穿刺伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "slash",
+            "label": "切割伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "disintegrate",
+            "label": "瓦解伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "trueDamage",
+            "label": "真实伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stiffness",
+            "label": "冲击吸收",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "toughness",
+            "label": "穿刺偏转",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "hardness",
+            "label": "切割抵抗",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stable",
+            "label": "相位转移",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "defense",
+            "label": "防御",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "penetrationPct",
+            "label": "防御穿透",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          },
+          {
+            "key": "finalBonusPct",
+            "label": "最终伤害加成",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "total": "本例计算结果",
+          "resistanceScale": "防护保留比例",
+          "effectiveDefense": "生效防御",
+          "beforeFinalMultiplier": "最终倍率前合计"
+        },
+        "rules": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "输入伤害必须非负；防护可以输入负数来观察负面属性的基础计算。",
+          "防御穿透对防护的忽略比例限定在0%至100%；低于0%按0%，超过100%按100%。",
+          "最低1点发生在最终伤害倍率之前；例如最终加成为-50%时，本例计算结果可低至0.5。这一步没有把最终倍率限制为非负。",
+          "沿用游戏的小数精度，保留小数；没有把每种伤害或扣血量取整。页面可格式化显示，但不可把格式化数值再参与计算。"
+        ]
+      }
+    },
+    {
+      "id": "magic-hat-three",
+      "name": "“窗口牌”魔法帽的相位转移3",
+      "category": "装备实例",
+      "summary": "帽子的3是相位转移，不是防御，也不是3%减伤。",
+      "appliesTo": [
+        "正常穿戴后形成的角色相位转移汇总值",
+        "瓦解伤害基础减伤"
+      ],
+      "doesNotApplyTo": [
+        "冲击、穿刺、切割、真实伤害的直接减伤",
+        "只命中头部才生效的推断"
+      ],
+      "formula": {
+        "text": "没有其他加成时提供3点相位转移；无穿透时每次瓦解通道先减3，有50%防御穿透时只减1.5。",
+        "steps": [],
+        "limits": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "基础穿戴属性加入角色汇总值；特殊事件或命中特殊子对象仍需另行处理。"
+        ]
+      },
+      "presets": [
+        {
+          "title": "10点瓦解",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "disintegrate": 10,
+            "stable": 3
+          },
+          "expected": {
+            "total": 7
+          },
+          "explanation": "基础公式剩7。"
+        },
+        {
+          "title": "2点瓦解",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "disintegrate": 2,
+            "stable": 3
+          },
+          "expected": {
+            "total": 1
+          },
+          "explanation": "通道被减尽，合计最低规则随后生效。"
+        },
+        {
+          "title": "50%穿透",
+          "calculatorKind": "damage-defense",
+          "inputs": {
+            "disintegrate": 10,
+            "stable": 3,
+            "penetrationPct": 50
+          },
+          "expected": {
+            "total": 8.5
+          },
+          "explanation": "相位转移仅生效1.5点。"
+        }
+      ],
+      "calculator": {
+        "kind": "damage-defense",
+        "parameters": [
+          {
+            "key": "impact",
+            "label": "冲击伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "puncture",
+            "label": "穿刺伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "slash",
+            "label": "切割伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "disintegrate",
+            "label": "瓦解伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "trueDamage",
+            "label": "真实伤害",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stiffness",
+            "label": "冲击吸收",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "toughness",
+            "label": "穿刺偏转",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "hardness",
+            "label": "切割抵抗",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "stable",
+            "label": "相位转移",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "defense",
+            "label": "防御",
+            "default": 0,
+            "unit": "点",
+            "type": "number"
+          },
+          {
+            "key": "penetrationPct",
+            "label": "防御穿透",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          },
+          {
+            "key": "finalBonusPct",
+            "label": "最终伤害加成",
+            "default": 0,
+            "unit": "%",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "total": "本例计算结果",
+          "resistanceScale": "防护保留比例",
+          "effectiveDefense": "生效防御",
+          "beforeFinalMultiplier": "最终倍率前合计"
+        },
+        "rules": [
+          "仅计算常规受伤时的基础计算，输入为暴击和伤害波动之后、抗性之前的伤害。装备、天赋和状态的加成请先合并为实际角色属性。未纳入命中部位、护甲插板、特殊生命对象、无敌、伤害转移、受伤事件及其他条件效果，不是全战斗模拟。",
+          "输入伤害必须非负；防护可以输入负数来观察负面属性的基础计算。",
+          "防御穿透对防护的忽略比例限定在0%至100%；低于0%按0%，超过100%按100%。",
+          "最低1点发生在最终伤害倍率之前；例如最终加成为-50%时，本例计算结果可低至0.5。这一步没有把最终倍率限制为非负。",
+          "沿用游戏的小数精度，保留小数；没有把每种伤害或扣血量取整。页面可格式化显示，但不可把格式化数值再参与计算。"
+        ]
+      }
+    },
+    {
+      "id": "initial-spread",
+      "name": "初始扩散",
+      "category": "武器操控",
+      "summary": "未累积后坐力时的基础左右散布半角。",
+      "appliesTo": [
+        "采用标准扩散逻辑的射击"
+      ],
+      "doesNotApplyTo": [
+        "命中率百分比",
+        "反冲动画量"
+      ],
+      "formula": {
+        "text": "当前半角＝至少0度的［（初始扩散＋已累积扩散）×瞄准倍率×移动倍率×额外扩散倍率］。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "初始射击",
+          "calculatorKind": "spread",
+          "inputs": {
+            "initialSpread": 2,
+            "growth": 3,
+            "limit": 10,
+            "shotCount": 0
+          },
+          "expected": {
+            "halfAngleDegrees": 2
+          },
+          "explanation": "尚未累积后坐力，方向可在左右各2度内随机偏转。"
+        },
+        {
+          "title": "达到上限",
+          "calculatorKind": "spread",
+          "inputs": {
+            "initialSpread": 2,
+            "growth": 3,
+            "limit": 10,
+            "shotCount": 3
+          },
+          "expected": {
+            "halfAngleDegrees": 10
+          },
+          "explanation": "忽略恢复，三次触发后从2度增长至上限10度。"
+        },
+        {
+          "title": "瞄准并奔跑",
+          "calculatorKind": "spread",
+          "inputs": {
+            "initialSpread": 2,
+            "growth": 3,
+            "limit": 10,
+            "shotCount": 1,
+            "aiming": true,
+            "movement": "run"
+          },
+          "expected": {
+            "halfAngleDegrees": 2.5
+          },
+          "explanation": "一次触发后5度，瞄准乘0.4，再乘奔跑倍率1.25，左右各2.5度。"
+        }
+      ],
+      "calculator": {
+        "kind": "spread",
+        "parameters": [
+          {
+            "key": "initialSpread",
+            "label": "初始扩散",
+            "default": 2,
+            "unit": "度",
+            "type": "number"
+          },
+          {
+            "key": "growth",
+            "label": "后坐力",
+            "default": 3,
+            "unit": "度／次",
+            "type": "number"
+          },
+          {
+            "key": "limit",
+            "label": "扩散上限",
+            "default": 10,
+            "unit": "度",
+            "type": "number"
+          },
+          {
+            "key": "stackBefore",
+            "label": "已累积扩散",
+            "default": 0,
+            "unit": "度",
+            "type": "number"
+          },
+          {
+            "key": "shotCount",
+            "label": "追加触发次数",
+            "default": 0,
+            "min": 0,
+            "max": 1000,
+            "type": "integer"
+          },
+          {
+            "key": "aiming",
+            "label": "瞄准",
+            "default": false,
+            "type": "boolean"
+          },
+          {
+            "key": "movement",
+            "label": "移动状态",
+            "default": "still",
+            "type": "select",
+            "options": [
+              {
+                "value": "still",
+                "label": "静止"
+              },
+              {
+                "value": "move",
+                "label": "移动"
+              },
+              {
+                "value": "run",
+                "label": "奔跑"
+              }
+            ]
+          },
+          {
+            "key": "multiplier",
+            "label": "额外扩散倍率",
+            "default": 1,
+            "unit": "倍",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "stackAfter": "触发后累积扩散",
+          "halfAngleDegrees": "左右各自最大偏转角",
+          "fullAngleDegrees": "总散布角范围"
+        },
+        "rules": [
+          "标准装填逻辑每次完成攻击触发后才累积后坐力，因此“追加触发次数”显示的是这些触发之后的下一次射击角度。",
+          "此计算不包含连续两次触发之间的扩散恢复、额外射击事件和特殊射击模式。",
+          "瞄准乘0.4，移动乘1.1，奔跑乘1.25；瞄准与移动可以相乘。",
+          "初始扩散与扩散上限谁小谁大都先排序后限幅，支持负后坐力逐次收束。最后散布半角至少为0。"
+        ]
+      }
+    },
+    {
+      "id": "spread-growth",
+      "name": "后坐力",
+      "category": "武器操控",
+      "summary": "原生名称为后坐力；在标准射击逻辑中，每次攻击触发后增加或减少累积扩散。",
+      "appliesTo": [
+        "标准射击扩散堆叠"
+      ],
+      "doesNotApplyTo": [
+        "反冲数值",
+        "直接增加伤害"
+      ],
+      "formula": {
+        "text": "触发后累积扩散＝把（初始扩散＋原累积扩散＋后坐力）限制在初始扩散和扩散上限两者之间，再减初始扩散。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "初始射击",
+          "calculatorKind": "spread",
+          "inputs": {
+            "initialSpread": 2,
+            "growth": 3,
+            "limit": 10,
+            "shotCount": 0
+          },
+          "expected": {
+            "halfAngleDegrees": 2
+          },
+          "explanation": "尚未累积后坐力，方向可在左右各2度内随机偏转。"
+        },
+        {
+          "title": "达到上限",
+          "calculatorKind": "spread",
+          "inputs": {
+            "initialSpread": 2,
+            "growth": 3,
+            "limit": 10,
+            "shotCount": 3
+          },
+          "expected": {
+            "halfAngleDegrees": 10
+          },
+          "explanation": "忽略恢复，三次触发后从2度增长至上限10度。"
+        },
+        {
+          "title": "瞄准并奔跑",
+          "calculatorKind": "spread",
+          "inputs": {
+            "initialSpread": 2,
+            "growth": 3,
+            "limit": 10,
+            "shotCount": 1,
+            "aiming": true,
+            "movement": "run"
+          },
+          "expected": {
+            "halfAngleDegrees": 2.5
+          },
+          "explanation": "一次触发后5度，瞄准乘0.4，再乘奔跑倍率1.25，左右各2.5度。"
+        }
+      ],
+      "calculator": {
+        "kind": "spread",
+        "parameters": [
+          {
+            "key": "initialSpread",
+            "label": "初始扩散",
+            "default": 2,
+            "unit": "度",
+            "type": "number"
+          },
+          {
+            "key": "growth",
+            "label": "后坐力",
+            "default": 3,
+            "unit": "度／次",
+            "type": "number"
+          },
+          {
+            "key": "limit",
+            "label": "扩散上限",
+            "default": 10,
+            "unit": "度",
+            "type": "number"
+          },
+          {
+            "key": "stackBefore",
+            "label": "已累积扩散",
+            "default": 0,
+            "unit": "度",
+            "type": "number"
+          },
+          {
+            "key": "shotCount",
+            "label": "追加触发次数",
+            "default": 0,
+            "min": 0,
+            "max": 1000,
+            "type": "integer"
+          },
+          {
+            "key": "aiming",
+            "label": "瞄准",
+            "default": false,
+            "type": "boolean"
+          },
+          {
+            "key": "movement",
+            "label": "移动状态",
+            "default": "still",
+            "type": "select",
+            "options": [
+              {
+                "value": "still",
+                "label": "静止"
+              },
+              {
+                "value": "move",
+                "label": "移动"
+              },
+              {
+                "value": "run",
+                "label": "奔跑"
+              }
+            ]
+          },
+          {
+            "key": "multiplier",
+            "label": "额外扩散倍率",
+            "default": 1,
+            "unit": "倍",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "stackAfter": "触发后累积扩散",
+          "halfAngleDegrees": "左右各自最大偏转角",
+          "fullAngleDegrees": "总散布角范围"
+        },
+        "rules": [
+          "标准装填逻辑每次完成攻击触发后才累积后坐力，因此“追加触发次数”显示的是这些触发之后的下一次射击角度。",
+          "此计算不包含连续两次触发之间的扩散恢复、额外射击事件和特殊射击模式。",
+          "瞄准乘0.4，移动乘1.1，奔跑乘1.25；瞄准与移动可以相乘。",
+          "初始扩散与扩散上限谁小谁大都先排序后限幅，支持负后坐力逐次收束。最后散布半角至少为0。"
+        ]
+      }
+    },
+    {
+      "id": "spread-limit",
+      "name": "扩散上限",
+      "category": "武器操控",
+      "summary": "限制基础扩散堆叠的端点；瞄准与移动倍率在限幅之后才应用。",
+      "appliesTo": [
+        "标准扩散堆叠"
+      ],
+      "doesNotApplyTo": [
+        "不保证是乘过移动倍率后的绝对最终上限"
+      ],
+      "formula": {
+        "text": "每次堆叠先以初始扩散和扩散上限中的较小值为下界、较大值为上界；允许负后坐力逐次收束。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "初始射击",
+          "calculatorKind": "spread",
+          "inputs": {
+            "initialSpread": 2,
+            "growth": 3,
+            "limit": 10,
+            "shotCount": 0
+          },
+          "expected": {
+            "halfAngleDegrees": 2
+          },
+          "explanation": "尚未累积后坐力，方向可在左右各2度内随机偏转。"
+        },
+        {
+          "title": "达到上限",
+          "calculatorKind": "spread",
+          "inputs": {
+            "initialSpread": 2,
+            "growth": 3,
+            "limit": 10,
+            "shotCount": 3
+          },
+          "expected": {
+            "halfAngleDegrees": 10
+          },
+          "explanation": "忽略恢复，三次触发后从2度增长至上限10度。"
+        },
+        {
+          "title": "瞄准并奔跑",
+          "calculatorKind": "spread",
+          "inputs": {
+            "initialSpread": 2,
+            "growth": 3,
+            "limit": 10,
+            "shotCount": 1,
+            "aiming": true,
+            "movement": "run"
+          },
+          "expected": {
+            "halfAngleDegrees": 2.5
+          },
+          "explanation": "一次触发后5度，瞄准乘0.4，再乘奔跑倍率1.25，左右各2.5度。"
+        }
+      ],
+      "calculator": {
+        "kind": "spread",
+        "parameters": [
+          {
+            "key": "initialSpread",
+            "label": "初始扩散",
+            "default": 2,
+            "unit": "度",
+            "type": "number"
+          },
+          {
+            "key": "growth",
+            "label": "后坐力",
+            "default": 3,
+            "unit": "度／次",
+            "type": "number"
+          },
+          {
+            "key": "limit",
+            "label": "扩散上限",
+            "default": 10,
+            "unit": "度",
+            "type": "number"
+          },
+          {
+            "key": "stackBefore",
+            "label": "已累积扩散",
+            "default": 0,
+            "unit": "度",
+            "type": "number"
+          },
+          {
+            "key": "shotCount",
+            "label": "追加触发次数",
+            "default": 0,
+            "min": 0,
+            "max": 1000,
+            "type": "integer"
+          },
+          {
+            "key": "aiming",
+            "label": "瞄准",
+            "default": false,
+            "type": "boolean"
+          },
+          {
+            "key": "movement",
+            "label": "移动状态",
+            "default": "still",
+            "type": "select",
+            "options": [
+              {
+                "value": "still",
+                "label": "静止"
+              },
+              {
+                "value": "move",
+                "label": "移动"
+              },
+              {
+                "value": "run",
+                "label": "奔跑"
+              }
+            ]
+          },
+          {
+            "key": "multiplier",
+            "label": "额外扩散倍率",
+            "default": 1,
+            "unit": "倍",
+            "type": "number"
+          }
+        ],
+        "resultLabels": {
+          "stackAfter": "触发后累积扩散",
+          "halfAngleDegrees": "左右各自最大偏转角",
+          "fullAngleDegrees": "总散布角范围"
+        },
+        "rules": [
+          "标准装填逻辑每次完成攻击触发后才累积后坐力，因此“追加触发次数”显示的是这些触发之后的下一次射击角度。",
+          "此计算不包含连续两次触发之间的扩散恢复、额外射击事件和特殊射击模式。",
+          "瞄准乘0.4，移动乘1.1，奔跑乘1.25；瞄准与移动可以相乘。",
+          "初始扩散与扩散上限谁小谁大都先排序后限幅，支持负后坐力逐次收束。最后散布半角至少为0。"
+        ]
+      }
+    },
+    {
+      "id": "recoil",
+      "name": "反冲",
+      "category": "武器操控",
+      "summary": "原生名称为反冲；已确认影响持枪表现和本地玩家射击时的画面震动。",
+      "appliesTo": [
+        "当前客户端武器表现",
+        "本地玩家远程武器震动画面输入"
+      ],
+      "doesNotApplyTo": [
+        "不能与后坐力混为一个字段",
+        "没有据此证明实际人物位移或全部特殊武器行为"
+      ],
+      "formula": {
+        "text": "画面震动输入＝反冲÷3的绝对值＋至少0的（当前散布半角÷40）；持枪表现输入还会加上当前散布半角÷5。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [],
+      "calculator": null
+    },
+    {
+      "id": "reload-time",
+      "name": "装填",
+      "category": "武器操控",
+      "summary": "标准装填逻辑向装填计时器加入的秒数；通常越低越快。",
+      "appliesTo": [
+        "标准装填计时"
+      ],
+      "doesNotApplyTo": [
+        "不是每秒装填速度",
+        "特殊逐发装填、脚本触发和中断后的总耗时保证"
+      ],
+      "formula": {
+        "text": "开始装填时，剩余装填时间增加该数值；持枪切换完成、正在装填且未翻滚时，按经过秒数扣减，降至0或以下即完成。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [],
+      "calculator": null
+    },
+    {
+      "id": "projectile-penetration",
+      "name": "穿透",
+      "category": "武器操控",
+      "summary": "启用穿透的标准实体弹体可额外通过的命中计数额度。",
+      "appliesTo": [
+        "明确启用穿透的标准实体弹体"
+      ],
+      "doesNotApplyTo": [
+        "防御穿透百分比",
+        "所有射线、近战、爆炸和特殊弹体统一规则"
+      ],
+      "formula": {
+        "text": "非负穿透值先向0截断为整数；在命中计数尚未大于该值时仍可尝试下一次命中，因此额度0通常允许1次，额度1通常允许2次。",
+        "steps": [],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "穿透0",
+          "description": "非负穿透值为0、路径中无其他阻挡时，通常允许1次命中尝试。",
+          "expected": {
+            "命中尝试上限": 1
+          },
+          "explanation": "非负穿透值为0、路径中无其他阻挡时，通常允许1次命中尝试。"
+        },
+        {
+          "title": "穿透1.9",
+          "description": "1.9先截断为1，通常允许2次命中尝试。",
+          "expected": {
+            "命中尝试上限": 2
+          },
+          "explanation": "1.9先截断为1，通常允许2次命中尝试。"
+        },
+        {
+          "title": "穿透2",
+          "description": "通常允许3次命中尝试；目标拒绝命中时也可能已消耗计数。",
+          "expected": {
+            "命中尝试上限": 3
+          },
+          "explanation": "通常允许3次命中尝试；目标拒绝命中时也可能已消耗计数。"
+        }
+      ],
+      "calculator": null
+    },
+    {
+      "id": "skill-growth",
+      "name": "技能成长",
+      "category": "生存与成长",
+      "summary": "技能经验逐级累积；死亡结算后，本级进度保留50%，已得等级不降低。",
+      "appliesTo": [
+        "身体：负重移动可训练，站着不动不涨经验。",
+        "心肺：消耗体力可训练，耗尽体力有额外奖励。",
+        "敏捷：实际移动可训练。",
+        "灵巧：搜索物品可训练。",
+        "武器熟练度：使用对应武器造成伤害可训练。"
+      ],
+      "doesNotApplyTo": [
+        "表格是升到各级时所需的经验，每次升级扣除该级门槛，并非累计经验。",
+        "心肺的经验获得方式已经调整，不能把新旧门槛的比例直接当成练级时间的比例。",
+        "霰弹枪各级门槛并非全部下降。"
+      ],
+      "formula": {
+        "text": "角色死亡结算时，本级已积累经验 × 50%；已经获得的等级保持。",
+        "steps": [
+          "经验达到当前升级门槛时，扣除门槛所需经验并升级。",
+          "死亡结算只减半当前等级进度，不降低已经获得的等级。"
+        ],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "死亡结算",
+          "explanation": "本级积累80经验，死亡结算后剩40；当前等级不变。"
+        },
+        {
+          "title": "心肺训练",
+          "explanation": "不计其他经验加成，消耗25体力并触发一次耗尽奖励，可获得25＋10＝35经验。"
+        }
+      ],
+      "calculator": null,
+      "sourceBuild": "26240042",
+      "skillRows": [
+        {
+          "name": "拳击",
+          "levels": [
+            100.0,
+            350.0,
+            700.0,
+            1000.0
+          ]
+        },
+        {
+          "name": "单手",
+          "levels": [
+            100.0,
+            400.0,
+            800.0,
+            1200.0
+          ]
+        },
+        {
+          "name": "双手",
+          "levels": [
+            100.0,
+            400.0,
+            800.0,
+            1200.0
+          ]
+        },
+        {
+          "name": "手枪",
+          "levels": [
+            100.0,
+            400.0,
+            800.0,
+            1200.0
+          ]
+        },
+        {
+          "name": "冲锋枪",
+          "levels": [
+            100.0,
+            400.0,
+            800.0,
+            1200.0
+          ]
+        },
+        {
+          "name": "霰弹枪",
+          "levels": [
+            300.0,
+            1200.0,
+            2400.0,
+            3600.0
+          ]
+        },
+        {
+          "name": "突击步枪",
+          "levels": [
+            100.0,
+            400.0,
+            800.0,
+            1200.0
+          ]
+        },
+        {
+          "name": "射手步枪",
+          "levels": [
+            100.0,
+            400.0,
+            800.0,
+            1200.0
+          ]
+        },
+        {
+          "name": "身体",
+          "levels": [
+            300.0,
+            750.0,
+            1200.0,
+            2400.0
+          ]
+        },
+        {
+          "name": "心肺",
+          "levels": [
+            19000.0,
+            44000.0,
+            69000.0,
+            90000.0
+          ]
+        },
+        {
+          "name": "敏捷",
+          "levels": [
+            3000.0,
+            7200.0,
+            10800.0,
+            14400.0
+          ]
+        },
+        {
+          "name": "精神",
+          "levels": [
+            100.0,
+            320.0,
+            1200.0,
+            5000.0
+          ]
+        },
+        {
+          "name": "灵巧",
+          "levels": [
+            120.0,
+            500.0,
+            1000.0,
+            2000.0
+          ]
+        }
+      ],
+      "aliases": [
+        "拳击",
+        "单手",
+        "双手",
+        "手枪",
+        "冲锋枪",
+        "霰弹枪",
+        "突击步枪",
+        "射手步枪",
+        "身体",
+        "心肺",
+        "敏捷",
+        "精神",
+        "灵巧",
+        "死亡经验",
+        "练级",
+        "经验保留"
+      ]
+    },
+    {
+      "id": "armor-plates",
+      "name": "护甲片使用与保险",
+      "category": "生存与成长",
+      "summary": "护甲片提供防护，耐久耗尽后需要更换；装入胸甲也不能投保。",
+      "appliesTo": [
+        "已安装且仍有耐久的护甲片按自身属性提供防护。",
+        "护甲片被用于抵挡伤害时会消耗耐久。"
+      ],
+      "doesNotApplyTo": [
+        "胸甲可以投保，不表示里面的护甲片也受保险保护。",
+        "护甲片不能投保。"
+      ],
+      "formula": {
+        "text": "护甲片耐久耗尽后不再继续提供该片的防护；叠放有下一片时会使用下一片，否则耗尽的甲片被移除。",
+        "steps": [
+          "将合适的护甲片安装到对应装备中。",
+          "受击消耗耐久，注意剩余数量与耐久。",
+          "保险判断单独排除护甲片，不因装进胸甲而改变。"
+        ],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "胸甲与护甲片",
+          "explanation": "投保胸甲后，里面的护甲片仍不在保险保护范围。"
+        }
+      ],
+      "calculator": null,
+      "sourceBuild": "26240042"
+    },
+    {
+      "id": "maximum-health",
+      "name": "血量上限",
+      "category": "生存与成长",
+      "summary": "装备上的“血量”表示穿戴后增加的生命上限。",
+      "appliesTo": [
+        "穿戴提供“血量”属性的装备时，将加成计入生命上限。"
+      ],
+      "doesNotApplyTo": [
+        "这是生命上限加成，不是一次直接治疗。",
+        "血量上限与防御、相位转移等防护属性分别计算。"
+      ],
+      "formula": {
+        "text": "生命上限由角色基础、穿戴装备和其他相关效果共同决定。以下示例只比较单件装备的加成。",
+        "steps": [
+          "查看装备“血量”条右侧数值。",
+          "更换装备时，比较两件装备各自的上限加成。"
+        ],
+        "limits": []
+      },
+      "presets": [
+        {
+          "title": "耶格式全身护甲",
+          "explanation": "提供25点生命上限加成。"
+        },
+        {
+          "title": "城市机能胸包",
+          "explanation": "提供5点生命上限加成。"
+        }
+      ],
+      "calculator": null,
+      "sourceBuild": "26240042"
+    },
+    {
+      "id": "corruption",
+      "name": "装备腐化与固化",
+      "category": "生存与成长",
+      "aliases": [
+        "腐化",
+        "固化",
+        "稳定性",
+        "词条"
+      ],
+      "summary": "腐化装备可能带有特殊词条；稳定性下降会影响装备的基础数值，固化可阻止继续下降。",
+      "appliesTo": [
+        "腐化武器、配件与其他可腐化装备",
+        "装备基础属性会随稳定性分档变化，词条效果按各词条的说明生效。"
+      ],
+      "doesNotApplyTo": [
+        "固化会停止稳定性继续下降，并不会直接把稳定性恢复到100%。",
+        "装备词条不都相同，具体效果以物品和词条说明为准。"
+      ],
+      "formula": {
+        "text": "装备基础属性倍率＝50%＋稳定性档位的一半。稳定性按20%分档；不利属性的变化方向相反。",
+        "steps": [
+          "查看装备显示的稳定性及附带词条。",
+          "对照稳定性档位估算装备自身基础数值的变化。",
+          "需要长期使用时进行固化，避免稳定性继续下降。"
+        ],
+        "limits": [
+          "容量等属性可能存在取整，附加词条及其他效果另行计算。"
+        ]
+      },
+      "presets": [
+        {
+          "title": "稳定性80%",
+          "explanation": "正向基础数值按原值的90%计算：原本100的数值约为90。"
+        },
+        {
+          "title": "稳定性100%",
+          "explanation": "基础数值倍率为100%；附带词条仍按自己的效果生效。"
+        },
+        {
+          "title": "耗尽稳定性",
+          "explanation": "未固化的装备稳定性耗尽后会变成腐化废料。"
+        }
+      ],
+      "calculator": null,
+      "sourceBuild": "26240042"
+    }
+  ]
+}

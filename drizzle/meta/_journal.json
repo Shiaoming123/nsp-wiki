@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1791775232847,
+      "tag": "0000_fat_sersi",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1791779067637,
+      "tag": "0001_normal_ben_parker",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791782233841,
+      "tag": "0002_same_rhodey",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1791786854350,
+      "tag": "0003_perfect_peter_parker",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1791790611778,
+      "tag": "0004_young_adam_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791991299550,
+      "tag": "0005_flawless_misty_knight",
+      "breakpoints": true
+    }
+  ]
+}

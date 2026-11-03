@@ -1,0 +1,17 @@
+/* Reading roles on the existing survival terminal. Unslop: Damir Sokolovsky, CC BY 4.0. */
+body{font-family:var(--font-body);font-size:var(--text-body);font-weight:400;line-height:var(--leading-body);letter-spacing:0;}
+body :is(button,input,select,textarea){font-family:var(--font-body);font-weight:500;letter-spacing:0;}
+body :is(h1,h2,h3,h4){font-family:var(--font-body);font-weight:600;letter-spacing:0;}
+body :is(.reference-heading,.browser-heading,.guide-heading) h1{font-size:var(--text-page-title);line-height:1.4;font-weight:600;}
+body :is(.reference-heading,.browser-heading) h2{font-weight:600;}
+body :is(.post-markdown,.mechanic-body){font-size:var(--text-reading);line-height:var(--leading-body);}
+body :is(.reference-detail,.terminal-item .detail-body,.quest-detail){font-size:15px;line-height:var(--leading-body);}
+body :is(.reference-detail,.terminal-item .detail-body,.quest-detail) .description{line-height:var(--leading-body);}
+body :is(.property dd,.native-stat-value,.detail-economy,.recipe-quantity,.loot-rate,.loot-quantity,.reference-count,.traffic-metrics,.mirror-table,.supplies-summary,.supplies-item input,table){font-variant-numeric:tabular-nums;}
+body :is(.enemy-protection-label,.enemy-protection-scale,.traffic-axis){font-family:var(--font-body);}
+.quest-page .quest-node strong{font-size:15px;font-weight:600;line-height:1.3;max-height:39px;flex-shrink:0;}
+#wiki-welcome,#wiki-welcome *{font-family:var(--font-body);}
+#wiki-welcome h2,#wiki-welcome .welcome-chapter::before,#wiki-welcome .welcome-steps li::before{font-family:var(--font-body);}
+body :is(code,pre,kbd),#wiki-welcome :is(code,pre,kbd,code *,pre *){font-family:var(--font-mono);}
+/* Canvas/node geometry and rem-based container limits keep their dedicated sizes. */
+.card-export-content{font-family:var(--font-body);}

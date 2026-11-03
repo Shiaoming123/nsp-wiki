@@ -1,0 +1,19 @@
+/* Approved A: survival handbook. Canonical shared tokens; quest-page keeps its scoped palette. */
+:root {
+  --bg:#202724; --panel:#2b3430; --deep:#171e1b; --border:#46564d;
+  --text:#e4ece8; --muted:#b2bdb5; --accent:#9bc6ad; --selected:#354d42; --warning:#d7bd88;
+  --edge-light:#5e7266; --edge-dark:#0b110e;
+  --plate:linear-gradient(155deg,#303b35,#242d28 65%);
+  --plate-shadow:inset 0 1px #829b8320,inset 0 -2px #090f0bc0,0 3px 10px #0002;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+  --space-6:24px; --space-8:32px; --space-12:48px;
+  --font-fallback:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+  --font-body:"Wiki Geist","Wiki Noto SC",var(--font-fallback); --font-mono:Consolas,"Cascadia Code",monospace;
+  --text-body:15px; --text-reading:16px; --text-page-title:28px; --text-secondary:14px; --text-caption:12px; --leading-body:1.8;
+  --radius-control:6px; --radius-card:10px; --radius-terminal:3px; --radius-terminal-panel:4px; --border-width:1px;
+  --control-min:44px; --focus-width:3px; --focus-offset:3px;
+  --motion-fast:120ms; --motion-normal:180ms; --motion-page:200ms; --motion-easing:cubic-bezier(.2,.8,.2,1);
+  --elevation-card:inset 0 1px #ffffff0a; --elevation-overlay:0 8px 24px #0005;
+  --control-edge-depth:3px; --control-hover:#3b4942;
+  --overlay-scrim:#0b110ed9; --error-text:#ffd0c3;
+}

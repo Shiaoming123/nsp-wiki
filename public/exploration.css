@@ -1,0 +1,97 @@
+/* Exploration workspace: preserve native graph/coordinates and quiet the chrome.
+   Unslop method: Damir Sokolovsky, CC BY 4.0. */
+.quest-page .quest-toolbar :is(button,select,input),.quest-page .map-controls button{min-height:44px;font-size:14px;border-radius:var(--radius-terminal);background-image:none;box-shadow:none;text-shadow:none;}
+.quest-page .quest-toolbar :is(button,select),.quest-page .map-controls button{background:var(--panel);border:1px solid var(--border);color:var(--text);}
+.quest-page .quest-toolbar input{background:var(--deep);color:var(--text);}
+.quest-page .quest-toolbar button:hover,.quest-page .map-controls button:hover{background:var(--selected);border-color:var(--accent);}
+.quest-immersive .quest-toolbar{display:grid;grid-template-columns:auto minmax(180px,1fr) minmax(140px,200px) auto auto;align-items:center;gap:8px;padding:8px;background:var(--deep);border:1px solid var(--border);border-radius:var(--radius-terminal);}
+.quest-toolbar .guide-search{min-width:0;margin:0;}
+.quest-toolbar .guide-search input{width:100%;}
+.quest-toolbar .quest-back{display:inline-flex;align-items:center;padding:8px;min-height:44px;color:var(--muted);font-size:14px;}
+.quest-toolbar select{width:100%;max-width:none;min-width:0;padding:8px;}
+.quest-toolbar button{white-space:nowrap;padding:8px 12px;}
+.quest-immersive #quest-count{top:88px;font-size:13px;line-height:1.6;}
+.quest-immersive .quest-legend{top:114px;display:flex;gap:8px;flex-wrap:wrap;}
+.quest-legend .quest-semantic-tag{border-radius:var(--radius-terminal);font-size:12px;padding:2px 8px;}
+.quest-immersive .map-controls{gap:8px;padding:8px;background:var(--deep);border-color:var(--border);border-radius:var(--radius-terminal);box-shadow:none;}
+.quest-immersive .map-controls output{font-variant-numeric:tabular-nums;font-size:13px;}
+.quest-immersive .quest-sidebar{top:148px;background:var(--deep);border-color:var(--border);border-radius:var(--radius-terminal);box-shadow:none;}
+.quest-sidebar-top{background:var(--deep);padding:8px 16px;border-color:var(--border);font-size:13px;color:var(--muted);}
+.quest-sidebar-top button{min-height:44px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-terminal);box-shadow:none;background-image:none;}
+.quest-page .quest-sidebar-top>button.secondary-button{background:var(--panel);background-image:none;box-shadow:none;}
+.quest-page .quest-sidebar-top>button.secondary-button:hover{background:var(--selected);background-image:none;}
+.quest-detail{padding:20px;font-size:15px;line-height:1.8;animation:exploration-panel-in var(--motion-normal) var(--motion-easing);}
+.quest-detail h2{font-size:24px;line-height:1.5;font-weight:600;}
+.quest-detail>.detail-tag{font-size:13px;margin:0 0 8px;color:var(--muted);}
+.quest-detail>.static-guide-link{display:inline-flex;align-items:center;min-height:44px;margin:8px 0;padding:0;font-size:13px;}
+.quest-detail>.secondary-button{min-height:44px;width:100%;background:var(--panel);background-image:none;border:1px solid var(--border);border-radius:var(--radius-terminal);box-shadow:none;}
+.quest-detail .description{font-size:15px;line-height:1.8;}
+.quest-detail .detail-section-title{font-size:16px;font-weight:500;margin:24px 0 12px;}
+.quest-detail .guide-row{gap:8px;padding:12px 0;}
+.quest-detail .guide-row>.row-label{flex-basis:100%;font-size:12px;color:var(--muted);}
+.quest-detail .guide-row>strong{margin-left:0;font-size:14px;font-variant-numeric:tabular-nums;}
+.quest-detail .related-links .inline-link{min-height:44px;border-radius:var(--radius-terminal);background:var(--panel);}
+.quest-detail .story-text{border-radius:var(--radius-terminal);}
+.quest-detail .story-text>summary{min-height:44px;display:flex;align-items:center;}
+.quest-list-row{border-radius:var(--radius-terminal);box-shadow:none;}
+.quest-list-row strong{font-weight:500;}
+#quest-supplies{background:var(--deep);border-color:var(--border);box-shadow:none;}
+.supplies-head{background:var(--deep);padding:16px 20px;}
+.supplies-head h2{font-size:22px;font-weight:600;}
+.supplies-head button{min-height:44px;border-radius:var(--radius-terminal);background:var(--panel);background-image:none;box-shadow:none;}
+.supplies-controls{gap:8px;}
+.supplies-controls :is(input,select){font-size:14px;border-radius:var(--radius-terminal);background:var(--panel);background-image:none;}
+.supplies-summary{font-size:13px;line-height:1.8;}
+.supplies-item{padding:16px;margin-bottom:12px;border-color:var(--border);border-radius:var(--radius-terminal);background:var(--panel);box-shadow:none;}
+.supplies-item-top{align-items:center;flex-wrap:wrap;gap:8px;}
+.supplies-item-top>a{min-height:44px;}
+.supplies-numbers input{min-height:44px;border-radius:var(--radius-terminal);background:var(--deep);}
+.supplies-numbers b{line-height:44px;}
+.supplies-tasks summary{min-height:44px;display:flex;align-items:center;}
+.supplies-task{justify-content:flex-start;flex-wrap:wrap;gap:4px 12px;}
+.supplies-task>a{min-height:32px;}
+.supplies-math{font-size:13px;}
+.supplies-math>summary{min-height:44px;display:flex;align-items:center;}
+#quest-supplies[open],.quest-progress-dialog[open]{animation:exploration-panel-in var(--motion-normal) var(--motion-easing);}
+.quest-progress-dialog{width:min(680px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:24px;overflow:auto;border:1px solid var(--border);border-radius:var(--radius-terminal);background:var(--deep);color:var(--text);box-shadow:none;}
+.quest-progress-dialog h2{font-size:24px;font-weight:600;}
+.quest-progress-dialog :is(button,select){min-height:44px;background:var(--panel);background-image:none;border:1px solid var(--border);border-radius:var(--radius-terminal);box-shadow:none;}
+.quest-progress-actions{gap:8px;flex-wrap:wrap;}
+body[data-wiki-page=mirror]>main{max-width:1280px;padding-inline:32px;}
+.mirror-tiers{gap:16px;margin:24px 0;}
+.mirror-tiers .tier-card{background:var(--deep);border:1px solid var(--border);border-radius:var(--radius-terminal);padding:20px;box-shadow:none;}
+.mirror-tiers h2{font-size:18px;line-height:1.5;font-weight:500;margin:0 0 8px;}
+.mirror-tiers p{font-size:14px;line-height:1.8;margin:8px 0 0;}
+.mirror-tools{display:flex;margin:24px 0 12px;}
+.mirror-tools input{min-height:44px;}
+.mirror-table{margin:12px 0;}
+.mirror-table .guide-table{font-size:14px;line-height:1.75;}
+.mirror-table .guide-table :is(td,th){padding:12px 16px;border:0;border-bottom:1px solid var(--border);}
+.mirror-table .guide-table th{font-size:13px;background:var(--deep);}
+.mirror-table .guide-table td:first-child{min-width:200px;}
+.mirror-table .guide-table strong{font-size:15px;}
+.mirror-table .guide-table small{font-size:13px;}
+@keyframes exploration-panel-in{from{opacity:.82}to{opacity:1}}
+@media(max-width:1000px){.quest-immersive .quest-toolbar{grid-template-columns:auto minmax(0,1fr) minmax(120px,160px) auto auto;}.quest-toolbar button{padding-inline:8px;}}
+@media(max-width:760px){
+ .quest-immersive .quest-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;left:8px;right:8px;top:8px;padding:8px;gap:8px;}
+ .quest-immersive .quest-toolbar .quest-back{grid-column:1;grid-row:1;}
+ .quest-immersive .quest-toolbar #quest-supplies-toggle{grid-column:2;grid-row:1;}
+ .quest-immersive .quest-toolbar .guide-search{grid-column:1/-1;grid-row:2;}
+ .quest-immersive .quest-toolbar select{grid-column:1;grid-row:3;max-width:none;}
+ .quest-immersive .quest-toolbar .quest-view-toggle{grid-column:2;grid-row:3;}
+ .quest-immersive #quest-count{top:184px;left:16px;font-size:12px;}
+ .quest-immersive .quest-legend{top:210px;left:16px;gap:4px;}
+ .quest-immersive .quest-sidebar{top:244px;bottom:136px;}
+ .quest-immersive .quest-list,.quest-immersive .details-open .quest-list{top:244px;bottom:136px;}
+ .quest-detail{padding:16px;}
+ .quest-immersive .map-controls{gap:8px;padding:8px;}
+ .quest-immersive .map-controls .secondary-button{min-height:44px;font-size:13px;padding:6px;}
+ .supplies-controls{display:grid;grid-template-columns:minmax(0,1fr);}
+ .supplies-controls input,.supplies-controls select{width:100%;}
+ .quest-progress-dialog{padding:16px;}
+ body[data-wiki-page=mirror]>main{padding-inline:16px;}
+ .mirror-tiers{gap:12px;}
+ .mirror-tiers .tier-card{padding:16px;}
+}
+@media(prefers-reduced-motion:reduce){.quest-detail,#quest-supplies[open],.quest-progress-dialog[open]{animation:none;}}

@@ -1,0 +1,118 @@
+{
+  "channels": [
+    {
+      "id": "library",
+      "name": "资料库",
+      "description": "查装备、材料、人物与制作所需。",
+      "sections": [
+        {
+          "id": "items",
+          "name": "物品图鉴",
+          "description": "属性、用途与获取方式"
+        },
+        {
+          "id": "enemies",
+          "name": "敌怪图鉴",
+          "description": "敌人、出现条件与战利品"
+        },
+        {
+          "id": "npcs",
+          "name": "NPC 图鉴",
+          "description": "人物、商店与相关任务"
+        },
+        {
+          "id": "recipes",
+          "name": "配方手册",
+          "description": "制造、研究与解锁"
+        },
+        {
+          "id": "corruption",
+          "name": "腐化词条",
+          "description": "词条效果与适用装备"
+        }
+      ],
+      "art": "icons/ea/ea-item-0341.png",
+      "shortcuts": [
+        {
+          "id": "maps",
+          "name": "地图全览",
+          "description": "查地点、资源与探索路线"
+        }
+      ]
+    },
+    {
+      "id": "explore",
+      "name": "探索与任务",
+      "description": "找路线、理任务，带好需要的物资。",
+      "sections": [
+        {
+          "id": "quests",
+          "name": "任务攻略",
+          "description": "任务流程与物品清单"
+        },
+        {
+          "id": "maps",
+          "name": "地图全览",
+          "description": "地点、时间线与探索目标"
+        },
+        {
+          "id": "loot",
+          "name": "容器与搜刮",
+          "description": "各地图容器、物品数量与预估概率"
+        },
+        {
+          "id": "mirror",
+          "name": "迷失镜柜",
+          "description": "兑换档位与奖励"
+        }
+      ],
+      "art": "ui/quest-mail.png"
+    },
+    {
+      "id": "builds",
+      "name": "配装与机制",
+      "description": "装配武器，弄懂数值怎样生效。",
+      "sections": [
+        {
+          "id": "workshop",
+          "name": "武器工坊",
+          "description": "配件装配、保存与对比"
+        },
+        {
+          "id": "mechanics",
+          "name": "机制手册",
+          "description": "属性释义、计算与示例"
+        }
+      ],
+      "art": "icons/ea/ea-item-0030.png"
+    },
+    {
+      "id": "community",
+      "name": "玩家社区",
+      "description": "分享看法，一起补全这本手册。",
+      "sections": [
+        {
+          "id": "tiers",
+          "name": "夯拉榜",
+          "description": "玩家排行与讨论"
+        },
+        {
+          "id": "feedback",
+          "name": "Wiki 反馈",
+          "description": "纠错、建议与站主回复"
+        },
+        {
+          "id": "updates",
+          "name": "更新档案",
+          "description": "游戏公告与本站变化"
+        },
+        {
+          "id": "traffic",
+          "name": "流量看板",
+          "description": "访问趋势与社区动态"
+        }
+      ],
+      "art": "ui/quest-message.png"
+    }
+  ]
+}

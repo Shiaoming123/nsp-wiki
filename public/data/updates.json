@@ -1,0 +1,1200 @@
+{
+  "schemaVersion": 1,
+  "currentInstallation": {
+    "buildId": "26240042",
+    "note": "当前安装版本已用于本轮地图点位复核；各类资料按已完成的核对范围持续维护。"
+  },
+  "records": [
+    {
+      "id": "wiki-20261103-office-plan-canvas",
+      "kind": "wiki",
+      "date": "2026-11-03",
+      "version": "20261103-office-plan-canvas",
+      "title": "楼层总览与平面画布",
+      "publication": "主站已发布",
+      "verification": "地图配置保真与网页交互验证",
+      "summary": "办公室新增可缩放、拖动的平面楼层总览，交通线路从就近边缘接出，支持聚焦和方向查看。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "maps",
+          "title": "平面楼层画布",
+          "before": "楼层总览只能上下滚动，查看跨层关系时容易失去当前关注。",
+          "after": "按楼层顺序排列原图，支持拖动、滚轮与双指缩放，提供全图和聚焦入口；点击地图仍进入原有详情。"
+        },
+        {
+          "module": "maps",
+          "title": "交通线路与资料联动",
+          "before": "空间线路较细，视角变化时交叠较多；部分遭遇名称缺少对应图鉴入口。",
+          "after": "统一原图轮廓，加粗线路并添加楼层方向标签；平面线路从最近边缘短接出、在外廊分道，牛虻与半人马链接对应图鉴。"
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261102-office-floors",
+      "kind": "wiki",
+      "date": "2026-11-02",
+      "version": "20261102-office-floors",
+      "title": "办公室楼层导览",
+      "publication": "主站已发布",
+      "verification": "地图配置核对与网页交互验证",
+      "verifiedBuild": "26240042",
+      "summary": "办公室支持楼层切换、空间导览与交通点查询，可按类型和目的地查看路线。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "maps",
+          "title": "楼层与交通导览",
+          "before": "办公室各层在同一张地图中平铺，跨层路线不易查找。",
+          "after": "新增原图轮廓与图框两种空间视图、二维交通点和三维线路，支持旋转、聚焦及单条路线查看；攻略集中显示通行、密码和遭遇信息。"
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261101-brand-icons",
+      "kind": "wiki",
+      "date": "2026-11-01",
+      "version": "20261101-brand-icons",
+      "title": "统一站点图标",
+      "publication": "主站已发布",
+      "verification": "主站静态发布与图标资源核验",
+      "verifiedBuild": null,
+      "summary": "左上角与浏览器标签采用统一的折页标识，方便辨认和返回首页。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "wiki",
+          "title": "统一页眉与浏览器图标",
+          "before": "左上角使用占位符号，浏览器图标与站内标识不同。",
+          "after": "首页和阅读页统一采用折页与缺失方格标识，浏览器图标适配常用小尺寸；原有导航、阅读和资料功能保留。",
+          "links": [
+            {
+              "label": "返回首页",
+              "route": "#home"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261101-visual-reading",
+      "kind": "wiki",
+      "date": "2026-11-01",
+      "version": "20261101-visual-unification",
+      "title": "资料阅读与操作体验优化",
+      "publication": "主站已发布",
+      "verification": "全站桌面与手机、本地功能回归及发布包校验通过",
+      "verifiedBuild": null,
+      "summary": "整理资料层级、详情布局、评论空间和配装工具的阅读体验，保留原有资料与操作。",
+      "source": {
+        "label": "查看本站更新",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "items",
+          "title": "资料更容易连续阅读",
+          "before": "部分短卡留白较多，详情标题与操作入口层级分散。",
+          "after": "资料卡按内容组织，名称、攻略入口与操作更清楚；夯拉榜长物品信息在侧栏内滚动。",
+          "note": "原属性、来源、材料数量与词条说明保留。",
+          "links": [
+            {
+              "label": "物品图鉴",
+              "route": "#items"
+            },
+            {
+              "label": "夯拉榜",
+              "route": "#tiers"
+            }
+          ]
+        },
+        {
+          "module": "workshop",
+          "title": "配装与评论操作更连贯",
+          "before": "长说明、配装摘要与评论编辑占用较多阅读空间。",
+          "after": "整理配装操作与摘要，评论编辑和预览共用区域，保留更多正文阅读空间。",
+          "note": "原方案、评级、排序及导出继续使用；减少动态效果设置继续生效。",
+          "links": [
+            {
+              "label": "武器工坊",
+              "route": "#workshop"
+            },
+            {
+              "label": "反馈",
+              "route": "#feedback"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261031-map-experience",
+      "kind": "wiki",
+      "date": "2026-10-31",
+      "version": "20261031-map-experience",
+      "title": "地图探索、武器招式与连续浏览更新",
+      "publication": "主站更新",
+      "verification": "程序规则核对与网页验证通过",
+      "verifiedBuild": "26240042",
+      "summary": "地图找资源更直接，武器分开展示轻重击与开火方式；补充配件属性，优化看板与连续浏览。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "items",
+          "title": "看清武器招式与补充属性",
+          "before": "武器卡片以单组数值为主，轻重击、开火方式和部分配件修正不易对照。",
+          "after": "106件武器分开展示轻击、重击、不同射击模式及枪托近战，沿用原生数值条；43件配件补充切换时间、持用移速等数值，以金色区分。长柄锤与烧火棍的骨折触发仍在特殊效果中说明。",
+          "links": [
+            {
+              "label": "物品图鉴",
+              "route": "#items"
+            }
+          ]
+        },
+        {
+          "module": "maps",
+          "title": "在地图里看资源和物资",
+          "before": "平面概览与点位图分离，筛选目标不易在大图中找到，地点操作较分散。",
+          "after": "整合平面地图与资源筛选，采用对应容器图标；选中地点即可打开物资卡，查看图标、数量和预估概率。调整工具与面板布局，减少底部空白。",
+          "links": [
+            {
+              "label": "地图全览",
+              "route": "#maps"
+            },
+            {
+              "label": "容器与搜刮",
+              "route": "#loot"
+            }
+          ]
+        },
+        {
+          "module": "maps",
+          "title": "复核各地图资源点",
+          "before": "部分地面物资点未收录，部分旧点位和保险箱分类需要校正。",
+          "after": "复核后收录4741处资源点，其中地面物资987处；新增986处地面物资，移除258处过时或重复记录，校正5处冰箱点位与8处保险箱分类。",
+          "links": [
+            {
+              "label": "查看地图",
+              "route": "#maps"
+            }
+          ]
+        },
+        {
+          "module": "items",
+          "title": "近战按单手、双手筛选",
+          "before": "近战武器归为同一组，查找和选择不够直接。",
+          "after": "28件单手与14件双手近战分别筛选，武器工坊同步分组。",
+          "links": [
+            {
+              "label": "物品图鉴",
+              "route": "#items"
+            },
+            {
+              "label": "武器工坊",
+              "route": "#workshop"
+            }
+          ]
+        },
+        {
+          "module": "wiki",
+          "title": "打开详情后接着浏览",
+          "before": "关闭物品、敌怪等资料卡后，筛选、流量周期或浏览位置可能重置。",
+          "after": "保留详情背后的页面状态与位置；流量周期切换保留面板，改善闪烁、图标挤压和趋势数据排版。",
+          "links": [
+            {
+              "label": "物品图鉴",
+              "route": "#items"
+            },
+            {
+              "label": "敌怪图鉴",
+              "route": "#enemies"
+            },
+            {
+              "label": "流量看板",
+              "route": "#traffic"
+            }
+          ]
+        },
+        {
+          "module": "wiki",
+          "title": "更细的访问趋势与更轻的日常浏览",
+          "before": "看板以7天、30天为主，普通页面也会探测统计汇总。",
+          "after": "新增今日与逐小时访客趋势；普通页面不再探测汇总接口，统计请求限制大小并定期清理过期数据，完善日志重复归档处理。",
+          "links": [
+            {
+              "label": "流量看板",
+              "route": "#traffic"
+            }
+          ]
+        },
+        {
+          "module": "wiki",
+          "title": "更新使用指引",
+          "before": "介绍卡片仍有旧地图操作和较早资料说明，更新档案缺少近期维护记录。",
+          "after": "官方介绍作为第一章，更新地图、查资料、工坊与社区指引；补录已发布的敌怪雷达与腐化手册。每日首次弹出规则沿用现有设置。",
+          "links": [
+            {
+              "label": "关于本站",
+              "route": "#home"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261030-traffic-about",
+      "kind": "wiki",
+      "date": "2026-10-30",
+      "version": "20261030-analytics-daily",
+      "title": "流量看板与每日介绍",
+      "publication": "主站已发布",
+      "verification": "主站激活回执与当前运行版本已核对",
+      "verifiedBuild": null,
+      "summary": "公开查看访问趋势、热门物品和近期互动；每天首次进入可查看本站介绍。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "wiki",
+          "title": "看见大家关注的内容",
+          "before": "站内没有公开的访问概览，本站介绍以手动打开为主。",
+          "after": "新增7天、30天访问趋势、物品点击与浏览排行、热门页面和近期点赞评论；本站介绍每天首次进入显示一次，保留深链接入口。",
+          "links": [
+            {
+              "label": "流量看板",
+              "route": "#traffic"
+            },
+            {
+              "label": "关于本站",
+              "route": "#home"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261030-corruption",
+      "kind": "wiki",
+      "date": "2026-10-30",
+      "version": "20261030-corruption-mechanic",
+      "title": "装备腐化机制手册",
+      "publication": "主站更新",
+      "verification": "主站发布与后验检查通过",
+      "verifiedBuild": null,
+      "summary": "机制手册增加装备腐化说明，联动物品词条与工坊查阅。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "mechanics",
+          "title": "理解装备腐化",
+          "before": "腐化词条已有单独入口，缺少集中机制说明。",
+          "after": "机制手册补充装备腐化的规则与示例，并连接腐化词条和配装入口。",
+          "links": [
+            {
+              "label": "装备腐化",
+              "route": "#mechanic/corruption"
+            },
+            {
+              "label": "腐化词条",
+              "route": "#corruption"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261029-enemy-radar",
+      "kind": "wiki",
+      "date": "2026-10-29",
+      "version": "20261029-enemy-radar",
+      "title": "敌怪六维属性对照优化",
+      "publication": "主站更新",
+      "verification": "主站发布与后验检查通过",
+      "verifiedBuild": null,
+      "summary": "缩小雷达图刻度，让常见敌怪的属性差异更清楚。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "enemies",
+          "title": "六维雷达图采用0—40刻度",
+          "before": "0—100刻度下，多数敌怪的属性集中在中心，难以对照。",
+          "after": "统一使用0—40刻度，保留具体属性数值，便于直观看出差异。",
+          "links": [
+            {
+              "label": "敌怪图鉴",
+              "route": "#enemies"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261027-game07114",
+      "kind": "wiki",
+      "date": "2026-10-27",
+      "version": "20261027-game07114",
+      "title": "技能成长与装备血量说明",
+      "publication": "主站更新",
+      "verification": "按已核实内容补充，保留既有掉率",
+      "verifiedBuild": "26240042",
+      "summary": "补充技能成长、护甲片规则与7件装备血量加成，细化黄金O44的黑潮箱来源。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "mechanics",
+          "title": "成长与防护说明",
+          "before": "缺少技能逐级门槛、死亡经验保留和护甲片规则的集中说明。",
+          "after": "机制手册内增加技能成长、护甲片使用与保险、血量上限说明。",
+          "links": [
+            {
+              "label": "技能成长",
+              "route": "#mechanic/skill-growth"
+            },
+            {
+              "label": "护甲片使用与保险",
+              "route": "#mechanic/armor-plates"
+            }
+          ]
+        },
+        {
+          "module": "items",
+          "title": "装备属性与来源显示补齐",
+          "before": "7件装备缺少血量属性，黄金O44的物品来源只泛称可搜索容器。",
+          "after": "显示已有血量上限加成；黄金O44标明黑潮装备箱、钥匙条件和预估0.91%。既有掉率保持。",
+          "links": [
+            {
+              "label": "血量上限",
+              "route": "#mechanic/maximum-health"
+            },
+            {
+              "label": "绿洲 O44 黄金",
+              "route": "#item/reciver_OAS_O44"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "game-07114",
+      "kind": "game",
+      "date": "2026-10-27",
+      "version": "0.7.1-14",
+      "title": "0.7.1-14 修复与优化",
+      "publication": "官方公告",
+      "verification": "官方公告原文整理",
+      "verifiedBuild": null,
+      "summary": "调整技能成长与经验保留，修复配件、护甲片和界面显示问题。",
+      "source": {
+        "label": "Steam 官方更新公告",
+        "url": "https://steamcommunity.com/games/3299050/announcements/detail/704408827984878292",
+        "publishedAt": 1793094018
+      },
+      "changes": [
+        {
+          "module": "mechanics",
+          "title": "技能成长与经验保留",
+          "before": "技能升级与经验获取沿用先前规则。",
+          "after": "调整身体机能和武器熟练度门槛及部分获取方式；公告称任务失败仅损失各技能当前等级已累积经验的50%。",
+          "links": [
+            {
+              "label": "技能成长与经验保留",
+              "route": "#mechanic/skill-growth"
+            }
+          ]
+        },
+        {
+          "module": "items",
+          "title": "配件与护甲片修复",
+          "before": "低腐化稳定配件、胸甲内护甲片保险及耗尽耐久甲片存在异常。",
+          "after": "修复相关问题，胸甲界面显示其提供的最大生命值加成。",
+          "links": [
+            {
+              "label": "配件与护甲片修复",
+              "route": "#mechanic/armor-plates"
+            }
+          ]
+        },
+        {
+          "module": "other",
+          "title": "动画与营地优化",
+          "before": "部分动画过渡、监工死亡动画与营地使用存在问题。",
+          "after": "修复监工死亡动画，略提动画过渡速度，修复教程与市场中可使用安全屋营地功能的问题。",
+          "links": [
+            {
+              "label": "动画与营地优化",
+              "route": "#home"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261026-loot-four-rows",
+      "kind": "wiki",
+      "date": "2026-10-26",
+      "version": "20261026-loot-four-rows",
+      "title": "搜刮列表四排滚动",
+      "publication": "主站更新",
+      "verification": "桌面与窄屏布局、内部滚动和物品跳转检查",
+      "verifiedBuild": null,
+      "summary": "每个容器的物品区最多显示四排，更多物品在区域内上下滚动；较短列表按内容收紧。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "loot",
+          "title": "压缩大型容器列表",
+          "before": "物品较多的容器展开后占据很长页面。",
+          "after": "物品区设四排高度上限，超出部分内部滚动，保留物品名称、图标、数量、概率和详情链接。",
+          "links": [
+            {
+              "label": "容器与搜刮",
+              "route": "#loot"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261026-item-sources",
+      "kind": "wiki",
+      "date": "2026-10-26",
+      "version": "20261026-item-sources",
+      "title": "获取来源补充与卡片精简",
+      "publication": "主站发布版本",
+      "verification": "当前版本静态来源核对；游戏内未实测",
+      "verifiedBuild": "26160218",
+      "summary": "补全亡神手谕的研究制作流程，关联旧版物品的对应条目；物品、敌怪、NPC和配方介绍移除维护说明，敌怪改用五维防护图，武器保留原生参数条。",
+      "source": {
+        "label": "Wiki 维护记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "items",
+          "title": "补全研究制作与旧版对应说明",
+          "before": "亡神手谕未连通研究解锁和制作入口，部分旧版物品只提示来源待确认。",
+          "after": "补充纸条研究解锁、基础工作台及四种符文骨片的制作流程；旧版稳定粉末、香烟、私酒可跳转当前对应条目。",
+          "note": "未闭合的获取线索保留在维护数据中，介绍页不展示为可用路线；已有数值概率与实际前置条件保持。",
+          "links": [
+            {
+              "label": "亡神手谕",
+              "route": "#item/material_messageOfDeathGod"
+            },
+            {
+              "label": "研究所需的纸条",
+              "route": "#item/material_note_symbolicNotes_1"
+            }
+          ]
+        },
+        {
+          "module": "items",
+          "title": "让卡片直接展示游戏内容",
+          "before": "介绍中反复出现版本、核验状态和资料口径，数值主要以文字排列。",
+          "after": "隐藏维护说明和未闭合来源；保留数值、效果、任务和材料条件。敌怪用统一刻度的五维防护图，生命、移速、经验单独显示；武器继续使用原生属性条。",
+          "note": "独立阅读页和复制卡片图片同步精简。",
+          "links": [
+            {
+              "label": "物品图鉴",
+              "route": "#items"
+            },
+            {
+              "label": "敌怪图鉴",
+              "route": "#enemies"
+            },
+            {
+              "label": "NPC图鉴",
+              "route": "#npcs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261025-weapon-effects",
+      "kind": "wiki",
+      "date": "2026-10-25",
+      "version": "20261025-weapon-effects",
+      "title": "武器效果补齐与卡片分享",
+      "publication": "主站发布版本",
+      "verification": "当前版本基础规则静态核对；游戏内未实测",
+      "verifiedBuild": "26160218",
+      "summary": "补充17种武器固有特性及43件武器的招式说明，写清轻重击、触发概率、持续时间与必要条件；共55件武器新增效果说明。物品与敌怪介绍卡新增完整截图复制，方便直接分享。",
+      "source": {
+        "label": "Wiki 维护记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "items",
+          "title": "属性条下直接查看特殊效果",
+          "before": "部分武器只显示基础属性，缺少棕色固有特性及攻击附带效果。",
+          "after": "补齐重创、残响锚定、会心等17种固有特性；长柄锤、烧火棍等补上轻重击骨折，匕首标清两段命中分别判定，红左轮、黑手及其他已核实招式同步整理。骨折、流血、燃烧可跳转状态说明。",
+          "note": "仅列已核实效果；灰烬的准确触发率仍待核实，暂用“有概率”。缺少装备定义的条目保留待核实，不视作没有效果。",
+          "links": [
+            {
+              "label": "查看物品图鉴",
+              "route": "#items"
+            },
+            {
+              "label": "查看长柄锤",
+              "route": "#item/reciver_cold_Sledgehammer"
+            },
+            {
+              "label": "查看军官手枪",
+              "route": "#item/reciver_Officer_G33"
+            }
+          ]
+        },
+        {
+          "module": "workshop",
+          "title": "区分招式说明与基础对比数值",
+          "before": "缺少轻重击附效的就近说明，个别固有描述沿用旧简述。",
+          "after": "当前工坊增加招式说明，当前配装、比较详情和新导出图片使用最新固有效果说明；概率触发效果不会混入基础对比数值。",
+          "note": "已有配装结构、计算规则、报告摘要及历史帖子快照保持。",
+          "links": [
+            {
+              "label": "进入武器工坊",
+              "route": "#workshop"
+            },
+            {
+              "label": "查看机制手册",
+              "route": "#mechanics"
+            }
+          ]
+        },
+        {
+          "module": "wiki",
+          "title": "一键复制完整介绍卡片",
+          "before": "分享物品或敌怪资料时，需要手动滚动截图、拼图。",
+          "after": "物品与敌怪介绍卡可复制完整PNG，包含折叠来源、攻击说明及物资池；原卡展开和滚动位置保持。复制受限时可下载同一张图片，夯拉榜的精简介绍也会补齐完整物品资料。",
+          "note": "分享攻略正文，评论和账号信息保留在网页；不会自动上传或发帖。",
+          "links": [
+            {
+              "label": "查看物品图鉴",
+              "route": "#items"
+            },
+            {
+              "label": "查看敌怪图鉴",
+              "route": "#enemies"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261025-item-classification",
+      "kind": "wiki",
+      "date": "2026-10-25",
+      "version": "20261025-item-classification",
+      "title": "武器分类纠正与物品分类核对",
+      "publication": "主站发布版本",
+      "verification": "当前版本静态分类核对；游戏内未实测",
+      "verifiedBuild": "26160218",
+      "summary": "核对969件物品分类，纠正冲锋枪、机枪和狙击枪误归，拆分突击步枪与战斗步枪，并整理弹链箱及缺资料物品的中文分类。",
+      "source": {
+        "label": "Wiki 维护记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "items",
+          "title": "按武器实际类型查找",
+          "before": "多种枪械因共用持枪动画被放进“步枪/自动枪械”，部分类别仍显示内部标签。",
+          "after": "冲锋枪14件、突击步枪16件、战斗步枪1件、狙击枪9件、机枪2件；玩具枪单列，弹链箱恢复中文分类。钢筋长刀按原生物品分类归近战，缺失装备资料仍保留，不加入工坊可装配列表。镇静剂从食物移入医疗。",
+          "note": "只整理分类；数值、掉落概率、配件兼容和已有配装保持。",
+          "links": [
+            {
+              "label": "查看物品图鉴",
+              "route": "#items"
+            },
+            {
+              "label": "进入武器工坊",
+              "route": "#workshop"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261025-search-point-names",
+      "kind": "wiki",
+      "date": "2026-10-25",
+      "version": "20261025-container-names",
+      "title": "容器识别名与搜刮查找",
+      "publication": "主站发布版本",
+      "verification": "静态关联与模型外观交叉核对；游戏内未实测",
+      "verifiedBuild": "26160218",
+      "summary": "白门街88号1999的43个待核实方案补上Wiki识别名，其他地图同类条目同步整理；名称旁明确标记，原生正式名与识别名分别说明。",
+      "source": {
+        "label": "Wiki 维护记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "loot",
+          "title": "用可识别的物类替代统一占位名",
+          "before": "49类、60个方案缺少可靠原生标题，统一显示“容器（名称待核实）”，难以检索和区分。",
+          "after": "按原生模型、场景绑定、任务物品或钥匙用途交叉核实后，补上咖啡机、打印机、叉车、任务物品保险箱等Wiki识别名；白门街88号1999覆盖43个方案，其他地图17个方案同步更新。",
+          "note": "这些是明确标记的Wiki识别名，不冒充原生正式标题；55类已有正式名保留。",
+          "links": [
+            {
+              "label": "查看白门街88号1999容器",
+              "route": "#loot/Origin08_1999"
+            },
+            {
+              "label": "查看各地图搜刮",
+              "route": "#loot"
+            }
+          ]
+        },
+        {
+          "module": "loot",
+          "title": "名称可检索，说明集中阅读",
+          "before": "同一待核实标题下出现大量物资方案编号。",
+          "after": "可按物类搜索，名称旁有简短识别名标记，页顶统一说明；同名类别继续区分各自物资方案。现有容器深链、物品、图标、概率、数量及专属条件保持。",
+          "links": [
+            {
+              "label": "进入容器与搜刮",
+              "route": "#loot"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261025-container-refinement",
+      "kind": "wiki",
+      "date": "2026-10-25",
+      "version": "20261025-container-refinement",
+      "title": "容器概率补齐与首页更新提醒",
+      "publication": "主站发布版本",
+      "verification": "静态生成规则核对与页面验收；游戏内未实测",
+      "verifiedBuild": "26160218",
+      "summary": "补齐原来待核实的2313条容器物品概率和数量，现有4109条候选均有预估值；通用说明集中到页顶，首页直接显示最新 Wiki 更新。",
+      "source": {
+        "label": "Wiki 维护记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "loot",
+          "title": "补齐可计算的容器物品概率",
+          "before": "部分容器物品仍只显示候选，概率与数量待核实。",
+          "after": "补齐2313条预估概率与数量范围，现有4109条容器物品候选均可查看预估值，原有1796条结果保持；49类容器仍缺少可靠正式中文名，继续标注“名称待核实”。",
+          "note": "这是单次生成至少一件的机会，不等于容器出现概率，也不保证装配、容量和场景处理后可拿到相同物品。",
+          "links": [
+            {
+              "label": "查看容器与搜刮",
+              "route": "#loot"
+            }
+          ]
+        },
+        {
+          "module": "loot",
+          "title": "通用备注只读一次",
+          "before": "每个容器都重复显示外观和出现条件的通用说明。",
+          "after": "通用备注统一放在页顶“搜刮说明”中，可按需展开；天赋箱条件和已知空容器说明保留在对应容器内。",
+          "links": [
+            {
+              "label": "查看容器与搜刮",
+              "route": "#loot"
+            }
+          ]
+        },
+        {
+          "module": "wiki",
+          "title": "首页显示本轮更新",
+          "before": "已有更新记录，但最新摘要仍在物品图鉴内，新首页不显示。",
+          "after": "首页常驻本轮更新摘要，可直接打开对应公告；补记四频道、机制手册与反馈帖的已上线变化，保留全部旧公告。",
+          "links": [
+            {
+              "label": "返回首页",
+              "route": "#home"
+            }
+          ]
+        },
+        {
+          "module": "wiki",
+          "title": "关于本站与当前栏目同步",
+          "before": "介绍卡仍沿用旧栏目描述，含过时的账号和资料基线说明。",
+          "after": "保留八章介绍与交互示例，更新四频道、机制与状态、容器搜刮、配装对比与帖子应用、反馈讨论和更新档案入口；说明各栏目的资料版本范围。",
+          "links": [
+            {
+              "label": "回到首页，可从页脚打开关于本站",
+              "route": "#home"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261025-combat-status-loot",
+      "kind": "wiki",
+      "date": "2026-10-25",
+      "version": "20261024-wiki-combat-status-loot",
+      "title": "机制排版、状态手册、敌怪攻击与容器搜刮",
+      "publication": "主站发布版本",
+      "verification": "静态资料核对与页面验收；游戏内未实测",
+      "verifiedBuild": "26160218",
+      "summary": "机制目录改为紧凑分组，魔法帽示例并入相位转移；补充增益减益状态、敌怪攻击和分地图容器物资。",
+      "source": {
+        "label": "Wiki 维护记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "mechanics",
+          "title": "机制与状态集中阅读",
+          "before": "机制分类长短失衡，装备实例单独占一栏，缺少状态目录。",
+          "after": "机制分类纵向展开，同组条目紧凑并排；魔法帽在相位转移内直接讲解；状态按增益、减益等分类，附可核实图标并可搜索、展开说明。",
+          "links": [
+            {
+              "label": "查看机制与状态",
+              "route": "#mechanics"
+            }
+          ]
+        },
+        {
+          "module": "enemies",
+          "title": "攻击方式与防护前伤害区间",
+          "before": "敌怪主要展示基础属性、出没与战利品。",
+          "after": "补充各攻击的普通命中区间、单位、附加状态与条件，随机武器按合法初始装配联合计算；同步已核实正式名称，保留旧称搜索。",
+          "note": "基础区间不等于实际扣血；无法可靠核实的内容保持说明，不补造数字。",
+          "links": [
+            {
+              "label": "查看敌怪攻击",
+              "route": "#enemies"
+            }
+          ]
+        },
+        {
+          "module": "loot",
+          "title": "分地图查看容器物资",
+          "before": "缺少按地图和容器汇总的物品、数量与概率参照。",
+          "after": "探索与任务新增容器与搜刮；按地图查看容器外观、物品图标、名称、数量与可核实的预估概率，点击物品进入原图鉴并可返回继续查找。",
+          "note": "概率表示单次生成至少一件；不等于箱子出现概率或最终可拿到的概率。未知名称与概率明确保留待核实。",
+          "links": [
+            {
+              "label": "查看容器与搜刮",
+              "route": "#loot"
+            },
+            {
+              "label": "查看地图",
+              "route": "#maps"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261025-channels-community-backfill",
+      "kind": "wiki",
+      "date": "2026-10-25",
+      "version": "20261024-wiki-mechanics-channels",
+      "title": "四频道导航、机制手册与反馈帖子（补记）",
+      "publication": "此前已上线，本次补记",
+      "verification": "页面交互与旧反馈保留已验收；游戏内未实测",
+      "verifiedBuild": "26160218",
+      "summary": "补记已上线的四频道首页、攻略搜索、机制计算示例与反馈讨论。",
+      "source": {
+        "label": "Wiki 维护记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "wiki",
+          "title": "四频道与范围搜索",
+          "before": "顶层导航栏目较多，缺少集中查找入口。",
+          "after": "归为资料库、探索与任务、配装与机制、玩家社区四频道；首页保留常用入口，搜索可限定频道，旧攻略链接继续可用。",
+          "links": [
+            {
+              "label": "查看首页",
+              "route": "#home"
+            }
+          ]
+        },
+        {
+          "module": "mechanics",
+          "title": "用公式和例子讲清关键属性",
+          "before": "防御、相位转移等关键概念缺少集中解释。",
+          "after": "机制手册用中文说明适用范围、计算步骤与实例，可调整示例数值查看变化；装备属性可直达对应机制。",
+          "note": "公式按已核对版本整理；示例计算不代表实际战斗测量。",
+          "links": [
+            {
+              "label": "查看机制手册",
+              "route": "#mechanics"
+            }
+          ]
+        },
+        {
+          "module": "wiki",
+          "title": "旧反馈也可继续讨论",
+          "before": "反馈只作列表展示，无法围绕单条建议留言与点赞。",
+          "after": "保留原反馈作者、正文和时间，每条反馈都有独立帖子；登录后可点赞和留言，站主回复带有身份标识。",
+          "links": [
+            {
+              "label": "查看 Wiki 反馈",
+              "route": "#feedback"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "game-071-13",
+      "kind": "game",
+      "date": "2026-10-23",
+      "version": "0.7.1-13",
+      "title": "0.7.1-13 修复与优化",
+      "publication": "公告已发布",
+      "verification": "Wiki 待核对",
+      "verifiedBuild": null,
+      "summary": "搜索高亮、部分物品和敌怪行为修复；最终伤害效果调整。以下为公告摘要，不代表 Wiki 已逐项同步。",
+      "source": {
+        "label": "Steam 官方公告（英文）",
+        "url": "https://store.steampowered.com/news/app/3299050/view/1847286114035588",
+        "publishedAt": 1792746853,
+        "timezone": "Asia/Shanghai"
+      },
+      "changes": [
+        {
+          "module": "maps",
+          "title": "搜索点与地面物品高亮恢复",
+          "before": "公告称代码冲突导致高亮丢失。",
+          "after": "恢复高亮，所有部门均可使用；部分隐蔽搜索点仍不会高亮。",
+          "note": "地图坐标与资源点未据此改动。",
+          "links": [
+            {
+              "label": "查看地图",
+              "route": "#maps"
+            }
+          ]
+        },
+        {
+          "module": "items",
+          "title": "最终伤害与物品使用修复",
+          "before": "最终伤害效果此前额外附加等量真实伤害。",
+          "after": "公告改为按比例增加最终伤害；同时修复部分研究解锁、近战攻击及容器内随机箱使用。",
+          "note": "数值公式与具体条目仍待同 Build 核对，不能当作工坊新公式。",
+          "links": [
+            {
+              "label": "查看物品",
+              "route": "#items"
+            },
+            {
+              "label": "查看腐化词条",
+              "route": "#corruption"
+            }
+          ]
+        },
+        {
+          "module": "enemies",
+          "title": "敌怪位置与影子行为修复",
+          "before": "公告列出敌怪困在安全屋、影子异常逃离等问题。",
+          "after": "修复相关行为；具体中文条目映射待核对。",
+          "links": [
+            {
+              "label": "查看敌怪",
+              "route": "#enemies"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261023",
+      "kind": "wiki",
+      "date": "2026-10-23",
+      "version": "20261023-wiki-history-probability",
+      "title": "更新档案、来源概率与工坊对比",
+      "publication": "主站发布版本",
+      "verification": "静态资料与本地界面已验收；游戏内未验证",
+      "verifiedBuild": "26157750",
+      "summary": "新增互动更新档案、来源级理论生成率、原生数值差值、多配装比较和帖子应用；任务、敌怪及商店资料按当前构建局部核对。",
+      "source": {
+        "label": "阅读更新档案",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "wiki",
+          "title": "更新档案可回看",
+          "before": "首页只显示本次机制说明。",
+          "after": "新增版本节点、记录类型与模块筛选、前后变化及条目直达。",
+          "note": "本轮发布至 nsp-wiki.shiaoming.cn；原 Sites 入口独立维护。",
+          "links": [
+            {
+              "label": "返回目录",
+              "route": "#items"
+            }
+          ]
+        },
+        {
+          "module": "items",
+          "title": "获得来源显示可核验的生成率",
+          "before": "多数来源只写“有概率获得”。",
+          "after": "969件物品的5932条来源全部分类；820件至少有一个来源显示部分或完整理论生成率，其余保留粗略说明。",
+          "note": "基于EA Build26157750静态生成规则，自动装配、容纳、消耗与实际拾取前；未测游戏实际掉率。",
+          "links": [
+            {
+              "label": "查看物品来源",
+              "route": "#items"
+            }
+          ]
+        },
+        {
+          "module": "workshop",
+          "title": "原生差值与多配装看板",
+          "before": "只能查看单套数值，帖子没有应用按钮。",
+          "after": "数值增加按属性优劣区分的红绿差值；对比看板以紧凑并排面板呈现游戏原生参数条、点阵与位置指示，每项一行并突出变化量，当前/保存/帖子方案可加入并切换基准，公开配装帖可应用并恢复上次试装。",
+          "note": "沿用同一引擎；未知和不可比项保持中性，无综合战力或DPS预测。",
+          "links": [
+            {
+              "label": "进入武器工坊",
+              "route": "#workshop"
+            }
+          ]
+        },
+        {
+          "module": "workshop",
+          "title": "东方工业C79及配件接口同步",
+          "before": "旧资料仍使用步枪分类及旧接口标签。",
+          "after": "按当前原生EquipSlotData的SMG标签更新C79、尼龙后握把、折叠枪托等配件。",
+          "note": "游戏动作仍沿用Rifle动画标识，不能据此把枪械类别误判回步枪。",
+          "links": [
+            {
+              "label": "查看C79",
+              "route": "#item/reciver_Oarin_C79"
+            }
+          ]
+        },
+        {
+          "module": "quests",
+          "title": "不明武装人员流程核对",
+          "before": "回收落叶识别牌触发，提交落叶识别牌。",
+          "after": "按当前配置改为击杀相关目标触发、提交3张黑潮识别牌，更新正文、奖励和关联资料。",
+          "note": "保留既有任务ID、手动标记和画布位置；未验证实机领取。",
+          "links": [
+            {
+              "label": "查看任务",
+              "route": "#quest/FallenLeaf_1961_UnidentifiedArmedPersonnel"
+            }
+          ]
+        },
+        {
+          "module": "enemies",
+          "title": "黑潮佣兵与实习保安",
+          "before": "部分旧组织名与主管召唤关系仍过时。",
+          "after": "更新当前名称并保留旧名搜索；主管相关条目说明实习保安召唤、基础经验和独立掉落触发差异。",
+          "note": "实习保安新形象尚未验证，不借用旧图片伪装为已完成。",
+          "links": [
+            {
+              "label": "查看敌怪",
+              "route": "#enemies"
+            }
+          ]
+        },
+        {
+          "module": "maps",
+          "title": "地图修复提醒与旧几何边界",
+          "before": "现有几何来自EA Build25989531。",
+          "after": "在地图与阅读页显示版本提醒，公告变更集中记录；当前元数据已读，但几何不冒标最新。",
+          "note": "新碰撞、通路、地图外出生与醉酒行为仍需逐项地图/实机验收。",
+          "links": [
+            {
+              "label": "查看地图",
+              "route": "#maps/Origin12_1535"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "game-071-12",
+      "kind": "game",
+      "date": "2026-10-22",
+      "version": "0.7.1-12",
+      "title": "0.7.1-12 修复与优化",
+      "publication": "公告已发布",
+      "verification": "Wiki 待核对",
+      "verifiedBuild": null,
+      "summary": "调整升级经验、C79 分类及接口、任务与敌怪，修复地图和商店内容。公告中的掉率调整未提供百分比。",
+      "source": {
+        "label": "Steam 官方公告（英文）",
+        "url": "https://store.steampowered.com/news/app/3299050/view/1847286114031742",
+        "publishedAt": 1792658135,
+        "timezone": "Asia/Shanghai"
+      },
+      "changes": [
+        {
+          "module": "workshop",
+          "title": "C79 改为冲锋枪并限制配件接口",
+          "before": "C79 原分类为突击步枪。",
+          "after": "改为冲锋枪，尼龙后握把与折叠枪托增加冲锋枪接口限制。",
+          "note": "公告摘要；工坊兼容范围以当前规则核验标识为准。",
+          "links": [
+            {
+              "label": "前往武器工坊",
+              "route": "#workshop"
+            }
+          ]
+        },
+        {
+          "module": "quests",
+          "title": "不明武装人员任务与后续调整",
+          "before": "旧流程的触发、完成条件与剧情文本待对照。",
+          "after": "公告调整相关任务与后续文本，并修复部分商店上新奖励提示。",
+          "note": "不依据删节公告补写剧情。",
+          "links": [
+            {
+              "label": "查看任务攻略",
+              "route": "#quests"
+            }
+          ]
+        },
+        {
+          "module": "enemies",
+          "title": "敌怪命名、经验与实习保安",
+          "before": "部分人形敌怪旧名称；主管召唤正式保安。",
+          "after": "调整部分名称及击杀经验；主管改召唤物品与经验奖励更少的实习保安。",
+          "links": [
+            {
+              "label": "查看敌怪图鉴",
+              "route": "#enemies"
+            }
+          ]
+        },
+        {
+          "module": "items",
+          "title": "钥匙掉率与终端组合包",
+          "before": "钥匙旧掉率及组合包内容需同版证据对照。",
+          "after": "公告提高 BLAK-TIDE 装备箱钥匙掉率，优化应急口粮与护甲组合包；未给出精确概率。",
+          "note": "公告未披露的数值保持未知，不能用权重代替实际获得率。",
+          "links": [
+            {
+              "label": "查找物品来源",
+              "route": "#items"
+            },
+            {
+              "label": "查看 NPC 商店",
+              "route": "#npcs"
+            }
+          ]
+        },
+        {
+          "module": "maps",
+          "title": "地图碰撞、出生与通路修复",
+          "before": "公告列出地图外出生、柜体缺少碰撞等问题。",
+          "after": "修复相关问题，并调整灰桦山 15:35 的高原至山顶通路。",
+          "note": "这些修复不直接证明 Wiki 地图几何或坐标已更新。",
+          "links": [
+            {
+              "label": "查看地图",
+              "route": "#maps"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261021",
+      "kind": "wiki",
+      "date": "2026-10-21",
+      "version": null,
+      "title": "工坊原生配装图与词条排版",
+      "publication": "已发布",
+      "verification": "发布记录已核对；静态计算",
+      "verifiedBuild": "25989531（基础）；26045796（局部）",
+      "summary": "配装图沿用游戏原生属性条，并改善完整词条与重复词条的排版。",
+      "source": {
+        "label": "查看武器工坊",
+        "url": "/workshop/",
+        "releaseId": "20261021-workshop-native-panel"
+      },
+      "changes": [
+        {
+          "module": "workshop",
+          "title": "原生属性面板与完整词条",
+          "before": "导出图片的属性及长词条需要更清晰的阅读布局。",
+          "after": "按原生顺序、纹理与刻度显示属性；配件两列分组、长词条换行、重复词条逐条保留。",
+          "note": "静态条件仍为腐化100%、效果倍率1、重量倍率1，不代表角色实测。",
+          "links": [
+            {
+              "label": "前往武器工坊",
+              "route": "#workshop"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wiki-20261019",
+      "kind": "wiki",
+      "date": "2026-10-19",
+      "version": null,
+      "title": "获取来源与日常查阅优化",
+      "publication": "已发布",
+      "verification": "发布记录已核对；静态来源",
+      "verifiedBuild": "26045796（局部资料）",
+      "summary": "物品来源明确区分静态候选与待确认；筛选直显，并加入站主提醒与刷新缓存修复。",
+      "source": {
+        "label": "查看物品图鉴",
+        "url": "/items/",
+        "releaseId": "20261019-independent-wiki-update-v2"
+      },
+      "changes": [
+        {
+          "module": "items",
+          "title": "来源候选与待确认",
+          "before": "旧资料的来源覆盖与空掉落表需要重新核对。",
+          "after": "核对局部资料，区分静态来源候选与来源待确认，修正空掉落表；保留历史物品身份。",
+          "note": "待确认不等于无法获得，静态来源不等于实机保证。",
+          "links": [
+            {
+              "label": "查找物品",
+              "route": "#items"
+            }
+          ]
+        },
+        {
+          "module": "wiki",
+          "title": "直显筛选与站主提醒",
+          "before": "筛选折叠、刷新可能继续使用旧资料。",
+          "after": "分类、排序与筛选直接显示，增加简洁站主提醒，并修复资料和工坊的刷新缓存。",
+          "links": [
+            {
+              "label": "返回目录",
+              "route": "#items"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

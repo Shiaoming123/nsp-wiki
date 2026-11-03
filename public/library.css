@@ -1,0 +1,82 @@
+/* Third-stage reference surfaces. Unslop method: Damir Sokolovsky, CC BY 4.0. */
+body[data-wiki-channel=library]:not(.seo-page)>main{max-width:1280px;padding-inline:32px;}
+.reference-heading{margin:24px 0 20px;padding:0;}
+.reference-heading h1{font-size:28px;line-height:1.4;font-weight:600;margin:0 0 8px;letter-spacing:0;}
+.reference-heading .intro-copy{font-size:15px;line-height:1.8;color:var(--muted);margin:8px 0;max-width:80ch;}
+.reference-heading .kicker{font-size:13px;color:var(--muted);margin:0 0 8px;}
+:where(.reference-toolbar){display:flex;flex-wrap:wrap;align-items:end;gap:8px;padding:12px;background:var(--deep);border:1px solid var(--border);border-radius:var(--radius-terminal);}
+.reference-toolbar :where(input,select,button),.reference-actions a{min-height:44px;}
+.reference-toolbar :where(input,select){font-size:14px;line-height:1.5;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-terminal);background:var(--panel);color:var(--text);max-width:100%;min-width:0;}
+.reference-toolbar :where(label){font-size:13px;color:var(--muted);}
+.reference-field{display:flex;flex-direction:column;gap:8px;min-width:0;}
+.reference-field .guide-search{min-width:0;width:100%;margin:0;}
+.reference-count{font-size:14px;color:var(--muted);line-height:1.7;margin:12px 0;}
+.reference-grid{gap:12px;}
+.reference-card{min-width:0;border:1px solid var(--border);border-radius:var(--radius-terminal);box-shadow:none;background:var(--deep);transition:background-color var(--motion-fast) var(--motion-easing),border-color var(--motion-fast) var(--motion-easing);}
+.reference-card:hover{background:var(--panel);border-color:var(--accent);transform:none;}
+.reference-card :is(h2,.item-name){font-weight:500;overflow-wrap:anywhere;}
+.reference-card p{overflow-wrap:anywhere;}
+.reference-item-card{padding:0;}
+.reference-card .item-art{height:112px;}
+.enemy-tools.reference-toolbar{display:grid;grid-template-columns:minmax(200px,1.2fr) repeat(3,minmax(0,1fr));gap:12px;}
+.enemy-grid.reference-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));}
+.reference-enemy-card{display:grid;grid-template-columns:72px minmax(0,1fr);gap:6px 16px;align-content:start;padding:16px;}
+.reference-enemy-card .enemy-art{grid-column:1;grid-row:1/span 5;width:72px;height:112px;margin:0;}
+.reference-enemy-card>:is(h2,p,.enemy-variant){grid-column:2;margin:0;min-height:0;}
+.reference-enemy-card h2{font-size:16px;line-height:1.5;}
+.reference-enemy-card .enemy-location{font-size:12px;line-height:1.65;color:var(--muted);}
+.reference-enemy-card .enemy-variant{font-size:13px;line-height:1.6;}
+.reference-enemy-card:not(:has(.enemy-art)){grid-template-columns:minmax(0,1fr);}
+.reference-enemy-card:not(:has(.enemy-art))>*{grid-column:1;}
+#item-page:has(#browser:not([hidden])) .categories{display:flex;flex-wrap:wrap;gap:8px;}
+#item-page:has(#browser:not([hidden])) .category{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;flex:0 1 auto;}
+#item-page:has(#browser:not([hidden])) .category-symbol{width:24px;height:24px;flex:none;font-size:16px;}
+#item-page:has(#browser:not([hidden])) .category-copy{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+#item-page:has(#browser:not([hidden])) .category-name{font-size:13px;}
+#item-page:has(#browser:not([hidden])) .category-count{font-size:12px;}
+#item-page:has(#browser:not([hidden])) .category-arrow{display:none;}
+.reference-page .browser-heading h2{font-size:22px;font-weight:500;}
+#item-page>.intro.reference-heading{padding:0;margin:24px 0 20px;gap:24px;}
+.reference-page .search-input{padding:0 12px;}
+.reference-page .search-input input{min-height:44px;font-size:14px;}
+.reference-page .search-input input:focus-visible{outline:none;}
+.reference-page .search-input:focus-within{outline:var(--focus-width) solid var(--accent);outline-offset:var(--focus-offset);border-color:var(--accent);box-shadow:none;}
+.reference-page .item-sort-tools{gap:12px;}
+.reference-categories button{border-radius:var(--radius-terminal);min-height:44px;font-size:14px;}
+#detail:has(.reference-detail){width:min(1040px,calc(100vw - 48px));height:fit-content;max-height:calc(100dvh - 64px);padding:0;}
+#detail:has(.reference-detail[data-reading-layout=compact]){width:min(720px,calc(100vw - 16px));}
+#detail:has(.terminal-item[data-detail-layout=brief]){width:min(760px,calc(100vw - 16px));}
+.seo-page .terminal-item[data-detail-layout=brief]{max-width:760px;margin-inline:auto;}
+#detail .terminal-item[data-detail-layout=brief] .detail-economy,.seo-page .terminal-item[data-detail-layout=brief] .detail-economy{justify-content:flex-start;}
+#detail:has(.reference-detail)>.detail-top{padding:8px 20px;background:var(--deep);border-bottom:1px solid var(--border);font-size:13px;}
+.reference-detail{padding:24px;font-size:15px;line-height:1.8;min-width:0;overflow-wrap:anywhere;}
+.reference-detail>.reference-heading{margin:0 0 20px;padding:0 0 16px;border-bottom:1px solid var(--border);}
+.reference-detail .reference-heading :is(h1,h2){font-size:24px;line-height:1.5;font-weight:600;margin:4px 0;letter-spacing:0;}
+.reference-detail .detail-tag{font-size:13px;color:var(--muted);margin:0 0 8px;}
+.reference-detail .description{font-size:15px;line-height:1.8;}
+.reference-detail .detail-section-title{font-size:16px;font-weight:500;line-height:1.6;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.reference-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;}
+.reference-actions:empty{display:none;}
+.reference-actions :is(.static-guide-link,.npc-feedback-link){display:inline-flex;align-items:center;min-height:44px;margin:0;padding:0;font-size:13px;text-underline-offset:4px;}
+.reference-detail>.reference-heading:has(>.card-capture-tools){display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;}
+.reference-detail>.reference-heading>:is(.detail-tag,h1,h2,.reference-actions){grid-column:1;}
+.reference-detail .reference-heading>.card-capture-tools{grid-column:2;grid-row:1/span 3;align-self:start;max-width:220px;margin:0;flex-wrap:wrap;gap:8px;}
+.reference-detail .card-capture-tools button{min-height:44px;font-size:13px;}
+.reference-detail .enemy-profile{grid-template-columns:minmax(180px,.7fr) minmax(0,1fr);gap:24px;padding:20px;border:1px solid var(--border);background:var(--deep);border-radius:var(--radius-terminal);}
+.reference-detail .enemy-detail-art{max-height:280px;}
+.reference-detail .enemy-profile-no-art{grid-template-columns:minmax(0,1fr);}
+.reference-detail .enemy-profile .detail-section-title{margin-top:0;}
+.reference-detail .related-links .inline-link,.reference-related .inline-link{min-height:44px;border-radius:var(--radius-terminal);}
+.reference-detail .loot-pool{border-radius:var(--radius-terminal);}
+.reference-detail .loot-pool>summary{min-height:44px;line-height:1.7;}
+@media(max-width:800px){.enemy-tools.reference-toolbar{grid-template-columns:repeat(2,minmax(0,1fr));}.enemy-tools .reference-field:first-child{grid-column:1/-1;}.enemy-tools .reference-field:last-child{grid-column:1/-1;}}
+@media(max-width:700px){
+ body[data-wiki-channel=library]:not(.seo-page)>main{padding-inline:16px;}
+ .reference-heading{margin:20px 0 16px;}.reference-heading h1{font-size:28px;}
+ .reference-enemy-card{grid-template-columns:64px minmax(0,1fr);padding:12px;gap:6px 12px;}.reference-enemy-card .enemy-art{width:64px;height:96px;}
+ #detail:has(.reference-detail){width:calc(100vw - 16px);max-height:calc(100dvh - 16px);}
+ .reference-detail{padding:16px;}.reference-detail>.reference-heading:has(>.card-capture-tools){display:block;}.reference-detail .reference-heading>.card-capture-tools{max-width:none;margin:12px 0 0;}
+ .reference-detail .enemy-profile{grid-template-columns:minmax(0,1fr);padding:12px;gap:16px;}.reference-detail .enemy-detail-art{height:180px;max-width:100%;}
+ .reference-detail .enemy-protection{max-width:100%;}
+}
+@media(prefers-reduced-motion:reduce){.reference-card{transition:none;}}
