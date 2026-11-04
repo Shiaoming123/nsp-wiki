@@ -6,6 +6,34 @@
   },
   "records": [
     {
+      "id": "wiki-20261104-home-video-paging",
+      "kind": "wiki",
+      "date": "2026-11-04",
+      "version": "20261104-home-video-paging",
+      "title": "更多敌怪视频与首页跨段切换",
+      "publication": "主站已发布",
+      "verification": "细滚轮、资料返回及视频验证",
+      "summary": "新增雾人与恐怖山民的视频攻略，首页卡片更紧凑；平滑鼠标跨过分界后完整滑入视频区域。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "wiki",
+          "title": "新增实战视频",
+          "before": "雾人和恐怖山民资料没有折叠视频入口，首页仅有四条攻略。",
+          "after": "两张敌怪资料补充官方B站播放器及直达链接，首页共六条视频，继续按需加载。"
+        },
+        {
+          "module": "wiki",
+          "title": "紧凑首页与跨段切换",
+          "before": "宽屏视频卡片偏大，细滚轮未触发原有弱落点修正。",
+          "after": "宽屏三列、中屏两列、手机单列；跨过分界后约420ms完整滑入视频区，同次惯性只触发一次，可反向打断，页脚柔和滚动开关可停用。"
+        }
+      ]
+    },
+    {
       "id": "wiki-20261104-workshop-video",
       "kind": "wiki",
       "date": "2026-11-04",
