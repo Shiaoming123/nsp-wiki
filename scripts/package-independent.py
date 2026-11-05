@@ -21,11 +21,13 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def prepare(client, output, *, release, sourceCommit):
+def prepare(client, output, *, release, sourceCommit, materialize=True, compresslevel=6):
     if not isinstance(release, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,99}', release):
         raise ValueError('Release must be a safe 1-100 character archive identifier')
     if not isinstance(sourceCommit, str) or not re.fullmatch(r'[a-fA-F0-9]{40}', sourceCommit):
         raise ValueError('Source commit must be a full 40-hex Git commit')
+    if type(materialize) is not bool or type(compresslevel) is not int or not 0 <= compresslevel <= 9:
+        raise ValueError('Invalid package output or compression option')
     client, output = Path(client).absolute(), Path(output).absolute()
     if client.is_symlink() or client.is_junction():
         raise ValueError('Linked client root')
@@ -82,15 +84,16 @@ def prepare(client, output, *, release, sourceCommit):
     files['nsp-release.json'] = (json.dumps(info, ensure_ascii=False, sort_keys=True, indent=2) + '\n').encode()
     output.mkdir(parents=True)
     public = output / 'public'
-    for name, data in files.items():
-        target = public / name
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(data)
+    if materialize:
+        for name, data in files.items():
+            target = public / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
     manifest = {**info, 'files': len(files), 'bytes': sum(map(len, files.values())),
                 'sha256': {name: digest(data) for name, data in sorted(files.items())}}
     (output / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8', newline='\n')
     archive = output / archive_name
-    with archive.open('wb') as raw, gzip.GzipFile(filename='', mode='wb', fileobj=raw, mtime=0) as compressed, tarfile.open(fileobj=compressed, mode='w', format=tarfile.PAX_FORMAT) as tar:
+    with archive.open('wb') as raw, gzip.GzipFile(filename='', mode='wb', fileobj=raw, mtime=0, compresslevel=compresslevel) as compressed, tarfile.open(fileobj=compressed, mode='w', format=tarfile.PAX_FORMAT) as tar:
         for name, data in sorted(files.items()):
             entry = tarfile.TarInfo(name)
             entry.size, entry.mode, entry.mtime = len(data), 0o644, 0

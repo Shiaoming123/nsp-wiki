@@ -15,7 +15,7 @@ def build(root,commit,tag,output):
         if p.is_absolute() or '..' in p.parts or '\\' in name or not re.fullmatch(r'[a-f0-9]{64}',h):raise ValueError('Unsafe export entry')
     output.mkdir(parents=True,exist_ok=False);archive=output/('nsp-wiki-'+manifest['release']+'.tar.gz')
     with subprocess.Popen(['git','-C',str(root),'-c','core.autocrlf=false','archive','--format=tar',commit],stdout=subprocess.PIPE) as process:
-        with archive.open('xb') as raw_archive,gzip.GzipFile(filename='',fileobj=raw_archive,mode='wb',mtime=0) as compressed:shutil.copyfileobj(process.stdout,compressed)
+        with archive.open('xb') as raw_archive,gzip.GzipFile(filename='',fileobj=raw_archive,mode='wb',mtime=0,compresslevel=6) as compressed:shutil.copyfileobj(process.stdout,compressed)
         if process.wait()!=0:raise ValueError('Git archive failed')
     found={}
     with tarfile.open(archive,'r:gz') as contents:

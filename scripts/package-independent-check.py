@@ -96,6 +96,23 @@ def verify(output):
 
 
 class PackageCheck(unittest.TestCase):
+    def test_archive_only_repeats_all_bytes_without_public_tree(self):
+        first = package.prepare(self.client, self.root / 'materialized', release='repeat', sourceCommit='a' * 40)
+        second = package.prepare(self.client, self.root / 'archive-only', release='repeat', sourceCommit='a' * 40, materialize=False)
+        self.assertEqual(first, second)
+        self.assertFalse((self.root / 'archive-only/public').exists())
+        for name in ('manifest.json', first['archiveName'], 'archive-sha256.txt'):
+            self.assertEqual((self.root / 'materialized' / name).read_bytes(), (self.root / 'archive-only' / name).read_bytes())
+        (self.client / 'robots.txt').write_text('changed input', encoding='utf-8')
+        changed = package.prepare(self.client, self.root / 'changed', release='repeat', sourceCommit='a' * 40, materialize=False)
+        self.assertNotEqual(first['archiveSHA256'], changed['archiveSHA256'])
+
+    def test_invalid_compression_options_rejected_before_output(self):
+        for options in ({'materialize': 0}, {'compresslevel': True}, {'compresslevel': -1}, {'compresslevel': 10}):
+            with self.subTest(options=options), self.assertRaises(ValueError):
+                package.prepare(self.client, self.root / 'invalid', release='repeat', sourceCommit='a' * 40, **options)
+        self.assertFalse((self.root / 'invalid').exists())
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
