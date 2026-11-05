@@ -1,5 +1,22 @@
 // Render with the existing guide UI so the reading pages retain its data semantics.
 const fs = require('node:fs'), path = require('node:path'), http = require('node:http'), zlib = require('node:zlib');
+const githubFooterLink='<a href="https://github.com/Shiaoming123/nsp-wiki" target="_blank" rel="noopener noreferrer">GitHub ↗</a>';
+function withGithubFooter(html){
+  const start=html.indexOf('<footer>');if(start<0)return html;
+  const end=html.indexOf('</footer>',start),span=html.indexOf('</span>',start);
+  if(end<0||span<0||span>end)throw Error('Unexpected footer structure');
+  const footer=html.slice(start,end),count=footer.split(githubFooterLink).length-1;
+  if(count===1)return html;
+  if(count||footer.includes('github.com/Shiaoming123/nsp-wiki'))throw Error('Conflicting GitHub footer link');
+  return html.slice(0,span)+' '+githubFooterLink+html.slice(span);
+}
+if(process.argv.includes('--footer-only')){
+  const root=path.resolve(__dirname,'../public'),walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]);
+  const edits=walk(root).filter(p=>p.endsWith('.html')).map(file=>{const before=fs.readFileSync(file,'utf8');return{file,before,after:withGithubFooter(before)};});
+  for(const e of edits)if(e.before!==e.after)fs.writeFileSync(e.file,e.after);
+  console.log(JSON.stringify({status:'PASS',footerPages:edits.filter(e=>e.after.includes('<footer>')).length,changed:edits.filter(e=>e.before!==e.after).length}));
+  return;
+}
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const {buildUiAssets, cleanUiAssets, sources: uiSources} = require('./build-ui-assets.cjs');
 const WikiNav=require('../lib/wiki-navigation.cjs');
@@ -105,7 +122,7 @@ function write(url, title, description, body, section = '', image = '', noindex 
   const stamp='';
   const html = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#202927">${metadata(url,title,description,crumbs,image,noindex)}${WikiBrand.head}<link rel="stylesheet" href="/${uiAssets.css}">${community}</head><body class="seo-page"><a class="skip-link" href="#main-content">跳到攻略内容</a><header class="site-header"><a class="brand" href="/" aria-label="返回攻略首页">${WikiBrand.mark}<span>查无此地 <small>生存手册</small></span></a>${WikiNav.navigation(section,true)}</header><main id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="当前位置">${breadcrumb}</nav><article>${stamp?`<p class="guide-note">${esc(stamp)}</p>`:''}${body}</article></main><footer><span>查无此地 · 生存手册</span>${link('/','返回交互图鉴')}</footer></body></html>`;
   const filename = url==='/404.html'?path.join(ROOT,'404.html'):path.join(ROOT,...url.split('/').filter(Boolean),'index.html');
-  fs.mkdirSync(path.dirname(filename),{recursive:true});fs.writeFileSync(filename,html.replace(/[ \t]+(?=\r?$)/gm,''));
+  fs.mkdirSync(path.dirname(filename),{recursive:true});fs.writeFileSync(filename,withGithubFooter(html).replace(/[ \t]+(?=\r?$)/gm,''));
   if(!noindex) pages.push({url,title,description,filename:path.relative(ROOT,filename).replace(/\\/g,'/')});
 }
 function listing(records, kind) {
@@ -238,7 +255,7 @@ async function main() {
   html=html.replace(/\s*<title>[\s\S]*?<\/title>/,'').replace(/\s*<meta name="description"[^>]*>/,'');
   html=html.replace('</head>',`<!-- seo:head -->${metadata('/',rootTitle,rootDesc)}<!-- /seo:head --></head>`);
   html=html.replace('</footer>',`<!-- seo:directory -->${WikiNav.directory()}<!-- /seo:directory --></footer>`);
-  fs.writeFileSync(rootFile,html);pages.unshift({url:'/',title:rootTitle,description:rootDesc,filename:'index.html'});
+  fs.writeFileSync(rootFile,withGithubFooter(html));pages.unshift({url:'/',title:rootTitle,description:rootDesc,filename:'index.html'});
   const lastmod=new Date().toISOString().slice(0,10);
   fs.writeFileSync(path.join(ROOT,'sitemap.xml'),`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${pages.map(p=>`<url><loc>${esc(ORIGIN+p.url)}</loc><lastmod>${lastmod}</lastmod></url>`).join('')}</urlset>`);
   fs.writeFileSync(path.join(ROOT,'robots.txt'),`User-agent: *\nAllow: /\nSitemap: ${ORIGIN}/sitemap.xml\n`);
