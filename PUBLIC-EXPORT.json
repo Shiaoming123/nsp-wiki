@@ -1,6 +1,6 @@
 {
-  "release": "20261105-packaging-fast",
-  "sourceCommit": "17f5bb6b2cb407dc1e024ac2fe9c422357cace46",
+  "release": "20261105-retry-timing",
+  "sourceCommit": "f5e1d20dea8b601a514d065ce2b18fdbf803684a",
   "policyVersion": 1,
   "projectionPolicySHA256": "27805ad56e3dd1a2ff87ba80ac0d167989a596e3dded219208e14952db46d66f",
   "license": "PolyForm-Noncommercial-1.0.0",
