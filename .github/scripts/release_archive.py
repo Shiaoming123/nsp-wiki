@@ -45,20 +45,29 @@ def tag_commit(repo,tag):
     refs=dict(row.split('\t')[::-1] for row in rows)
     return refs.get('refs/tags/'+tag+'^{}',refs.get('refs/tags/'+tag))
 
+def find_release(repo,tag):
+    response=subprocess.run(['gh','api','repos/'+repo+'/releases/tags/'+tag],capture_output=True)
+    if not response.returncode:return json.loads(response.stdout)
+    if b'404' not in response.stderr:raise RuntimeError(response.stderr.decode(errors='replace'))
+    # GitHub's tag endpoint omits drafts; authenticated release listings include them.
+    pages=json.loads(command('gh','api','--paginate','--slurp','repos/'+repo+'/releases?per_page=100'))
+    matches=[release for page in pages for release in page if release['tag_name']==tag]
+    if len(matches)>1:raise ValueError('Multiple releases match the immutable tag')
+    return matches[0] if matches else None
+
 def publish(root,commit,tag,repo,output):
     if repo!='Shiaoming123/nsp-wiki':raise ValueError('Unexpected repository')
     info=json.loads(command('gh','api','repos/'+repo))
     if info.get('private') is not False:raise ValueError('Only the public repository is supported')
     if tag_commit(repo,tag)!=commit:raise ValueError('Tag moved or is missing')
     archive,checksum=build(root,commit,tag,output);files=[archive,checksum]
-    endpoint='repos/'+repo+'/releases/tags/'+tag
-    response=subprocess.run(['gh','api',endpoint],capture_output=True)
-    if response.returncode:
-        if b'404' not in response.stderr:raise RuntimeError(response.stderr.decode(errors='replace'))
+    release=find_release(repo,tag)
+    if release is None:
         if tag_commit(repo,tag)!=commit:raise ValueError('Tag moved before draft creation')
-        subprocess.run(['gh','release','create',tag,'--repo',repo,'--verify-tag','--target',commit,'--draft','--title','Wiki '+tag[5:],'--notes','完整公开源码及静态资源；逐文件校验见 PUBLIC-EXPORT.json，整包校验见 SHA256SUMS.txt。'],check=True)
-        release=json.loads(command('gh','api',endpoint))
-    else:release=json.loads(response.stdout)
+        subprocess.run(['gh','release','create',tag,'--repo',repo,'--verify-tag','--draft','--title','Wiki '+tag[5:],'--notes','完整公开源码及静态资源；逐文件校验见 PUBLIC-EXPORT.json，整包校验见 SHA256SUMS.txt。'],check=True)
+        release=find_release(repo,tag)
+    if release is None:raise ValueError('Created release is missing')
+    endpoint='repos/'+repo+'/releases/'+str(release['id'])
     missing=verify_assets(release,files,complete=False)
     if missing:
         if not release['draft']:raise ValueError('Incomplete public release requires review')
