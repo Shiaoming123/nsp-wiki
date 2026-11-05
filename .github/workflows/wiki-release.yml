@@ -1,0 +1,35 @@
+name: Verified Wiki archive
+on:
+  push:
+    tags: ['wiki-*']
+permissions: {}
+concurrency:
+  group: wiki-archive-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  archive:
+    if: github.repository == 'Shiaoming123/nsp-wiki' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Fetch the exact public commit
+        env:
+          PUBLIC_COMMIT: ${{ github.sha }}
+          PUBLIC_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init --quiet .
+          git remote add origin "https://github.com/${PUBLIC_REPOSITORY}.git"
+          git fetch --depth=1 origin "${PUBLIC_COMMIT}"
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "${PUBLIC_COMMIT}"
+      - name: Verify and publish both complete archive attachments
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUBLIC_COMMIT: ${{ github.sha }}
+          PUBLIC_REPOSITORY: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python3 .github/scripts/release_archive.py
