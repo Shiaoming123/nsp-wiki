@@ -18,7 +18,7 @@
     const heading = e('div', 'posts-heading'), title = e('div'); title.append(e('h2', '', workshopMode?'玩家配装攻略':'玩家夯拉榜'), e('p', 'guide-note', workshopMode?'分享配件、词条与工坊计算值。点赞多的攻略优先，同赞数展示最新发布。':'看看大家怎么排。点赞多的攻略优先，同赞数展示最新发布。'));
     let account=CommunityAuth.account;
     const authButton=button('登录 / 注册',()=>account?logout():signIn()), actions=e('div','posts-buttons');
-    const adminButton=button('站主管理',()=>requireLogin(()=>{if(account.isAdmin)manage();}),'secondary-button post-admin-button');adminButton.hidden=true;
+    const adminButton=e('a','secondary-button post-admin-button','管理中心');adminButton.href='/admin/';adminButton.hidden=true;
     actions.append(adminButton,button(workshopMode?'发布配装':'发布攻略',()=>openComposer()),authButton,button('刷新帖子',()=>load(true)));
     heading.append(title, actions);
     const status = e('p', 'posts-status'); status.setAttribute('role', 'status');
@@ -82,7 +82,7 @@
       dialog.addEventListener('close',() => dialog.remove()); dialog.addEventListener('click',event => { if (event.target===dialog) { const r=dialog.getBoundingClientRect(); if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom) dialog.close(); } });
       section.append(dialog); return dialog;
     }
-    function showAccount(){authButton.textContent=account?'退出 · '+account.username:'登录 / 注册';adminButton.hidden=!account?.isAdmin;}
+    function showAccount(){authButton.textContent=account?'退出 · '+account.username:'登录 / 注册';adminButton.hidden=!account?.isAdmin&&!account?.permissions?.length;}
     async function requireLogin(next){const trigger=document.activeElement;try{account=await CommunityAuth.refresh();if(!section.isConnected||!trigger.isConnected||!trigger.getClientRects().length)return;showAccount();if(account)next();else signIn(next);}catch(error){if(section.isConnected)status.textContent=error.message;}}
     async function logout(){try{await CommunityAuth.logout();account=null;showAccount();}catch(error){status.textContent=error.message;}}
     function signIn(next=()=>{}){CommunityAuth.signIn(()=>{account=CommunityAuth.account;showAccount();next();},document.activeElement===document.body?authButton:document.activeElement);}
@@ -201,7 +201,7 @@
       let offset=0, fetching=false;
       async function loadComments(reset){
         if(fetching)return; fetching=true; moreComments.disabled=true;
-        try{const data=await api('posts/'+post.id+'/comments?offset='+(reset?0:offset)); if(!dialog.isConnected)return; if(reset){list.replaceChildren();offset=0;} data.comments.forEach(comment=>{const row=e('article','post-comment'),meta=e('div','post-comment-meta'),time=e('time','',new Date(comment.created).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}));time.dateTime=new Date(comment.created).toISOString();const author=e('div','post-comment-author');author.append(e('strong','',comment.nickname));if(comment.username)author.append(e('span','post-comment-account','@'+comment.username));meta.append(author,time);if(account?.isAdmin)meta.append(button('删除评论',async event=>{if(!confirm('删除这条评论？此操作无法撤销。'))return;const b=event.currentTarget;b.disabled=true;try{await api('comments/'+comment.id,{method:'DELETE'});post.comments=Math.max(0,post.comments-1);commentsHeading.textContent='评论 · '+post.comments;await loadComments(true);await load(true);await onChange();}catch(error){notice.textContent=error.message;}finally{b.disabled=false;}},'post-delete-comment'));row.append(meta,markdownBody(comment.body,'post-comment-body'));list.append(row);}); offset+=data.comments.length;moreComments.hidden=!data.more;notice.textContent=offset?'':'还没有评论，聊聊你的看法。';}
+        try{const data=await api('posts/'+post.id+'/comments?offset='+(reset?0:offset)); if(!dialog.isConnected)return; if(reset){list.replaceChildren();offset=0;} data.comments.forEach(comment=>{const row=e('article','post-comment'),meta=e('div','post-comment-meta'),time=e('time','',new Date(comment.created).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}));time.dateTime=new Date(comment.created).toISOString();const author=e('div','post-comment-author');author.append(e('strong','',comment.nickname));if(comment.username)author.append(e('span','post-comment-account','@'+comment.username));meta.append(author,time);if(account?.isAdmin||account?.permissions?.includes("content"))meta.append(button('删除评论',async event=>{if(!confirm('删除这条评论？此操作无法撤销。'))return;const b=event.currentTarget;b.disabled=true;try{await api('comments/'+comment.id,{method:'DELETE'});post.comments=Math.max(0,post.comments-1);commentsHeading.textContent='评论 · '+post.comments;await loadComments(true);await load(true);await onChange();}catch(error){notice.textContent=error.message;}finally{b.disabled=false;}},'post-delete-comment'));row.append(meta,markdownBody(comment.body,'post-comment-body'));list.append(row);}); offset+=data.comments.length;moreComments.hidden=!data.more;notice.textContent=offset?'':'还没有评论，聊聊你的看法。';}
         catch(error){notice.textContent=error.message;}finally{fetching=false;moreComments.disabled=false;}
       }
       form.onsubmit=async event=>{event.preventDefault();if(submit.disabled)return;if(!account){signIn(()=>{if(dialog.isConnected&&dialog.open)form.requestSubmit();});return;}if(length(nick.value.trim())>24||length(body.value)>500){notice.textContent='昵称最多 24 字，评论最多 500 字。';return;}submit.disabled=nick.disabled=body.disabled=true;
@@ -209,29 +209,17 @@
         catch(error){if(!dialog.isConnected||!dialog.open)return;notice.textContent=error.message;if(error.status===401){account=null;signIn(()=>{if(dialog.isConnected&&dialog.open)form.requestSubmit();});}}finally{submit.disabled=nick.disabled=body.disabled=false;}
       }; loadComments(true);
     }
-    function manage(){
-      const dialog=modal('站主管理'),content=e('div','post-form'),tabs=e('div','posts-buttons'),list=e('div','post-admin-list'),notice=e('p','posts-status'),more=button('加载更多',()=>fetchItems(false));notice.setAttribute('role','status');
-      dialog.classList.add('post-admin-dialog');
-      let kind='posts',offset=0,fetching=false;
-      const postTab=button('帖子',()=>switchTab('posts')),commentTab=button('评论',()=>switchTab('comments')),itemTab=button('物品评论',()=>switchTab('item-comments'));const affixTab=button('词条评论',()=>switchTab('affix-comments')),feedbackTab=button('Wiki反馈',()=>switchTab('feedback'));tabs.append(postTab,commentTab,itemTab,affixTab,feedbackTab,button('刷新',()=>fetchItems(true)));content.append(e('p','guide-note','这里可查看并删除全部帖子和评论，包括旧匿名内容。删除无法撤销，请先核对。'),tabs,list,notice,more);dialog.append(content);dialog.showModal();
-      function switchTab(value){if(fetching)return;kind=value;fetchItems(true);}
-      async function fetchItems(reset){
-        if(fetching)return;fetching=true;postTab.disabled=commentTab.disabled=itemTab.disabled=affixTab.disabled=feedbackTab.disabled=more.disabled=true;postTab.setAttribute('aria-pressed',String(kind==='posts'));commentTab.setAttribute('aria-pressed',String(kind==='comments'));itemTab.setAttribute('aria-pressed',String(kind==='item-comments'));affixTab.setAttribute('aria-pressed',String(kind==='affix-comments'));feedbackTab.setAttribute('aria-pressed',String(kind==='feedback'));notice.textContent='正在载入…';
-        try{const data=await api('admin/'+kind+'?offset='+(reset?0:offset));if(!dialog.isConnected)return;if(reset){list.replaceChildren();offset=0;}
-          for(const item of data.items){const row=e('article','post-admin-row'),controls=e('div','posts-buttons');row.append(e('h3','',kind==='posts'?item.title:kind==='item-comments'?'物品 · '+(window.Wiki?.getItem(item.item)?.name||item.item):kind==='affix-comments'?'腐化词条评论':kind==='feedback'?item.title:item.postTitle),e('p','post-author',item.nickname+(kind!=='posts'&&item.username?' @'+item.username:'')+' · '+new Date(kind==='posts'?item.created*1000:item.created).toLocaleString('zh-CN')+(item.anonymous?' · 旧匿名帖':'')),markdownBody(item.body));
-            if(kind==='posts'){row.append(e('p','guide-note',item.kind==='workshop'?'配装攻略':'夯拉榜攻略'));controls.append(button('查看帖子',()=>detail(item,()=>fetchItems(true))));}
-            if(kind==='affix-comments'){const related=e('a','','查看词条');related.href='/#affix/'+encodeURIComponent(item.affix);controls.append(related);}
-            if(kind==='feedback'&&item.route){const related=e('a','','查看关联页');related.href='/'+item.route;controls.append(related);}
-            const selectedKind=kind;controls.append(button(kind==='posts'?'删除帖子':kind==='feedback'?'删除反馈':'删除评论',async event=>{if(!confirm(selectedKind==='posts'?'删除这篇帖子及其评论、点赞？此操作无法撤销。':'删除这条评论？此操作无法撤销。'))return;const b=event.currentTarget;b.disabled=true;try{await api(selectedKind+'/'+item.id,{method:'DELETE'});if(selectedKind==='item-comments')window.dispatchEvent(new CustomEvent('item-community-change',{detail:item.item}));if(selectedKind==='affix-comments')window.dispatchEvent(new CustomEvent('item-community-change',{detail:'affix:'+item.affix}));if(selectedKind==='feedback')window.dispatchEvent(new Event('wiki-feedback-change'));await fetchItems(true);await load(true);notice.textContent='已删除。';}catch(error){notice.textContent=error.message;}finally{b.disabled=false;}}));row.append(controls);list.append(row);
-          }offset+=data.items.length;more.hidden=!data.more;notice.textContent=offset?'':'暂无内容。';
-        }catch(error){notice.textContent=error.message;}finally{fetching=false;postTab.disabled=commentTab.disabled=itemTab.disabled=affixTab.disabled=feedbackTab.disabled=more.disabled=false;}
-      }fetchItems(true);
-    }
     function edit(post,detailDialog,onChange=async()=>{}){
       const dialog=modal('修改帖子'),form=e('form','post-form'),title=input(80,'标题'),body=e('textarea'),notice=e('p','posts-status'),submit=e('button','secondary-button','保存修改');title.value=post.title;body.value=post.body;body.rows=7;body.maxLength=2000;submit.type='submit';notice.setAttribute('role','status');form.append(field('标题（最多 80 字）',title),field('攻略文字（最多 1000 字，支持 Markdown）',body),markdownPreview(body),e('p','guide-note','这里修改标题和文字；要换图片或排行，请重新发布。'),notice,submit);dialog.append(form);dialog.showModal();
       form.onsubmit=async event=>{event.preventDefault();if(submit.disabled)return;submit.disabled=true;try{await api('posts/'+post.id,jsonWrite('PATCH',{title:title.value,body:body.value}));dialog.close();detailDialog.close();await load(true);await onChange();status.textContent='帖子已修改。';}catch(error){notice.textContent=error.message;}finally{submit.disabled=false;}};
     }
     const onAccount=()=>{accountRevision++;account=CommunityAuth.account;posts=[];offset=0;more.hidden=true;draw();section.querySelectorAll('.post-management,.post-delete-comment').forEach(node=>node.remove());section.querySelectorAll('.post-admin-dialog').forEach(dialog=>dialog.close());showAccount();load(true);};window.addEventListener('community-account-change',onAccount);const authObserver=new MutationObserver(()=>{if(!section.isConnected){window.removeEventListener('community-account-change',onAccount);authObserver.disconnect();}});authObserver.observe(root,{childList:true});showAccount();CommunityAuth.refresh().then(value=>{account=value;showAccount();}).catch(()=>{});
+    const linked=location.hash.slice(1).split('/');
+    const linkedHash=location.hash;
+    if(linked[0]===(workshopMode?'workshop':'tiers')&&linked[1]==='post'&&/^[0-9a-f-]{36}$/i.test(linked[2]||''))CommunityAuth.refresh().then(async()=>{
+      const revision=accountRevision;if(!section.isConnected||location.hash!==linkedHash)return;
+      const data=await api('posts/'+linked[2]);if(section.isConnected&&location.hash===linkedHash&&revision===accountRevision)detail(data.post);
+    }).catch(error=>{if(section.isConnected&&location.hash===linkedHash)status.textContent=error.message;});
     load(true);
     return {openComposer,dispose(){window.removeEventListener('community-account-change',onAccount);resize.disconnect();observer.disconnect();authObserver.disconnect();section.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());section.remove();}};
   }

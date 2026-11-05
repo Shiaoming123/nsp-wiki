@@ -10,6 +10,8 @@ const sources = {
   js: ['typography.js','welcome.js','scroll-motion.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js','vendor/post-markdown.js','community-auth.js','site-notice.js','item-community.js','app.js','tiers.js','posts.js','corruption.js','feedback.js','enemy-variants.js','enemy-guide-videos.js','quest-supplies.js','quest-progress.js','quest-semantics.js','npc-recipes.js','updates.js','loot.js','guides.js','scroll-tools.js']
 };
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+sources.css.push('admin.css');
+sources.community.push('admin.js');
 const owned = /^(?:(?:wiki-ui|community-ui|navigation-ui)\.[a-f0-9]{20}\.(?:js|css)|workshop-ui\.[a-f0-9]{20}\.js)$/;
 function replaceBlock(text, name, block) {
   const start = `<!-- wiki-ui:${name} -->`, end = `<!-- /wiki-ui:${name} -->`;
@@ -52,6 +54,8 @@ function buildUiAssets() {
   result.retired = [...new Set(result.retired)].filter(name => ![result.js,result.css,result.community,result.navigation,result.workshop].includes(name));
   if (!result.retired.every(name => owned.test(name))) throw Error('Unknown generated UI asset');
   fs.writeFileSync(file, JSON.stringify(result, null, 2) + '\n');
+  fs.mkdirSync(path.join(root,'admin'),{recursive:true});
+  fs.writeFileSync(path.join(root,'admin/index.html'),require('../lib/admin-page.cjs')(result));
   const index = path.join(root, 'index.html'); let html = fs.readFileSync(index, 'utf8');
   if (!html.includes('<!-- wiki-ui:assets -->')) {
     const end = html.indexOf('<!-- seo:head -->'); if (end < 0) throw Error('Missing index SEO boundary');

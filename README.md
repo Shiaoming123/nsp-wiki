@@ -30,6 +30,9 @@
 | 机制手册 | 阅读属性、伤害与防护说明；修改示例输入，观察试算结果与适用条件 | [机制与状态](https://nsp-wiki.shiaoming.cn/#mechanics) |
 | 腐化与镜柜 | 查词条效果、适用装备和镜柜资料 | [腐化词条](https://nsp-wiki.shiaoming.cn/#corruption) · [迷失镜柜](https://nsp-wiki.shiaoming.cn/#mirror) |
 | 玩家交流 | 制作物品评级榜，在主站分享帖子、配装与反馈，查看更新档案 | [夯拉榜](https://nsp-wiki.shiaoming.cn/#tiers) · [Wiki 反馈](https://nsp-wiki.shiaoming.cn/#feedback) · [更新档案](https://nsp-wiki.shiaoming.cn/#updates) |
+| 社区管理 | 按授权管理内容、反馈、成员发言与公告；站主分配权限，操作留有记录 | [管理中心](https://nsp-wiki.shiaoming.cn/admin/)（需相应权限） |
+
+反馈列表和详情显示处理进度，内部处理备注不公开。管理入口沿用站内账号；本地部署者需配套启用社区 API 和数据库迁移，单独打开静态页面不会获得管理权限。
 
 ### 地图：把地点、物资和路线连起来
 

@@ -13,7 +13,8 @@ const navigation = ['typography.js','welcome.js','scroll-motion.js','navigation.
 const scripts = [...navigation,'vendor/post-markdown.js','community-auth.js','site-notice.js','item-community.js','app.js','tiers.js','posts.js','corruption.js','feedback.js','enemy-variants.js','enemy-guide-videos.js','quest-supplies.js','quest-progress.js','quest-semantics.js','npc-recipes.js','updates.js','loot.js','guides.js','scroll-tools.js'];
 const styles = ['ui-tokens.css','fonts.css','styles.css','guides.css','loot.css','corruption.css','workshop.css','design.css','maps/map-viewer.css','maps/floor-guide.css','maps/floor-tower.css','maps/floor-plan.css','tiers.css','posts.css','item-community.css','feedback.css','npc-recipes.css','welcome.css','seo.css','ui-refinement.css','updates.css','navigation.css','mechanics.css','traffic.css','terminal.css','library.css','exploration.css','components.css','typography.css'];
 const mapEntries=['maps/map-viewer.js','maps/floor-guide.js','maps/floor-tower.js','maps/office-transit.js','maps/floor-plan.js'];
-const community = [...navigation,'vendor/post-markdown.js','community-auth.js','item-community.js','feedback.js'];
+styles.push('admin.css');
+const community = [...navigation,'vendor/post-markdown.js','community-auth.js','item-community.js','feedback.js','admin.js'];
 const workshop = ['workshop.js','workshop-engine.js','workshop-assembly.js','workshop-model.js','workshop-report.js','workshop-image.js','workshop-state.js'];
 const checks = [];
 fs.mkdirSync(output, {recursive:true});
@@ -24,7 +25,7 @@ function fixture(name) {
   const originals = new Map();
   const fontBytes=Buffer.from('wOF2fixture'),font={family:'Wiki Geist',style:'normal',weight:'100 900',file:'fonts/fixture-'+hash(fontBytes).slice(0,12)+'.woff2',sha256:hash(fontBytes),size:fontBytes.length,unicodeRange:'U+20-7E'};
   fs.mkdirSync(path.join(root,'fonts'),{recursive:true});fs.writeFileSync(path.join(root,font.file),fontBytes);fs.writeFileSync(path.join(root,'fonts/manifest.json'),JSON.stringify({schemaVersion:1,files:[font]}));
-  for (const file of scripts) {
+  for (const file of new Set([...scripts,...community])) {
     const lazy = file === 'guides.js' ? ',globalThis.lazy=()=>import("./workshop.js"),globalThis.map=()=>import("./maps/map-viewer.js")' : '';
     // Adjacent parenthesized scripts form an invalid call chain without explicit separators.
     const text = '(globalThis.order.push(' + JSON.stringify(file) + ')' + lazy + ',globalThis.boundary=()=>1)';
@@ -57,6 +58,7 @@ try {
   const f = fixture('main');
   assert.deepEqual(Array.from(f.sources.js), scripts); assert.deepEqual(Array.from(f.sources.css), styles); assert.deepEqual(Array.from(f.sources.community), community); assert.deepEqual(Array.from(f.sources.navigation), navigation); assert.deepEqual(Array.from(f.sources.workshop),workshop);
   const first = f.buildUiAssets();
+  const admin=read(path.join(f.root,'admin/index.html'));assert(admin.includes('noindex,nofollow')&&admin.includes('/'+first.community)&&admin.includes('/'+first.css),'Management shell uses current immutable runtime');
   for (const [file, text] of f.originals) {
     assert.equal(read(path.join(f.root, file)), text, 'original source modified: ' + file);
     assert.equal(first.inputs[file], hash(Buffer.from(text)), 'source hash differs: ' + file);

@@ -6,6 +6,21 @@
   },
   "records": [
     {
+      "id": "wiki-20261105-community-admin",
+      "kind": "wiki",
+      "date": "2026-11-05",
+      "version": "20261105-community-admin",
+      "title": "反馈处理进度与社区管理",
+      "publication": "主站已发布",
+      "verification": "权限、迁移与网页交互验证",
+      "summary": "反馈可查看待处理、处理中、已解决或已关闭状态；管理人员可在独立管理中心处理内容、成员发言和公告。",
+      "source": {"label": "Wiki 更新记录", "url": "/updates/"},
+      "changes": [
+        {"module": "wiki", "title": "反馈处理进度", "before": "反馈只有原文、讨论与删除操作。", "after": "列表和详情展示处理进度，保留原反馈及讨论；内部处理备注不公开。"},
+        {"module": "wiki", "title": "独立社区管理中心", "before": "站主管理以内容删除弹窗为主。", "after": "增加管理总览、内容检索、反馈处理、限时禁言、权限分配、公告与操作日志；管理权限由站主按能力分配。"}
+      ]
+    },
+    {
       "id": "wiki-20261104-home-video-paging",
       "kind": "wiki",
       "date": "2026-11-04",

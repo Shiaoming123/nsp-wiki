@@ -15,7 +15,7 @@
     return request.then(structuredClone);
   }
   const write=(method,data)=>({method,headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-  function set(value,force=false){const changed=account?.username!==value?.username||account?.isAdmin!==value?.isAdmin;account=value;revision++;if(changed||force){reads.clear();window.dispatchEvent(new Event('community-account-change'));}}
+  function set(value,force=false){const changed=account?.username!==value?.username||account?.isAdmin!==value?.isAdmin||JSON.stringify(account?.permissions)!==JSON.stringify(value?.permissions)||account?.mutedUntil!==value?.mutedUntil;account=value;revision++;if(changed||force){reads.clear();window.dispatchEvent(new Event('community-account-change'));}}
   function refresh(){if(sessionRead)return sessionRead;const ticket=++readSequence,version=revision;const pending=api('auth/session').then(data=>{if(ticket===readSequence&&version===revision)set(data.account);return account;});sessionRead=pending;const clear=()=>{if(sessionRead===pending)sessionRead=null;};pending.then(clear,clear);return pending;}
   function invalidate(){revision++;readSequence++;sessionRead=null;reads.clear();}
   function notify(){try{localStorage.setItem('nsp-community-account-change',crypto.randomUUID());}catch{}}
@@ -42,4 +42,13 @@
   }
   async function requireLogin(next,returnFocus=document.activeElement){const value=await refresh();if(returnFocus&&(!returnFocus.isConnected||!returnFocus.getClientRects().length))return;if(value)return next();signIn(next,returnFocus);}
   window.CommunityAuth={api,write,refresh,logout,signIn,requireLogin,get account(){return account;}};
+  function managementEntry(){
+    if(document.body.classList.contains('admin-page')||window.WIKI_STATIC_BUILD)return;
+    const host=document.querySelector('.header-actions')||document.querySelector('.site-header');if(!host)return;
+    let entry=host.querySelector('.community-admin-entry');
+    if(!entry){entry=e('a','community-admin-entry','管理中心');entry.href='/admin/';host.append(entry);}
+    entry.hidden=!account?.isAdmin&&!account?.permissions?.length;
+  }
+  window.addEventListener('community-account-change',managementEntry);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{managementEntry();refresh().catch(()=>{});},{once:true});else{managementEntry();refresh().catch(()=>{});}
 })();

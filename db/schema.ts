@@ -27,8 +27,8 @@ export const writeLimits = sqliteTable('write_limits', {
 
 export const moderationActions = sqliteTable("moderation_actions", {
   id: text("id").primaryKey(), admin: text("admin").notNull(),
-  action: text("action").notNull(), target: text("target").notNull(), created: integer("created").notNull(),
-});
+  action: text("action").notNull(), target: text("target").notNull(), created: integer("created").notNull(), detail: text('detail').notNull().default(''),
+}, t => [index('moderation_actions_created').on(t.created,t.id)]);
 
 export const itemLikes = sqliteTable('item_likes', {
   item: text('item').notNull(), visitor: text('visitor').notNull(),
@@ -61,3 +61,17 @@ export const siteNotice = sqliteTable('site_notice', {
   id: integer('id').primaryKey(), content: text('content').notNull(),
   version: integer('version').notNull(), updatedAt: integer('updated_at').notNull(),
 }, t => [check('site_notice_singleton',sql`${t.id}=1`),check('site_notice_version',sql`${t.version} BETWEEN 1 AND 9007199254740991`)]);
+
+export const accountPermissions = sqliteTable('account_permissions', {
+  account: text('account').notNull().references(() => accounts.id), permission: text('permission').notNull(),
+}, t => [primaryKey({columns:[t.account,t.permission]}),check('account_permissions_value',sql`${t.permission} IN ('content','users','notice','audit')`)]);
+export const accountRestrictions = sqliteTable('account_restrictions', {
+  account: text('account').primaryKey().references(() => accounts.id), mutedUntil: integer('muted_until').notNull().default(0),
+  reason: text('reason').notNull().default(''), version: integer('version').notNull(),
+  updatedBy: text('updated_by').notNull().references(() => accounts.id), updatedAt: integer('updated_at').notNull(),
+}, t => [check('account_restrictions_time',sql`${t.mutedUntil} >= 0`),check('account_restrictions_version',sql`${t.version} > 0`)]);
+export const feedbackWorkflow = sqliteTable('feedback_workflow', {
+  feedback: text('feedback').primaryKey().references(() => wikiFeedback.id,{onDelete:'cascade'}),
+  status: text('status').notNull(), note: text('note').notNull().default(''), version: integer('version').notNull(),
+  updatedBy: text('updated_by').notNull().references(() => accounts.id), updatedAt: integer('updated_at').notNull(),
+}, t => [check('feedback_workflow_status',sql`${t.status} IN ('open','working','resolved','closed')`),check('feedback_workflow_version',sql`${t.version} > 0`)]);

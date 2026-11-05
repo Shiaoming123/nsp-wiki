@@ -4,7 +4,7 @@
   const button=(label,fn)=>{const n=e('button','secondary-button',label);n.type='button';n.onclick=fn;return n;};
   const categories=['资料纠错','使用问题','建议','其他'];let context=null;
   function markdown(node,text){if(window.PostMarkdown)PostMarkdown.render(node,text);else node.textContent=text;}
-  function author(item){const meta=e('p','feedback-author',item.nickname+(item.username?' @'+item.username:''));if(item.isAdmin){const badge=e('span','feedback-admin-badge','站主');badge.setAttribute('aria-label','已核实的站主账号');meta.append(badge);}const time=e('time','',new Date(item.created).toLocaleString('zh-CN'));time.dateTime=new Date(item.created).toISOString();meta.append(time);return meta;}
+  function author(item){const meta=e('p','feedback-author',item.nickname+(item.username?' @'+item.username:''));if(item.isAdmin){const badge=e('span','feedback-admin-badge','站主');badge.setAttribute('aria-label','已核实的站主账号');meta.append(badge);}if(item.status){const label={open:'待处理',working:'处理中',resolved:'已解决',closed:'已关闭'}[item.status];if(label)meta.append(e('span','feedback-category','处理状态：'+label));}const time=e('time','',new Date(item.created).toLocaleString('zh-CN'));time.dateTime=new Date(item.created).toISOString();meta.append(time);return meta;}
   function related(item){if(!item.route)return null;const link=e('a','feedback-related','查看关联页');if(item.route.startsWith('#'))link.href='/'+item.route;else return e('p','guide-note','关联页：'+item.route);return link;}
   function mount(root,id=null){
     if(window.WIKI_STATIC_BUILD)return;
