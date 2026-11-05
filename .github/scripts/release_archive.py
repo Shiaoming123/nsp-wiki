@@ -55,7 +55,8 @@ def publish(root,commit,tag,repo,output):
     response=subprocess.run(['gh','api',endpoint],capture_output=True)
     if response.returncode:
         if b'404' not in response.stderr:raise RuntimeError(response.stderr.decode(errors='replace'))
-        subprocess.run(['gh','release','create',tag,'--repo',repo,'--target',commit,'--draft','--title','Wiki '+tag[5:],'--notes','完整公开源码及静态资源；逐文件校验见 PUBLIC-EXPORT.json，整包校验见 SHA256SUMS.txt。'],check=True)
+        if tag_commit(repo,tag)!=commit:raise ValueError('Tag moved before draft creation')
+        subprocess.run(['gh','release','create',tag,'--repo',repo,'--verify-tag','--target',commit,'--draft','--title','Wiki '+tag[5:],'--notes','完整公开源码及静态资源；逐文件校验见 PUBLIC-EXPORT.json，整包校验见 SHA256SUMS.txt。'],check=True)
         release=json.loads(command('gh','api',endpoint))
     else:release=json.loads(response.stdout)
     missing=verify_assets(release,files,complete=False)
@@ -69,5 +70,7 @@ def publish(root,commit,tag,repo,output):
     if release['draft'] or release.get('prerelease'):raise ValueError('Release is not public and final')
     print(json.dumps({'status':'PASS','publicCommit':commit,'tag':tag,'url':release['html_url'],'archiveBytes':archive.stat().st_size,'archiveSHA256':checksum.read_text().split()[0]}))
 
-if __name__=='__main__':
-    publish(Path.cwd(),os.environ['PUBLIC_COMMIT'],os.environ['RELEASE_TAG'],os.environ['PUBLIC_REPOSITORY'],Path(os.environ['RUNNER_TEMP'])/'wiki-release-'+os.environ['GITHUB_RUN_ATTEMPT'])
+def run_from_environment():
+    return publish(Path(os.environ.get('PUBLIC_SOURCE_ROOT',str(Path.cwd()))),os.environ['PUBLIC_COMMIT'],os.environ['RELEASE_TAG'],os.environ['PUBLIC_REPOSITORY'],Path(os.environ['RUNNER_TEMP'])/('wiki-release-'+os.environ['GITHUB_RUN_ATTEMPT']))
+
+if __name__=='__main__':run_from_environment()

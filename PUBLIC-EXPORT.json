@@ -6,8 +6,8 @@
   "license": "PolyForm-Noncommercial-1.0.0",
   "files": {
     ".gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
-    ".github/scripts/release_archive.py": "159462ca41aa8ff2e6ad364a9e428c993920049ce794cabf726fc188dee5ce97",
-    ".github/workflows/wiki-release.yml": "b570ecde3d3963c44c6de4129432803985f560ccfdb07e1e242f45af22f23411",
+    ".github/scripts/release_archive.py": "979cc9fe4bad662bcdb6fb0ee8e72e3dc2eeac7068ae940427e110833608f179",
+    ".github/workflows/wiki-release.yml": "70312657e8ae9fcd783365e8fea9ee9a346c7309e94845d608e4f58bdf361998",
     ".gitignore": "9ae6a9dd8ad82bed7862ce54a7081ec5b776509a2182a92fd9612d70956725eb",
     "LICENSE": "c0ea4a896d2c8c394b29f9427589996db826cd501c512279ff0ed3ef48fabbe5",
     "NOTICE.md": "036c2eb27b0d3bdd6cefee89315cc5bcdbedf4c8ecd7b7991b431be6090fca4c",
