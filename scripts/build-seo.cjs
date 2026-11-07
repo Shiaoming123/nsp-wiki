@@ -129,8 +129,8 @@ function listing(records, kind) {
   return `<ul class="reading-list">${records.map(r=>`<li>${r.icon||r.image?`<img src="/${esc(r.icon||r.image)}" alt="${esc(plain(r.name||r.title||r.subcategory||'物品'))}" width="48" height="48" loading="lazy" decoding="async">`:''}${link(route(kind,r.id),(r.name||r.title||r.subcategory||'物品')+(kind==='enemies'&&enemyVariants.has(r.id)?' · '+enemyVariants.get(r.id).facts.join(' · '):''))}</li>`).join('')}</ul>`;
 }
 function intro(title, copy, hash) {return `<h1>${esc(title)}</h1><p class="description">${esc(copy)}</p><p>${link('/'+hash,'进入交互页面')}</p>`;}
-async function snapshot(page, selector) {
-  return page.locator(selector).evaluate((node,mapping)=>{
+async function snapshot(page, selector, promoteTitle=true) {
+  return page.locator(selector).evaluate((node,{mapping,promoteTitle})=>{
     const root=node.cloneNode(true), routes=new Map(mapping);
     root.querySelectorAll('.item-community,.item-community-toolbar,.card-capture-tools').forEach(n=>n.remove());
     root.querySelectorAll('button.stat-definition').forEach(n=>n.replaceWith(document.createTextNode(n.textContent)));
@@ -139,10 +139,10 @@ async function snapshot(page, selector) {
     root.querySelectorAll('img').forEach(n=>{const src=n.getAttribute('src');if(src&&!src.startsWith('/'))n.setAttribute('src','/'+src);n.setAttribute('loading','lazy');n.setAttribute('decoding','async');if(!n.alt)n.alt=(n.closest('.detail-hero')?.querySelector('h2')?.textContent||n.closest('a')?.textContent||'物品图标').trim();});
     root.querySelectorAll('[style]').forEach(n=>n.setAttribute('style',n.getAttribute('style').replace(/url\(["']?(?!\/|https?:)([^)"']+)["']?\)/g, 'url("/$1")')));
     root.querySelectorAll('a[href]').forEach(n=>{const href=n.getAttribute('href');if(routes.has(href))n.setAttribute('href',routes.get(href));else if(href.startsWith('#'))n.setAttribute('href','/'+href);});
-    const title=root.querySelector('h2');if(title&&!root.querySelector('h1')){const h=document.createElement('h1');h.textContent=title.textContent;title.replaceWith(h);}
+    const title=root.querySelector('h2');if(promoteTitle&&title&&!root.querySelector('h1')){const h=document.createElement('h1');h.replaceChildren(...title.childNodes);title.replaceWith(h);}
     root.querySelectorAll('h3.detail-section-title,h4').forEach(old=>{const heading=document.createElement(old.tagName==='H3'?'h2':'h3');heading.className=old.className;heading.replaceChildren(...old.childNodes);old.replaceWith(heading);});
     return root.outerHTML;
-  }, [...routes]);
+  }, {mapping:[...routes],promoteTitle});
 }
 async function main() {
   const server=http.createServer((req,res)=>{
@@ -210,7 +210,9 @@ async function main() {
     for(const r of items.archivedItems||[]) write(route('items',r.id),`${plain(r.name)}：历史条目 | NSP Wiki`,'此条目已从当前物品图鉴移除，仅保留旧链接与玩家榜单中的身份。',intro(`${plain(r.name)}（历史条目）`,'当前物品图鉴不再收录此条目。旧榜单与评论记录仍予保留。',`#item/${encodeURIComponent(r.id)}`),'items','',true);
     for(const [kind,records,label] of [['quests',quests.archivedMissions,'任务'],['enemies',enemies.archivedEnemies,'敌怪']])for(const r of records||[])write(route(kind,r.id),`${plain(r.name||r.id)}：历史条目 | NSP Wiki`,`此${label}已不在当前EA攻略目录中，仅保留旧链接提示。`,`<h1>${esc(plain(r.name||r.id))}（历史条目）</h1><p>${esc(plain(r.reason)||'当前资料不再收录此条目，内容待核实。')}</p><p>${link(route(kind),'返回'+label+'目录')}</p>`,kind,'',true);
     write('/items/','查无此地物品图鉴：分类、属性与获取方式 | NSP Wiki',`查无此地 EA ${items.items.length} 件物品图鉴，包含武器、弹药、装备、消耗品和材料的属性与来源。`,intro('物品图鉴',`${items.items.length} 件物品，按类别查找属性与来源。`,'#items')+items.categories.map(c=>`<section><h2>${link('/items/category/'+encodeURIComponent(c.id)+'/',c.name)}</h2>${listing(items.items.filter(i=>i.category===c.id),'items')}</section>`).join(''),'items');
-    write('/quests/','查无此地任务攻略：前置、目标与奖励 | NSP Wiki',`查无此地 ${versionLabel('quests')} ${quests.missions.length} 项任务的接取条件、前置关系、目标和奖励；未核实依赖保留说明。`,intro('任务攻略','查看任务接取、目标、补给与后续流程。手动完成标记仅保存在交互页面的当前浏览器，不读取游戏存档。','#quests')+listing(quests.missions,'quests'),'quests');
+    await page.evaluate(data=>{const guide=window.QuestGuide.render(data);guide.id='quest-reading-guide';document.getElementById('guide-root').append(guide);},quests);
+    const questReadingGuide=await snapshot(page,'#quest-reading-guide',false);
+    write('/quests/','查无此地任务攻略：前置、目标与奖励 | NSP Wiki',`查无此地 ${versionLabel('quests')} ${quests.missions.length} 项任务的接取条件、前置关系、目标和奖励；未核实依赖保留说明。`,intro('任务攻略','查看任务接取、目标、补给与后续流程。手动完成标记仅保存在交互页面的当前浏览器，不读取游戏存档。','#quests')+questReadingGuide+'<h2>全部任务条目</h2>'+listing(quests.missions,'quests'),'quests');
     write('/enemies/','查无此地敌怪图鉴：出没、属性与掉落 | NSP Wiki',`查无此地 ${versionLabel('enemies')} ${enemies.enemies.length} 个敌怪与特殊对象的基础属性、出没条件和战利品。随身物资与额外掉落分别说明。`,intro('敌怪图鉴','同名变体分别列出，生成机会与击杀掉落概率分别说明；未核实内容明确标注。','#enemies')+listing(enemies.enemies,'enemies'),'enemies');
     await page.goto(origin+'/#mirror');await page.locator('#mirror-table tbody tr').first().waitFor();
     write('/mirror/','查无此地迷失镜柜：兑换规则与概率表 | NSP Wiki',`查无此地 EA Build ${mirror.meta.buildId} 迷失镜柜投入门槛、兑换规则与 ${mirror.items.length} 种候选的配置理论概率，实际领取与频率待实测。`,await snapshot(page,'#guide-root')+`<p>${link('/#mirror','进入交互兑换表')}</p>`,'mirror');
