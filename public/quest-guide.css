@@ -24,6 +24,12 @@ body.quest-immersive .quest-toolbar>button{flex-shrink:0}
 .zoom-overview .quest-node.quest-trunk-node:after{display:block;width:var(--quest-trunk-width,2px)}
 .quest-node.quest-trunk-node.muted-node{opacity:.5}
 .quest-legend .quest-trunk-legend{color:#b1edc8;border-color:#71c997;background:#203a2c}
+.quest-edge.prerequisite{stroke-dasharray:8 5}
+.quest-node-bottom{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.quest-node-bottom .node-mark{flex-shrink:0}
+.quest-entry-tag{color:#b8d5c4;border-bottom:1px solid #6d9580;font-size:9px;line-height:1.4;white-space:nowrap}
+.quest-entry-summary{padding:8px 12px;border-left:2px solid #71c997;color:#b1edc8;background:#20352b;font-size:14px}
+.quest-legend .quest-auto-legend{border-style:dashed;color:#b5cbd2}
 .quest-node .quest-node-review{position:absolute;top:5px;right:5px;margin:0;padding:1px 4px;font-size:10px;background:#172023}
 .quest-review-note{padding:10px 12px;border-left:2px solid var(--warning);background:var(--deep);font-size:14px;line-height:1.8}
 .quest-native-keyword{font-weight:600}
@@ -67,5 +73,5 @@ body.quest-immersive .quest-toolbar>button{flex-shrink:0}
  .quest-immersive .quest-view-toggle,.quest-immersive #quest-supplies-toggle{min-height:44px;padding:6px;font-size:12px;white-space:nowrap}
  .quest-immersive #quest-count{top:178px}
  .quest-immersive .quest-legend{top:200px}
- .quest-immersive .quest-sidebar,.quest-immersive .quest-list,.quest-immersive .details-open .quest-list{top:230px}
+ .quest-immersive .quest-sidebar,.quest-immersive .quest-list,.quest-immersive .details-open .quest-list{top:264px}
 }

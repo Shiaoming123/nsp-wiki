@@ -55,8 +55,10 @@ const mapData = new Map(maps.map(m=>{
 }));
 const variantModule={exports:{}};require('node:vm').runInNewContext(fs.readFileSync(path.join(ROOT,'enemy-variants.js'),'utf8'),{module:variantModule});const enemyVariants=variantModule.exports.summarize(enemies.enemies);
 const edition = `EA Build ${items.meta.buildId}`;
+const questGuideModule={exports:{}};require('node:vm').runInNewContext(fs.readFileSync(path.join(ROOT,'quest-guide.js'),'utf8'),{module:questGuideModule});const questGuide=questGuideModule.exports;
 const moduleData={items,quests,enemies,npcs,recipes,mirror,corruption,workshop:read('data/workshop.json')};
 function versionLabel(section){
+  if(section==='quests')return questGuide.versionNote(quests);
   const meta=moduleData[section]?.meta;if(!meta)return '';
   if(meta.acquisitionBuildId)return `基础资料 EA Build ${meta.buildId}；获取来源及公告相关变更静态核对 Build ${meta.acquisitionBuildId}，其他字段保留原核验版本`;
   return `EA Build ${meta.buildId}`+(meta.partialUpdate?`；Build ${meta.partialUpdate.buildId} 局部更新：${meta.partialUpdate.scope}（未实机验证）`:'');

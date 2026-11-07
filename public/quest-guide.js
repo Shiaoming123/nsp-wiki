@@ -8,6 +8,13 @@
     system:{label:'系统通知',description:'由对应系统条件触发，不通过普通任务前置线接取。'}
   };
   function status(mission){return statuses[mission.review?.status]||null;}
+  function versionNote(data){return `任务规则与文本静态核对至 EA Build ${data.guide?.buildId||data.meta.buildId}；当前${data.missions.length}项任务。地图定位沿用既有资料，未逐任务实机通关。`;}
+  function entryLabel(mission,edges){
+    const grants=new Set(edges.filter(e=>e.to===mission.id&&e.kind==='reward-add-mission').map(e=>e.from));
+    const group=mission.activationGroups?.[0];
+    if(grants.size){const reward=grants.size>1?'任一奖励':'奖励';return group?reward+'或'+(group.gate==='ANY'?'任一前置':group.members.length>1?'全部前置':'自动前置'):reward+'可接取';}
+    return group?group.gate==='ANY'?'任一前置':group.members.length>1?'需全部前置':'自动前置':'';
+  }
   function parts(text,source){
     if(!Array.isArray(source)||!source.length||source.some(p=>typeof p?.text!=='string'||p.tone&&!['orange','purple'].includes(p.tone)||p.italic!==undefined&&typeof p.italic!=='boolean')||source.map(p=>p.text).join('')!==text)return [{text}];
     return source.map(p=>({text:p.text,tone:p.tone||null,italic:p.italic===true}));
@@ -26,7 +33,7 @@
     const byId=new Map(data.missions.map(m=>[m.id,m])),guide=data.guide;
     const el=(tag,className,text)=>{const node=doc.createElement(tag);if(className)node.className=className;if(text)node.textContent=text;return node;};
     const taskLink=id=>{const a=el('a','inline-link',byId.get(id).name);a.href='#quest/'+encodeURIComponent(id);return a;};
-    const root=el('section','quest-walkthrough');root.append(el('p','kicker','任务攻略 · 推进与排查'),el('h2','','正常推进路线'),el('p','',guide.intro),el('p','guide-note',`任务逻辑与原生重点词核对至 EA Build ${guide.buildId}；地图定位沿用既有资料，未逐任务实机通关。`));
+    const root=el('section','quest-walkthrough');root.append(el('p','kicker','任务攻略 · 推进与排查'),el('h2','','正常推进路线'),el('p','',guide.intro),el('p','guide-note',versionNote(data)));
     const key=el('p','quest-native-legend');appendRich(key,'橙色为游戏原文重点词；紫色保留原生特殊提示。',[{text:'橙色',tone:'orange'},{text:'为游戏原文重点词；'},{text:'紫色',tone:'purple'},{text:'保留原生特殊提示。'}]);root.append(key);
     for(const [index,stage] of guide.stages.entries()){
       const section=el('details','quest-route-stage');section.open=index===0;
@@ -44,7 +51,7 @@
     }
     return root;
   }
-  const api={status,parts,appendRich,render};
+  const api={status,versionNote,entryLabel,parts,appendRich,render};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   if(typeof window!=='undefined')window.QuestGuide=api;
 })();
