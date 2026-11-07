@@ -60,6 +60,7 @@ const moduleData={items,quests,enemies,npcs,recipes,mirror,corruption,workshop:r
 function versionLabel(section){
   if(section==='quests')return questGuide.versionNote(quests);
   const meta=moduleData[section]?.meta;if(!meta)return '';
+  if(meta.currentReview)return meta.currentReview.note;
   if(meta.acquisitionBuildId)return `基础资料 EA Build ${meta.buildId}；获取来源及公告相关变更静态核对 Build ${meta.acquisitionBuildId}，其他字段保留原核验版本`;
   return `EA Build ${meta.buildId}`+(meta.partialUpdate?`；Build ${meta.partialUpdate.buildId} 局部更新：${meta.partialUpdate.scope}（未实机验证）`:'');
 }

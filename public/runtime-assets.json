@@ -129,7 +129,7 @@
     "community-auth.js": "b558e2071f263e05cdd5c8a078d7b2531fea3d241391b218102880f1abd20b64",
     "site-notice.js": "13ce39942d92b23dbe01e2d5fd699638761cf34b2ec414651636859e7323283d",
     "item-community.js": "0d4acd3e53d52d25eda10aaaeb9fba2b9466b14b3233dbbb51eeabae8bdd3365",
-    "app.js": "592293cb8f59b1dbce20035c16abcaa1ec8dada211b64f30b6e193ae1c5c66c3",
+    "app.js": "582dc0ead0963f7083f976b788d852eecfda04ba72b9a43d8f9719f6a6294951",
     "tiers.js": "aa849288e50656e14bac3c4861f9a1f1da837fc8cc096b3596970eef28a30c00",
     "posts.js": "21f330e5b9e11419eab6047d8c7e6056b9a6d7765f815643048b66ac9bb51e6e",
     "corruption.js": "9ab27f92ff1f4c3bebf550b46d6630cb0a343325a0fbcf00e561557872a6381b",
@@ -151,7 +151,7 @@
   "mapVersion": "e482cde90e8054f05074",
   "workshop": "workshop-ui.2df410435ae4af602193.js",
   "css": "wiki-ui.07eaedc4e4bf50dd6023.css",
-  "js": "wiki-ui.31e4b9c14aab0a8610a9.js",
+  "js": "wiki-ui.6ed4fcfcfaf0794d2f71.js",
   "community": "community-ui.bb53b8fdf6b92a809048.js",
   "navigation": "navigation-ui.82f61cf51ee5f5d83ea5.js"
 }
