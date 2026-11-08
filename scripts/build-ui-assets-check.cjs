@@ -11,9 +11,9 @@ const {formatFontFaces}=require('../lib/font-assets.cjs');
 const read = file => fs.readFileSync(file, 'utf8');
 const navigation = ['typography.js','welcome.js','scroll-motion.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js'];
 const scripts = [...navigation,'vendor/post-markdown.js','community-auth.js','site-notice.js','item-community.js','app.js','tiers.js','posts.js','corruption.js','feedback.js','enemy-variants.js','enemy-guide-videos.js','quest-supplies.js','quest-progress.js','quest-semantics.js','quest-guide.js','npc-recipes.js','updates.js','loot.js','guides.js','scroll-tools.js'];
-const styles = ['ui-tokens.css','fonts.css','styles.css','guides.css','loot.css','corruption.css','workshop.css','design.css','maps/map-viewer.css','maps/floor-guide.css','maps/floor-tower.css','maps/floor-plan.css','tiers.css','posts.css','item-community.css','feedback.css','npc-recipes.css','welcome.css','seo.css','ui-refinement.css','updates.css','navigation.css','mechanics.css','traffic.css','terminal.css','library.css','exploration.css','components.css','typography.css'];
-const mapEntries=['maps/map-viewer.js','maps/floor-guide.js','maps/floor-tower.js','maps/office-transit.js','maps/floor-plan.js'];
-styles.push('quest-guide.css','admin.css');
+const styles = ['ui-tokens.css','fonts.css','styles.css','guides.css','loot.css','corruption.css','workshop.css','design.css','maps/map-viewer.css','maps/enemy-layer.css','maps/floor-guide.css','maps/floor-tower.css','maps/floor-plan.css','tiers.css','posts.css','item-community.css','feedback.css','npc-recipes.css','welcome.css','seo.css','ui-refinement.css','updates.css','navigation.css','mechanics.css','traffic.css','terminal.css','library.css','exploration.css','components.css','typography.css'];
+const mapEntries=['maps/map-viewer.js','maps/floor-guide.js','maps/floor-tower.js','maps/office-transit.js','maps/floor-plan.js','maps/enemy-layer.js','maps/data/enemy-spawns.json'];
+styles.push('quest-guide.css','admin.css','native-ui.css');
 const community = [...navigation,'vendor/post-markdown.js','community-auth.js','item-community.js','feedback.js','admin.js'];
 const workshop = ['workshop.js','workshop-engine.js','workshop-assembly.js','workshop-model.js','workshop-report.js','workshop-image.js','workshop-state.js'];
 const checks = [];
@@ -42,7 +42,7 @@ function fixture(name) {
   };
   for (const [file,text] of Object.entries(modules)) {fs.writeFileSync(path.join(root,file),text);originals.set(file,text);}
   fs.mkdirSync(path.join(root,'maps'),{recursive:true});const mapSource="import './vendor/three.module.js';export const mapRevision=1;";fs.writeFileSync(path.join(root,'maps/map-viewer.js'),mapSource);originals.set('maps/map-viewer.js',mapSource);
-  for(const file of mapEntries.slice(1)){const text='export const floorRevision=1;';fs.writeFileSync(path.join(root,file),text);originals.set(file,text);}
+  for(const file of mapEntries.slice(1)){const text='export const floorRevision=1;';fs.mkdirSync(path.dirname(path.join(root,file)),{recursive:true});fs.writeFileSync(path.join(root,file),text);originals.set(file,text);}
   for (const [i, file] of styles.entries()) {
     const text = file==='fonts.css'?formatFontFaces([font]):(file === 'seo.css' ? "@import url('/tiers.css');\n" : '') + '[data-ui-source="' + file + '"]{--source-step:' + i + ';color:rgb(' + i + ',2,3)}';
     const target = path.join(root, file); fs.mkdirSync(path.dirname(target), {recursive:true}); fs.writeFileSync(target, text); originals.set(file, text);
@@ -55,6 +55,12 @@ function fixture(name) {
   return {root, originals, originalHeaders, ...module.exports};
 }
 try {
+  const native=fixture('native-images'),png=Buffer.from('89504e470d0a1a0a00000000','hex'),pngName='assets/ui-native/card.'+hash(png).slice(0,20)+'.png';
+  fs.mkdirSync(path.join(native.root,'assets/ui-native'),{recursive:true});fs.writeFileSync(path.join(native.root,pngName),png);
+  fs.writeFileSync(path.join(native.root,'native-ui.css'),".card{background:url('/"+pngName+"')}");
+  assert.equal(native.buildUiAssets().inputs[pngName],hash(png));fs.appendFileSync(path.join(native.root,pngName),'broken');assert.throws(()=>native.buildUiAssets(),/identity mismatch/);
+  fs.writeFileSync(path.join(native.root,'native-ui.css'),".card{background:url('https://example.com/x.png')}");assert.throws(()=>native.buildUiAssets(),/Unknown native UI/);
+  checks.push('selected native UI PNG fingerprints tracked; corrupt or external references rejected');
   const f = fixture('main');
   assert.deepEqual(Array.from(f.sources.js), scripts); assert.deepEqual(Array.from(f.sources.css), styles); assert.deepEqual(Array.from(f.sources.community), community); assert.deepEqual(Array.from(f.sources.navigation), navigation); assert.deepEqual(Array.from(f.sources.workshop),workshop);
   const first = f.buildUiAssets();

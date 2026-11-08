@@ -1,0 +1,74 @@
+{
+  "build": "26240042",
+  "notice": "NoSuchPlace game UI artwork remains the property of its original rightsholders; the website source license does not relicense it. Four selected UI sprites used for the Wiki interface.",
+  "images": [
+    {
+      "name": "Backpack_C",
+      "pathId": 10248,
+      "size": [
+        90,
+        88
+      ],
+      "border": [
+        31.5,
+        37.0,
+        31.0,
+        28.5
+      ],
+      "bytes": 2754,
+      "sha256": "9498b9163795cb6ee548c8b2c766b09b90718724af7210e562bf37e519faefa8",
+      "url": "/assets/ui-native/Backpack_C.9498b9163795cb6ee548.png"
+    },
+    {
+      "name": "Backpack_Header",
+      "pathId": 11718,
+      "size": [
+        303,
+        27
+      ],
+      "border": [
+        16.5,
+        0.0,
+        14.5,
+        0.0
+      ],
+      "bytes": 1184,
+      "sha256": "c0d9cff960bbecd03dd429cee5630af2d0cec51118c5ca9904270be7cdc927a9",
+      "url": "/assets/ui-native/Backpack_Header.c0d9cff960bbecd03dd4.png"
+    },
+    {
+      "name": "card",
+      "pathId": 11858,
+      "size": [
+        294,
+        160
+      ],
+      "border": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bytes": 7606,
+      "sha256": "045e00eefed1aeb0d601776a074791047b68b87b3f1d485183e835e57e7dfe2a",
+      "url": "/assets/ui-native/card.045e00eefed1aeb0d601.png"
+    },
+    {
+      "name": "Character_BG",
+      "pathId": 12531,
+      "size": [
+        93,
+        133
+      ],
+      "border": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bytes": 1987,
+      "sha256": "c3c8c16f538cd88a96f95fc705d022bf4448f9287dc8565bcb0d3d648c4336a3",
+      "url": "/assets/ui-native/Character_BG.c3c8c16f538cd88a96f9.png"
+    }
+  ]
+}

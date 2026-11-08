@@ -3,7 +3,7 @@ const {transformSync, buildSync} = require('esbuild');
 const {readFontAssets}=require('../lib/font-assets.cjs');
 const root = path.resolve(__dirname, '../public');
 const sources = {
-  css: ['ui-tokens.css','fonts.css','styles.css','guides.css','loot.css','corruption.css','workshop.css','design.css','maps/map-viewer.css','maps/floor-guide.css','maps/floor-tower.css','maps/floor-plan.css','tiers.css','posts.css','item-community.css','feedback.css','npc-recipes.css','welcome.css','seo.css','ui-refinement.css','updates.css','navigation.css','mechanics.css','traffic.css','terminal.css','library.css','exploration.css','components.css','typography.css'],
+  css: ['ui-tokens.css','fonts.css','styles.css','guides.css','loot.css','corruption.css','workshop.css','design.css','maps/map-viewer.css','maps/enemy-layer.css','maps/floor-guide.css','maps/floor-tower.css','maps/floor-plan.css','tiers.css','posts.css','item-community.css','feedback.css','npc-recipes.css','welcome.css','seo.css','ui-refinement.css','updates.css','navigation.css','mechanics.css','traffic.css','terminal.css','library.css','exploration.css','components.css','typography.css'],
   navigation: ['typography.js','welcome.js','scroll-motion.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js'],
   community: ['typography.js','welcome.js','scroll-motion.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js','vendor/post-markdown.js','community-auth.js','item-community.js','feedback.js'],
   workshop: ['workshop.js','workshop-engine.js','workshop-assembly.js','workshop-model.js','workshop-report.js','workshop-image.js','workshop-state.js'],
@@ -12,6 +12,7 @@ const sources = {
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 sources.css.push('quest-guide.css');
 sources.css.push('admin.css');
+sources.css.push('native-ui.css');
 sources.community.push('admin.js');
 const owned = /^(?:(?:wiki-ui|community-ui|navigation-ui)\.[a-f0-9]{20}\.(?:js|css)|workshop-ui\.[a-f0-9]{20}\.js)$/;
 function replaceBlock(text, name, block) {
@@ -24,7 +25,7 @@ function buildUiAssets() {
   const previous = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
   if (![...(previous.retired || []), previous.js, previous.css, previous.community, previous.navigation, previous.workshop].filter(Boolean).every(name => owned.test(name))) throw Error('Unknown generated UI asset');
   const result = {schemaVersion: 1, inputs: {}, retired: [...(previous.retired || []), previous.js, previous.css, previous.community, previous.navigation, previous.workshop].filter(Boolean)};
-  const mapEntries=['maps/map-viewer.js','maps/floor-guide.js','maps/floor-tower.js','maps/office-transit.js','maps/floor-plan.js'];
+  const mapEntries=['maps/map-viewer.js','maps/floor-guide.js','maps/floor-tower.js','maps/office-transit.js','maps/floor-plan.js','maps/enemy-layer.js','maps/data/enemy-spawns.json'];
   for(const name of mapEntries)result.inputs[name]=hash(fs.readFileSync(path.join(root,name),'utf8'));
   result.mapVersion=hash(mapEntries.map(name=>result.inputs[name]).join(':')).slice(0,20);
   for (const name of sources.workshop) result.inputs[name] = hash(fs.readFileSync(path.join(root, name), 'utf8'));
@@ -45,6 +46,11 @@ function buildUiAssets() {
       }
       if (name === 'seo.css') data = data.replace(/^@import url\('\/tiers\.css'\);\s*/, '');
       if(kind==='css'&&name==='fonts.css')Object.assign(result.inputs,readFontAssets(root,data));
+      else if(kind==='css'&&name==='native-ui.css'){
+        const references=[...data.matchAll(/url\('\/(assets\/ui-native\/(?:Backpack_C|Backpack_Header|card|Character_BG)\.[a-f0-9]{20}\.png)'\)/g)];
+        if(references.length!==(data.match(/url\s*\(/gi)||[]).length||/@import/i.test(data))throw Error('Unknown native UI image reference');
+        for(const [,file]of references){const bytes=fs.readFileSync(path.join(root,file)),digest=hash(bytes);if(bytes.toString('hex',0,8)!=='89504e470d0a1a0a'||!file.includes('.'+digest.slice(0,20)+'.'))throw Error('Native UI image identity mismatch');result.inputs[file]=digest;}
+      }
       else if (kind === 'css' && /url\s*\(|@import/i.test(data)) throw Error('CSS asset rebasing required: ' + name);
       return data;
     }).join(kind === 'css' ? '\n' : '\n;\n');

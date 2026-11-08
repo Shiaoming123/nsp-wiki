@@ -1,0 +1,38 @@
+/* Approved game UI surfaces. Native image provenance: /assets/ui-native/manifest.json. */
+body .wm-enemy-panel{width:370px;background:transparent;border:0;border-radius:0;box-shadow:none;padding:26px;gap:10px;isolation:isolate}
+body .wm-enemy-panel::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;border:26px solid transparent;border-image:url('/assets/ui-native/Backpack_C.9498b9163795cb6ee548.png') 28.5 31 37 31.5 fill / 26px round;image-rendering:pixelated}
+body .wm-enemy-heading{background:none;border:solid transparent;border-width:0 16px;border-image:url('/assets/ui-native/Backpack_Header.c0d9cff960bbecd03dd4.png') 0 14.5 0 16.5 fill / 0 16px;padding:6px 0;min-height:44px;flex-shrink:0}
+body .wm-enemy-heading strong{font-size:16px;letter-spacing:2px;color:#d3d5c5}
+body .wm-enemy-panel :is(button,select){background:#252c29;border:1px solid #657268;border-radius:1px;box-shadow:none;color:#e4e9db}
+body .wm-enemy-panel button:is(:hover,[aria-pressed=true]){background:#3b4b3f;border-color:#a9b89b}
+body .wm-enemy-panel>input{background:#19231e;border:1px solid #6d7f6b;box-shadow:none;border-radius:0}
+body .wm-enemy-density-legend{padding:8px;background:#1a251e;border-left:2px solid #97a882;color:#c3d0ba}
+body .wm-enemy-list{background:#1c2520;border:0;padding:4px 0}
+body .wm-enemy-list>button{background:none;border:0;border-bottom:1px dashed #65736155;padding:9px 8px}
+body .wm-enemy-detail{background:#c7cdbd url('/assets/ui-native/Character_BG.c3c8c16f538cd88a96f9.png') center/100% 100% no-repeat;background-blend-mode:multiply;color:#303b32;border:0;padding:14px 12px;flex-basis:45%;min-height:120px}
+body .wm-enemy-detail :is(p,small){color:#495747}
+body .wm-enemy-detail dt{color:#35523b}
+body .wm-enemy-detail dd{padding-bottom:8px;border-bottom:1px dotted #788671;line-height:1.8}
+body .wm-enemy-detail button{font-size:12px;min-height:36px}
+body #detail:has(.terminal-item){border:0;border-radius:0;background:#1c2421;box-shadow:none;padding:14px;isolation:isolate;overflow:hidden}
+body #detail[open]:has(.terminal-item){display:flex;flex-direction:column}
+body #detail:has(.terminal-item)>#detail-content{min-height:0;min-width:0;overflow:auto;overscroll-behavior:contain}
+body #detail-content>.terminal-item{padding:0}
+body #detail:has(.terminal-item)::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;border:22px solid transparent;border-image:url('/assets/ui-native/Backpack_C.9498b9163795cb6ee548.png') 28.5 31 37 31.5 fill / 22px round;image-rendering:pixelated}
+body #detail:has(.terminal-item)>.detail-top{background:none;border:solid transparent;border-width:0 16px;border-image:url('/assets/ui-native/Backpack_Header.c0d9cff960bbecd03dd4.png') 0 14.5 0 16.5 fill / 0 16px;padding:2px 0;margin-bottom:10px;box-shadow:none;flex-shrink:0}
+body .terminal-item .item-detail-summary{background:#c7cdbd url('/assets/ui-native/Character_BG.c3c8c16f538cd88a96f9.png') center/100% 100% no-repeat;background-blend-mode:multiply;color:#303b32;border:0;padding:18px;box-shadow:none}
+body .terminal-item .detail-art{position:relative;width:100%;height:auto;aspect-ratio:294/160;border:0;border-radius:0;box-shadow:none;background:transparent url('/assets/ui-native/card.045e00eefed1aeb0d601.png') center/100% 100% no-repeat;image-rendering:pixelated}
+body .terminal-item .detail-art img{position:absolute;left:41%;top:37%;width:55%;height:56%;object-fit:contain}
+body .terminal-item .item-detail-summary :is(.detail-tag,.description,.detail-economy,.property dt){color:#495747}
+body .terminal-item .item-detail-summary :is(.item-guide-link,.static-guide-link,.detail-sale strong){color:#35523b}
+body .terminal-item .item-community-toolbar{background:transparent;border-color:#8d9a82}
+body .terminal-item .item-community-toolbar button{background:transparent;box-shadow:none;border:0;color:#35523b}
+body .terminal-item .item-community-toolbar button:hover{background:#aebba2;color:#253d2c}
+body .terminal-item .item-community-toolbar button[aria-pressed=true]{color:#913d42}
+body .terminal-item .item-detail-summary :focus-visible{outline-color:#35523b}
+body .terminal-item .item-detail-summary .property{border-bottom:1px dotted #85937b}
+body .terminal-item .detail-body{background:#222c27;border:0;box-shadow:none}
+body .terminal-item .attack-mode{border:0;border-left:2px solid #75856b;background:transparent;padding:8px 10px}
+body .terminal-item .detail-section-title{border-bottom:1px solid #77866d;box-shadow:none}
+@media(min-width:701px){body #detail .terminal-item[data-detail-layout=detailed] .item-detail-summary{position:sticky;top:0;box-sizing:border-box;max-height:calc(100dvh - 150px);overflow:auto}}
+@media(max-width:700px){body .wm-enemy-panel{padding:20px 18px;max-width:calc(100% - 64px)}body .wm-enemy-panel::before{border-image-width:20px}body #detail:has(.terminal-item){padding:10px}body .terminal-item .detail-hero{display:flex}body .terminal-item .detail-art{width:100%;height:auto}body .terminal-item .item-detail-summary{padding:18px}body .wm-enemy-detail{padding:10px}}
