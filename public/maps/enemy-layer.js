@@ -74,10 +74,10 @@ export function mountEnemyLayer({host,stage,dialog,signal,onInvalidate,onOpen,on
   const legend=node('div','','wm-enemy-density-legend'),ramp=node('span','','wm-enemy-density-ramp');ramp.style.background=`linear-gradient(90deg,${[.15,1,2.2,3.2].map(v=>'rgb('+densityColor(v).slice(0,3).join(',')+')').join(',')})`;legend.append(node('span','预置出生候选密度'),ramp,node('small','稀疏 → 密集 · 非刷新概率'));
   const search=node('input');search.type='search';search.placeholder='搜索敌怪、队伍或据点';search.setAttribute('aria-label','搜索敌怪、队伍或据点');
   const note=node('p','','wm-enemy-note'),scenario=node('div','','wm-enemy-scenario'),place=node('button','点选假设玩家位置'),reset=node('button','清除示意'),scenarioNote=node('p');place.type=reset.type='button';place.setAttribute('aria-pressed','false');scenario.append(place,reset,scenarioNote);
-  const detail=node('section','','wm-enemy-detail');detail.hidden=true;detail.setAttribute('aria-label','敌怪生成详情');
+  const detail=node('section','','wm-enemy-detail');detail.hidden=true;detail.tabIndex=-1;detail.setAttribute('aria-label','敌怪生成详情');
   const list=node('div','','wm-enemy-list');list.setAttribute('aria-label','本图敌怪与区域');
   const feedback=node('p','','wm-enemy-feedback');feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');
-  panel.append(header,displayRow,controls,legend,search,note,scenario,detail,feedback,list);stage.append(panel);
+  const content=node('div','','wm-enemy-content');content.append(displayRow,controls,legend,search,note,scenario,detail,feedback,list);panel.append(header,content);stage.append(panel);
   const listen=(el,type,fn)=>{el.addEventListener(type,fn);listeners.push(()=>el.removeEventListener(type,fn));};
   const buttons=()=>host.querySelectorAll('[data-action=enemies]');
   const entries=()=>data?.maps[mapId]?.entries||[];
@@ -89,12 +89,13 @@ export function mountEnemyLayer({host,stage,dialog,signal,onInvalidate,onOpen,on
   const filtered=()=>entries().filter(e=>active.has(e.kind)&&matches(e)&&inBounds(e));
   function repaint(){hits.clear();onInvalidate();}
   function syncContainer(){const parent=dialog.open?dialog.querySelector('.wm-atlas-layout'):stage.hidden?host:stage;if(panel.parentElement!==parent)parent.append(panel);}
-  function setOpen(value){open=value;syncContainer();panel.hidden=!value;for(const b of buttons()){b.setAttribute('aria-expanded',String(open));b.setAttribute('aria-pressed',String(enabled));}if(open){onOpen();load();search.focus({preventScroll:true});}else buttons()[dialog.open?1:0]?.focus({preventScroll:true});}
+  function setOpen(value,focusSearch=true){open=value;syncContainer();panel.hidden=!value;for(const b of buttons()){b.setAttribute('aria-expanded',String(open));b.setAttribute('aria-pressed',String(enabled));}if(open){onOpen();load();if(focusSearch)search.focus({preventScroll:true});}else buttons()[dialog.open?1:0]?.focus({preventScroll:true});}
   async function load(){
     if(data||request||disposed)return;loading=true;error=null;render();
     request=fetch(new URL('./data/enemy-spawns.json'+new URL(import.meta.url).search,import.meta.url),{signal,cache:'no-cache'}).then(async response=>{if(!response.ok)throw Error('敌怪资料暂时不可用');return validateEnemyData(await response.json());}).then(result=>{if(disposed||signal.aborted)return;data=result;}).catch(e=>{if(!disposed&&e.name!=='AbortError')error='敌怪资料暂时无法读取，地图与物资仍可使用。';}).finally(()=>{request=null;loading=false;if(!disposed){render();repaint();}});render();
   }
-  function showEntry(id,focus=false){selected=id;placing=false;place.setAttribute('aria-pressed','false');setOpen(true);renderDetail();renderScenario();for(const b of list.querySelectorAll('[data-enemy-id]'))b.setAttribute('aria-pressed',String(b.dataset.enemyId===id));const entry=selectedEntry();if(focus&&entry)onFocus(entry);repaint();}
+  function focusContent(target){target.focus({preventScroll:true});if(content.clientHeight)content.scrollTop+=target.getBoundingClientRect().top-content.getBoundingClientRect().top;}
+  function showEntry(id,focus=false){selected=id;placing=false;place.setAttribute('aria-pressed','false');setOpen(true,false);renderDetail();renderScenario();for(const b of list.querySelectorAll('[data-enemy-id]'))b.setAttribute('aria-pressed',String(b.dataset.enemyId===id));const entry=selectedEntry();if(entry)focusContent(detail);if(focus&&entry)onFocus(entry);repaint();}
   function appendFields(parent,fields){const dl=node('dl');for(const[key,value]of fields){dl.append(node('dt',key),node('dd',value));}parent.append(dl);}
   function appendCandidates(parent,enemies,title='可生成角色'){
     if(!enemies.length)return;const names=node('div','','wm-enemy-names');names.append(node('strong',title));
@@ -183,8 +184,9 @@ export function mountEnemyLayer({host,stage,dialog,signal,onInvalidate,onOpen,on
   }
   function selectHit(hit){
     if(hit.entries.length===1){showEntry(hit.entries[0].id);return;}
-    setOpen(true);selected=null;renderDetail();list.replaceChildren();feedback.textContent=`此处聚合${hit.entries.length}项，选择一项查看详情。`;
+    setOpen(true,false);selected=null;renderDetail();list.replaceChildren();feedback.textContent=`此处聚合${hit.entries.length}项，选择一项查看详情。`;
     for(const e of hit.entries){const button=node('button',e.title);button.type='button';listenOnce(button,'click',()=>showEntry(e.id,true));list.append(button);}
+    if(list.firstElementChild)focusContent(list.firstElementChild);
   }
   return {toggle:()=>setOpen(!open),setOpen,syncContainer,draw,getDensity,hit,selectHit,
     placePlayer(position){if(!placing||!scenarioEnabled()||!position?.every(Number.isFinite))return false;player=[position[0],0,position[2]];stopPlacing();renderScenario();repaint();return true;},

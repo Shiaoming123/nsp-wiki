@@ -5,7 +5,7 @@ body .wm-enemy-heading{background:none;border:solid transparent;border-width:0 1
 body .wm-enemy-heading strong{font-size:16px;letter-spacing:2px;color:#d3d5c5}
 body .wm-enemy-panel :is(button,select){background:#252c29;border:1px solid #657268;border-radius:1px;box-shadow:none;color:#e4e9db}
 body .wm-enemy-panel button:is(:hover,[aria-pressed=true]){background:#3b4b3f;border-color:#a9b89b}
-body .wm-enemy-panel>input{background:#19231e;border:1px solid #6d7f6b;box-shadow:none;border-radius:0}
+body .wm-enemy-panel input[type=search]{background:#19231e;border:1px solid #6d7f6b;box-shadow:none;border-radius:0}
 body .wm-enemy-density-legend{padding:8px;background:#1a251e;border-left:2px solid #97a882;color:#c3d0ba}
 body .wm-enemy-list{background:#1c2520;border:0;padding:4px 0}
 body .wm-enemy-list>button{background:none;border:0;border-bottom:1px dashed #65736155;padding:9px 8px}

@@ -37,7 +37,7 @@
 .home-search>[role=status]{grid-column:1/-1;margin:0;font-size:13px;line-height:1.7;color:var(--muted);}
 .home-search>[role=status]:empty{display:none;}
 .home-search[data-search-state=error]>[role=status]{color:var(--error-text);}
-.site-search-results{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr);gap:0;max-height:50dvh;overflow:auto;overscroll-behavior:contain;border:1px solid var(--border);border-radius:var(--radius-terminal);background:var(--deep);}
+.site-search-results{grid-column:1/-1;display:block;max-height:50dvh;overflow:auto;overscroll-behavior:contain;border:1px solid var(--border);border-radius:var(--radius-terminal);background:var(--deep);}
 .site-search-results:empty{display:none;}
 .site-search-results[aria-busy=true]{opacity:.6;}
 .site-search-result{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;min-height:var(--control-min);padding:12px 16px;border-bottom:1px solid var(--border);text-decoration:none;overflow-wrap:anywhere;}
@@ -48,7 +48,7 @@
 .site-search-result small{max-width:44%;flex:none;text-align:right;color:var(--muted);font-size:12px;line-height:1.6;}
 .site-search-dialog{width:min(720px,calc(100vw - 32px));height:fit-content;max-height:calc(100dvh - 48px);padding:24px;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-terminal-panel);}
 .site-search-dialog::backdrop{background:var(--overlay-scrim);}
-.site-search-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:16px;margin-bottom:20px;border-bottom:1px solid var(--border);}
+.site-search-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:16px;margin-bottom:20px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1;background:var(--panel);}
 .site-search-heading h2{margin:0;font-size:22px;font-weight:600;}
 .channel-directory{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;flex-basis:100%;}
 .channel-directory>div{display:flex;flex-direction:column;align-items:flex-start;gap:8px;}
