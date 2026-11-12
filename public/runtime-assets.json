@@ -143,7 +143,7 @@
     "corruption.js": "9ab27f92ff1f4c3bebf550b46d6630cb0a343325a0fbcf00e561557872a6381b",
     "feedback.js": "44c312a95c944e35dee018da814dcbdf4ca45ffefa1511785927865362fca36e",
     "enemy-variants.js": "b8e37049ca0315e39a80f3b52c70d0fea71bad62add5c367d0b86988ba64207a",
-    "enemy-guide-videos.js": "849d30583067204acea2ac745912032ce38da812939a6c9114392daf996f976f",
+    "enemy-guide-videos.js": "a7229b54a6311597de6c8fd2f7732ca9c09c9dd58687e556256d6661c0babfd0",
     "quest-supplies.js": "e7340587ef90dd649a6025e3b6dc2b80f0636cf8af23e972c3e696429f08beec",
     "quest-progress.js": "109dc975a19029793b1308a801bb1ae1dd02cc66eefabe0db0da9a531be6c89e",
     "quest-semantics.js": "9acd4c45bddc32aec2e4a2bbe712016dae32811ac459b3679894930f6ac40acd",
@@ -159,7 +159,7 @@
   "mapVersion": "3bb830c82339ba657179",
   "workshop": "workshop-ui.2df410435ae4af602193.js",
   "css": "wiki-ui.3fb01598d98010ba3bd8.css",
-  "js": "wiki-ui.2a16b8ace3d78680db0e.js",
+  "js": "wiki-ui.48f6e3aa49f6972cc7c6.js",
   "community": "community-ui.bb53b8fdf6b92a809048.js",
   "navigation": "navigation-ui.82f61cf51ee5f5d83ea5.js"
 }
