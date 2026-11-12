@@ -36,7 +36,7 @@
       const source=node('p','updates-source');source.append(anchor(record.source.label,record.source.url));card.append(source);
       for(const change of record.changes.filter(c=>state.module==='all'||c.module===state.module)){
         const details=node('details','updates-change'),summary=node('summary');summary.append(node('span','updates-module',modules[change.module]||change.module),document.createTextNode(change.title));details.append(summary);
-        const diff=node('dl','updates-diff');for(const [label,text]of [['此前',change.before],['变化后',change.after]]){const row=node('div');row.append(node('dt','',label),node('dd','',text));diff.append(row);}details.append(diff);
+        const diff=node('dl','updates-diff');for(const [label,text]of [...(Object.hasOwn(change,'before')?[['此前',change.before]]:[]),['变化后',change.after]]){const row=node('div');row.append(node('dt','',label),node('dd','',text));diff.append(row);}details.append(diff);
         if(change.note)details.append(node('p','guide-note',change.note));const links=node('div','related-links');for(const l of change.links||[])links.append(anchor(l.label,l.route));details.append(links);card.append(details);
       }
       card.append(anchor('此版本链接',route({...state,version:record.id}),'updates-permalink'));content.append(card);

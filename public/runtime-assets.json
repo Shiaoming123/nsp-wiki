@@ -137,7 +137,7 @@
     "community-auth.js": "b558e2071f263e05cdd5c8a078d7b2531fea3d241391b218102880f1abd20b64",
     "site-notice.js": "13ce39942d92b23dbe01e2d5fd699638761cf34b2ec414651636859e7323283d",
     "item-community.js": "0d4acd3e53d52d25eda10aaaeb9fba2b9466b14b3233dbbb51eeabae8bdd3365",
-    "app.js": "582dc0ead0963f7083f976b788d852eecfda04ba72b9a43d8f9719f6a6294951",
+    "app.js": "7e5fcc234f4f2defaf7ce7f0f9d56f6680870d4b741d73983b25d10bfc7065cd",
     "tiers.js": "aa849288e50656e14bac3c4861f9a1f1da837fc8cc096b3596970eef28a30c00",
     "posts.js": "21f330e5b9e11419eab6047d8c7e6056b9a6d7765f815643048b66ac9bb51e6e",
     "corruption.js": "9ab27f92ff1f4c3bebf550b46d6630cb0a343325a0fbcf00e561557872a6381b",
@@ -149,7 +149,7 @@
     "quest-semantics.js": "9acd4c45bddc32aec2e4a2bbe712016dae32811ac459b3679894930f6ac40acd",
     "quest-guide.js": "511ee7e64e21dd531fe7cb1377093a559fd5699a603e0529b1082c52a2721e0d",
     "npc-recipes.js": "0ad69b6cf4c700d9514810f2e2a775dff71c073237482b9a0e7ea7088a0a7de6",
-    "updates.js": "85ca768b5597bacbfad5348554e2465187b650ff57270cfef4cb88ad57c0b13d",
+    "updates.js": "22874b2006a304e869435cbd8a66f6b86b58faec0adc9efaaa5433de968bd089",
     "loot.js": "1af1fe6abd4bb5b60bb2d6eb31d9b3fcac3c9e8355cba7e4e50d13feda0168c4",
     "guides.js": "d358a3530c615d21aedccc79dcfc55844df31bef4d2dc706b3e786b94a707bcf",
     "scroll-tools.js": "98735f830fa39c444bee9c79d39fc7242549195782d6b3430ed86d004b487900",
@@ -159,7 +159,7 @@
   "mapVersion": "3bb830c82339ba657179",
   "workshop": "workshop-ui.2df410435ae4af602193.js",
   "css": "wiki-ui.3fb01598d98010ba3bd8.css",
-  "js": "wiki-ui.2c02888ed80017e22fa0.js",
+  "js": "wiki-ui.2a16b8ace3d78680db0e.js",
   "community": "community-ui.bb53b8fdf6b92a809048.js",
   "navigation": "navigation-ui.82f61cf51ee5f5d83ea5.js"
 }

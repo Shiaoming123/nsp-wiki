@@ -224,7 +224,7 @@
     if(!stats?.length)return null;
     const section=el('section','item-hidden-stats');
     if(heading)section.append(el('h3','detail-section-title','补充属性'),el('span','hidden-stat-tag','隐藏属性'));
-    const list=el('dl');for(const stat of stats){const row=el('div');row.append(el('dt','',stat.label),el('dd','',stat.formatted));list.append(row);}section.append(list);return section;
+    const list=el('dl');for(const stat of stats){const row=el('div'),label=el('dt','',stat.label);if(stat.key==='moveSpeed'){const link=el('a','inline-link',stat.label);link.href='#mechanic/weapon-movement';label.replaceChildren(link);}row.append(label,el('dd','',stat.formatted));list.append(row);}section.append(list);return section;
   }
   function itemAttackModes(item) {
     if(!item.attackModes?.length)return null;
