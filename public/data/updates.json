@@ -6,6 +6,29 @@
   },
   "records": [
     {
+      "id": "wiki-20261115-reading-navigation",
+      "kind": "wiki",
+      "date": "2026-11-15",
+      "version": "20261115-reading-navigation",
+      "title": "阅读目录、任务详情与首页推荐",
+      "publication": "主站版本 20261115-reading-navigation",
+      "verification": "桌面与触控目录、滚轮及拖动、任务返回、完整构建与交付检查",
+      "summary": "首页新增图文攻略推荐；阅读页支持左侧进度目录，任务详情可在文章中直接展开，逐层返回继续阅读。",
+      "source": {
+        "label": "Wiki更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "wiki",
+          "title": "阅读与查阅资料更连贯",
+          "before": "目录以列表呈现；完整任务资料需要打开任务页面，首页没有专门的图文攻略推荐。",
+          "after": "电脑左侧阅读标尺支持章节定位与拖动，手机可打开完整目录；任务目标、前置、奖励和原文在资料卡内阅读，返回保留位置；首页提供使用说明、攻略广场和写作入口。",
+          "links": []
+        }
+      ]
+    },
+    {
       "id": "wiki-20261115-wiki-articles",
       "kind": "wiki",
       "date": "2026-11-15",

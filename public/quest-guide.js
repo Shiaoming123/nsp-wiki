@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  const types = {Mail:'邮件',Chat:'消息',AutoDone:'自动事件',Collect:'提交物品',Kill:'消灭',KillUnique:'消灭指定目标',Reach:'抵达',Explore:'调查',CraftItem:'制作物品',CraftFurniture:'制作设施',PlaceItem:'放置物品',UpgradeResearchTable:'升级研究台',UnlockBlueprint:'解锁配方',UnlockFurniture:'解锁设施',FinishResearch:'完成研究',FixPortalToilet:'修复传送马桶',Money:'信用券',Item:'物品',Document:'后续任务',AddShopItem:'商店上新',ItemBlueprint:'物品配方',FurnitureBlueprint:'设施配方',ExitPoint:'撤离点',UnlockInsurance:'解锁保险',Talk:'对话',AddShopBundle:'商店商品组',Coordinate:'坐标',Interact:'交互',OccupyBastion:'占领据点'};
   const statuses={
     empty:{label:'空定义',description:'当前没有对白步骤、目标、补给或奖励；保留条目供查阅，不作为正常推进任务。'},
     unconfirmed:{label:'入口未明',description:'在本次核对的任务、地图与资料中未找到正常接取入口；不作为必做任务推荐，仍不能排除运行时入口。'},
@@ -51,7 +52,35 @@
     }
     return root;
   }
-  const api={status,versionNote,entryLabel,parts,appendRich,render};
+
+  // Shared read-only content. Page state, routing and completion writes stay with callers.
+  function appendDetails(body,m,data,options={}){
+    const doc=body.ownerDocument;
+    const el=(tag,cls,text)=>{const n=doc.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
+    const link=options.link||((text,route)=>{const n=el('a','inline-link',text);n.href=route;return n;});
+    const getItem=options.getItem||((id)=>window.Wiki.getItem(id));
+    const itemLink=options.itemLink||((id)=>{const i=getItem(id);return i?link(i.name||i.subcategory||'物品','#item/'+encodeURIComponent(id)):el('span','muted','物品');});
+    const completed=options.completed||new Set(),byId=new Map(data.missions.map(x=>[x.id,x]));
+    const guide={status,appendRich},heading=(parent,text)=>parent.append(el('h3','detail-section-title',text));
+    const variantLabel=options.variantLabel||(()=>''),enemies=options.enemies;
+    if(options.context){
+      const semantic=options.classifyMission(m,options.itemIds||new Set()),entry=entryLabel(m,data.edges);
+      if(entry)body.append(el('p','quest-entry-summary',entry));
+      for(const c of semantic.coordinates){const row=el('p','quest-semantic-note');row.append(el('span','',c.phase==='finReward'?'完成后获得坐标：':'事前获得坐标：'),link(c.name,'#maps/'+encodeURIComponent(c.id)),el('span','',c.count===null?' · 数量待核实':' × '+c.count));body.append(row);}
+      if(semantic.coordinates.length)body.append(el('p','guide-note','获得地图坐标不代表地图全部探索内容已解锁。'));
+      for(const r of semantic.recycles){const row=el('p','quest-semantic-note');row.append(el('span','','回收指定物品以接取：'),itemLink(r.itemId),el('span','',r.count===null?' · 无额外累计数量门槛':' × '+r.count));body.append(row);}
+      if(semantic.pending.length)body.append(el('p','guide-note','部分特殊奖励或接取入口的关联资料待核实。'));
+    }
+  function questRow(body,r){const row=el('div','guide-row');row.append(el('span','row-label',types[r.type]||r.type));if(['AddShopItem','AddShopBundle'].includes(r.type)){const products=el('div','related-links');(r.products||(r.candidates||[]).map(c=>c.id)).forEach(id=>products.append(itemLink(id)));row.append(products.childElementCount?products:el('span','','商品资料待核实'));}else if(r.type==='Document'){const m=data.missions.find(m=>m.id===r.data);row.append(m?link(m.name,`#quest/${encodeURIComponent(r.data)}`):el('span','',r.nameZh||'关联资料待核实'));}else if(getItem(r.data))row.append(itemLink(r.data));else row.append(el('span','',r.nameZh|| (r.type==='Money'?'信用券':r.data||'')));if(!['Document','AddShopItem','AddShopBundle','UnlockInsurance','Coordinate'].includes(r.type))row.append(el('strong','',`× ${r.count}`));body.append(row);if(r.actorIds?.length){const wrap=el('div','related-links');r.actorIds.forEach(id=>wrap.append(link('查看目标 · '+(r.actorNames?.[id]||enemies?.enemies.find(e=>e.id===id)?.name||r.nameZh||'敌怪资料待核实')+(variantLabel(id)?' · '+variantLabel(id):''),`#enemy/${encodeURIComponent(id)}`)));body.append(wrap);}if(['AddShopItem','AddShopBundle'].includes(r.type)){body.append(el('p','guide-note','解锁商品的上架范围，并非直接获得；具体在售以商店刷新为准。'));}if(r.mark&&/[一-鿿]/.test(r.mark))body.append(el('p','guide-note',r.mark));if(r.referenceStatus?.startsWith('UNKNOWN'))body.append(el('p','guide-note','关联配置待核实。'));}
+    heading(body,'接取与前置');const incoming=data.edges.filter(e=>e.to===m.id),groups=m.activationGroups||[],direct=incoming.filter(e=>e.kind==='reward-add-mission');
+    function prerequisiteRow(target,parent,suffix){const row=el('p');row.append(target?link(target.name,`#quest/${encodeURIComponent(target.id)}`):el('span','muted','前置任务待核实'),el('span','muted',` · ${suffix}`));if(target){const mark=el('span','muted',completed.has(target.id)?' · 已手动标记完成':'');mark.dataset.progressId=target.id;row.append(mark);}parent.append(row);}
+    groups.forEach(group=>{const section=el('section','quest-prereq-group');section.dataset.gate=group.gate;section.append(el('p','',group.gate==='ANY'?'自动接取：以下任一前置流程结束后可解锁。':'自动接取：以下全部前置流程结束后可解锁。'));group.members.forEach(id=>prerequisiteRow(byId.get(id),section,'前置流程'));(group.pending||[]).forEach(()=>section.append(el('p','guide-note','另有前置依赖待核实。')));body.append(section);});
+    if(direct.length){const section=el('section','quest-direct-entry');section.append(el('p','',groups.length?'也可由以下任一任务的奖励直接发放，无需同时满足上面的自动前置：':'由以下任一任务的奖励直接发放：'));direct.forEach(edge=>prerequisiteRow(byId.get(edge.from),section,edge.rewardPhase==='preReward'?'事前补给发放':'完成奖励发放'));body.append(section);}
+    m.triggers.forEach(t=>{const p=el('p');if(t.type==='recycle'){p.append(el('span','','回收 '),itemLink(t.itemId),el('span','',' 时触发。'));}else{p.append(el('span','',t.name||'接取位置待核实'));(t.maps||[]).forEach(id=>p.append(el('span','',' · '),t.mapNames?.[id]?link(t.mapNames[id],'#maps/'+encodeURIComponent(id)):el('span','muted','地图入口待核实')));}body.append(p);});(m.pendingDependencies||[]).forEach(d=>body.append(el('p','guide-note',`待核实依赖：${/[一-鿿]/.test(d.name||'')?d.name:'关联任务'}`)));if(!incoming.length&&!m.triggers.length&&!m.review?.notes?.length&&!guide.status(m))body.append(el('p','guide-note','接取方式待核实。'));
+    heading(body,'任务目标');if(!m.requirements.length)body.append(el('p','',m.review?.status==='empty'?'空定义；当前无可推进的对白步骤或目标。':m.review?.status==='dialogue'?'默认闲聊，不列为普通任务目标。':'无数值目标，按消息、邮件或对白的实际步骤继续。'));m.requirements.forEach(r=>questRow(body,r));if(m.preReward.length){heading(body,'事前补给');m.preReward.forEach(r=>questRow(body,r));}heading(body,'完成奖励');m.reward.forEach(r=>questRow(body,r));if(m.dynamicReward)body.append(el('p','guide-note','保险返还由当前实例决定，没有固定物品清单。'));if(!m.reward.length&&!m.dynamicReward)body.append(el('p','','无固定物品奖励。'));const next=[...new Map(data.edges.filter(e=>e.from===m.id).map(e=>[e.to,e])).values()];if(next.length){heading(body,'后续任务');const wrap=el('div','related-links');next.forEach(e=>{const n=data.missions.find(m=>m.id===e.to);wrap.append(link(n.name,`#quest/${encodeURIComponent(n.id)}`));});body.append(wrap);}if(m.texts.length){const fold=el('details','story-text');fold.append(el('summary','','任务原文'));m.texts.forEach((t,index)=>fold.append(guide.appendRich(el('p'),t,m.emphasis?.texts?.[index])));body.append(fold);}
+    return body;
+  }
+  const api={types,appendDetails,status,versionNote,entryLabel,parts,appendRich,render};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   if(typeof window!=='undefined')window.QuestGuide=api;
 })();
