@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import {compactJSON} from './json-bytes.mjs';
 import {packMapGeometry} from './map-geometry-packs.mjs';
 import {spawn} from 'node:child_process';
+import {optimizeGzip} from './gzip-delivery.mjs';
 
 export async function tarStreamBytes(directory,entries){
   const binary=process.platform==='win32'?'tar.exe':'tar';
@@ -87,7 +88,7 @@ export function optimizePublic(directory){
   const deduplication=deduplicateSnow(root),changed=[];
   const candidates=files(root).filter(file=>{
     const relative=path.relative(root,file).split(path.sep).join('/');
-    return relative==='data/items.json'||/^maps\/data\/assets-(?:ea25933545|snow25933545-20261015)\/.+\.json\.gz$/.test(relative);
+    return /^data\/[^/]+\.json$/.test(relative)||/^maps\/data\/assets-(?:ea25933545|snow25933545-20261015)\/.+\.json\.gz$/.test(relative);
   });
   for(const file of candidates){
     const original=fs.readFileSync(file),gzip=file.endsWith('.gz'),content=gzip?gunzipSync(original):original;
@@ -194,7 +195,8 @@ async function pruneBuild(independent=false){
   const block=`${start}\n/maps/data/geometry-packs/*\n  Cache-Control: public, max-age=31536000, immutable\n${end}`;
   headers=headers.includes(start)?headers.replace(new RegExp(start+'[\\s\\S]*?'+end),block):headers.trimEnd()+'\n'+block;
   fs.writeFileSync(headerFile,headers.trimEnd()+'\n');
-  const result={...auditPublic(target,{filtered:true}),removedFiles:targets.length,removedBytes:report.excludedBytes,sourceFilesPreserved:report.files,optimization,packing:{...packing,removedGeometryFiles:retired.length,removedGeometryBytes:retired.reduce((sum,f)=>sum+f.bytes,0)}};
+  const gzipDelivery=await optimizeGzip(target);
+  const result={...auditPublic(target,{filtered:true}),removedFiles:targets.length,removedBytes:report.excludedBytes,sourceFilesPreserved:report.files,optimization,gzipDelivery,packing:{...packing,removedGeometryFiles:retired.length,removedGeometryBytes:retired.reduce((sum,f)=>sum+f.bytes,0)}};
   // Sites adds hosting metadata and SQL migrations when packaging the whole dist tree.
   result.expandedBudgetBytes=files(path.join(site,'dist')).reduce((sum,file)=>sum+fs.statSync(file).size,0)+files(path.join(site,'drizzle')).reduce((sum,file)=>sum+fs.statSync(file).size,0)+65536;
   if(!independent)assert(result.expandedBudgetBytes<=256*1024*1024-128*1024,'Sites expanded file budget exceeded; do not upload');

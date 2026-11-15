@@ -3,22 +3,37 @@ import {community} from './lib/community.js';
 import {allowedTencent} from './lib/tencent-mirror-policy.js';
 import {SQLiteD1,FileBucket} from './storage.mjs';
 import {publicActivity} from './analytics-feed.mjs';
+import {verifyMirror} from './lib/mirror-auth.js';
 export const ORIGIN='https://nsp-wiki.shiaoming.cn';
 export const BODY_LIMIT=5*1024*1024+65536;
 const error=(status,message)=>Response.json({error:message},{status,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
-export function createIndependent({databaseFile,uploadsDir,adminAccountId=null,registrationEnabled=false,analytics=null}){
+export function createIndependent({databaseFile,uploadsDir,adminAccountId=null,registrationEnabled=false,analytics=null,netlifyProxyKey=null}){
   if(adminAccountId!==null&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(adminAccountId))throw Error('Invalid administrator mapping');
+  if(netlifyProxyKey!==null&&!/^[0-9a-f]{64}$/i.test(netlifyProxyKey))throw Error('Invalid Netlify proxy key');
   const db=new SQLiteD1(databaseFile),bucket=new FileBucket(uploadsDir);
-  // Deliberately no shared-origin HMAC keys, Sites storage bindings or external fetch.
+  // Optional Netlify trust is verified at this boundary; never expose its key to business handlers.
   const env={DB:db,BUCKET:bucket,...(adminAccountId?{ADMIN_ACCOUNT_ID:adminAccountId}:{})};
   return {db,bucket,health(){
     const ok=db.db.prepare('SELECT 1 AS ok').get().ok===1;
     return {ok,service:'nsp-wiki-independent-community',release:'20261017-independent-v1',registrationEnabled:!!registrationEnabled,adminConfigured:!!adminAccountId};
   },async handle(request,trustedIp){
-    const url=new URL(request.url),headers=request.headers;
+    const url=new URL(request.url);let headers=request.headers;
     if(url.origin!==ORIGIN||!allowedTencent(request.method,url.pathname))return error(404,'Unknown API route');
     if(!isIP(trustedIp))return error(503,'Trusted client address unavailable');
-    if([...headers.keys()].some(k=>k.startsWith('x-nsp-mirror-'))||headers.get('sec-fetch-site')==='cross-site'||
+    if(headers.get('sec-fetch-site')==='cross-site')return error(403,'Submit from the wiki origin');
+    if([...headers.keys()].some(k=>k.startsWith('x-nsp-mirror-'))){
+      try{
+        if(!netlifyProxyKey)return error(403,'Mirror identity not enabled');
+        const mirror=await verifyMirror(request,{NSP_MIRROR_ORIGIN:'https://nsp-wiki.netlify.app',NSP_MIRROR_PROXY_KEY:netlifyProxyKey});
+        if(!mirror||!isIP(mirror.ip))return error(403,'Invalid mirror identity');
+        const clean=new Headers();
+        for(const name of ['accept','content-type','cookie','if-none-match'])if(mirror.request.headers.has(name))clean.set(name,mirror.request.headers.get(name));
+        clean.set('origin',ORIGIN);
+        request=new Request(request.url,{method:request.method,headers:clean,...(mirror.request.body?{body:mirror.request.body,duplex:'half'}:{})});
+        headers=request.headers;trustedIp=mirror.ip;
+      }catch(cause){return error(cause.status||503,cause.status?'Mirror identity rejected':'Mirror verification unavailable');}
+    }
+    if(
        (headers.has('origin')&&headers.get('origin')!==ORIGIN)||(request.method!=='GET'&&headers.get('origin')!==ORIGIN))return error(403,'Submit from the wiki origin');
     if(Number(headers.get('content-length'))>BODY_LIMIT)return error(413,'Upload too large');
     if(url.pathname.startsWith('/api/analytics/')){

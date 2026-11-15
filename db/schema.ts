@@ -75,3 +75,28 @@ export const feedbackWorkflow = sqliteTable('feedback_workflow', {
   status: text('status').notNull(), note: text('note').notNull().default(''), version: integer('version').notNull(),
   updatedBy: text('updated_by').notNull().references(() => accounts.id), updatedAt: integer('updated_at').notNull(),
 }, t => [check('feedback_workflow_status',sql`${t.status} IN ('open','working','resolved','closed')`),check('feedback_workflow_version',sql`${t.version} > 0`)]);
+
+export const articles = sqliteTable('articles', {
+  id:text('id').primaryKey(),author:text('author').notNull().references(()=>accounts.id),
+  draftJson:text('draft_json').notNull(),publishedJson:text('published_json'),revision:integer('revision').notNull().default(1),
+  publishedRevision:integer('published_revision'),status:text('status').notNull().default('draft'),
+  created:integer('created').notNull(),updated:integer('updated').notNull(),publishedAt:integer('published_at'),
+},t=>[index('articles_author_updated').on(t.author,t.updated,t.id),index('articles_status_published').on(t.status,t.publishedAt,t.id),check('articles_status',sql`${t.status} IN ('draft','published','withdrawn')`)]);
+export const articleRevisions=sqliteTable('article_revisions',{
+  article:text('article').notNull().references(()=>articles.id),revision:integer('revision').notNull(),document:text('document').notNull(),created:integer('created').notNull(),
+},t=>[primaryKey({columns:[t.article,t.revision]})]);
+export const articleMedia=sqliteTable('article_media',{
+  id:text('id').primaryKey(),owner:text('owner').notNull().references(()=>accounts.id),objectKey:text('object_key').notNull().unique(),width:integer('width').notNull(),height:integer('height').notNull(),bytes:integer('bytes').notNull(),created:integer('created').notNull(),
+},t=>[index('article_media_owner').on(t.owner,t.created,t.id)]);
+export const articleRefs=sqliteTable('article_refs',{
+  article:text('article').notNull().references(()=>articles.id),kind:text('kind').notNull(),entityId:text('entity_id').notNull(),
+},t=>[primaryKey({columns:[t.article,t.kind,t.entityId]}),index('article_refs_entity').on(t.kind,t.entityId,t.article)]);
+export const articleComments=sqliteTable('article_comments',{
+  id:text('id').primaryKey(),article:text('article').notNull().references(()=>articles.id),author:text('author').notNull().references(()=>accounts.id),body:text('body').notNull(),created:integer('created').notNull(),
+},t=>[index('article_comments_article').on(t.article,t.created,t.id)]);
+export const articleLikes=sqliteTable('article_likes',{
+  article:text('article').notNull().references(()=>articles.id),account:text('account').notNull().references(()=>accounts.id),
+},t=>[primaryKey({columns:[t.article,t.account]})]);
+export const articleBookmarks=sqliteTable('article_bookmarks',{
+  article:text('article').notNull().references(()=>articles.id),account:text('account').notNull().references(()=>accounts.id),
+},t=>[primaryKey({columns:[t.article,t.account]})]);

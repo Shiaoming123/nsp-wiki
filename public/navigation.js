@@ -151,7 +151,7 @@
     window.addEventListener('hashchange',()=>{if(dialog.open)dialog.close();});
     results.addEventListener('click',event=>{if(event.target.closest('a'))dialog.close();});
     document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.defaultPrevented&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)&&!document.querySelector('dialog[open]')){event.preventDefault();open();}});
-    const aliases={item:'items',quest:'quests',enemy:'enemies',npc:'npcs',recipe:'recipes',affix:'corruption',mechanic:'mechanics',history:'updates'};
+    const aliases={item:'items',quest:'quests',enemy:'enemies',npc:'npcs',recipe:'recipes',affix:'corruption',mechanic:'mechanics',history:'updates',article:'articles',write:'articles','article-preview':'articles'};
     const section=location.pathname==='/'?(location.hash.slice(1).split('/')[0]||'home'):location.pathname.split('/')[1];sync(aliases[section]||section);if(section==='home'&&document.getElementById('guide-root')){document.getElementById('guide-root').hidden=false;document.getElementById('item-page').hidden=true;renderHome(document.getElementById('guide-root'));}
   }
   window.WikiNavigation={sync,renderHome,cancelPageTransition,enterPage,closeDialog,cancelDialogClose,replaceDetail};

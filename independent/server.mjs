@@ -50,6 +50,13 @@ if(process.argv[1]&&realpathSync(process.argv[1])===fileURLToPath(import.meta.ur
   const dir=args[at+1],adminAt=args.indexOf('--admin-id-file');
   const adminAccountId=adminAt<0?null:readFileSync(args[adminAt+1],'utf8').trim();
   const option=name=>{const i=args.indexOf(name);return i<0?null:args[i+1];};
+  let netlifyProxyKey=null;
+  if(args.includes('--netlify-proxy-key-file')){
+    const file=option('--netlify-proxy-key-file');
+    if(!file||!path.isAbsolute(file))throw Error('An absolute Netlify proxy key file is required');
+    netlifyProxyKey=readFileSync(file,'utf8').trim();
+    if(!/^[0-9a-f]{64}$/i.test(netlifyProxyKey))throw Error('Invalid Netlify proxy key file');
+  }
   let analytics=null;
   if(args.includes('--analytics-db')||args.includes('--analytics-secret-file')||args.includes('--analytics-items')){
     try{
@@ -63,7 +70,7 @@ if(process.argv[1]&&realpathSync(process.argv[1])===fileURLToPath(import.meta.ur
       setInterval(()=>{try{analytics.prune(90);}catch{console.error('Analytics retention cleanup failed');}},3600000).unref();
     }catch{console.error('Analytics unavailable; community remains enabled');}
   }
-  const app=createIndependent({databaseFile:path.join(dir,'community.sqlite'),uploadsDir:path.join(dir,'uploads'),adminAccountId,registrationEnabled:args.includes('--allow-registration'),analytics});
+  const app=createIndependent({databaseFile:path.join(dir,'community.sqlite'),uploadsDir:path.join(dir,'uploads'),adminAccountId,registrationEnabled:args.includes('--allow-registration'),analytics,netlifyProxyKey});
   const portAt=args.indexOf('--listen-port'),port=portAt<0?8767:Number(args[portAt+1]);
   if(!Number.isInteger(port)||port<0||port>65535)throw Error('Invalid loopback port');
   const server=createHTTPServer(app);server.listen(port,'127.0.0.1',()=>{

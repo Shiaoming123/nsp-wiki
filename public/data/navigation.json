@@ -92,6 +92,11 @@
       "description": "分享看法，一起补全这本手册。",
       "sections": [
         {
+          "id": "articles",
+          "name": "图文攻略",
+          "description": "作者经验、图文教程与玩家讨论"
+        },
+        {
           "id": "tiers",
           "name": "夯拉榜",
           "description": "玩家排行与讨论"

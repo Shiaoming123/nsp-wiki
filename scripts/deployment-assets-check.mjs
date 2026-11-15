@@ -9,6 +9,12 @@ import {auditPublic,compactJSON,optimizePublic,mapReferences,tarStreamBytes,chec
 
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'nsp-assets-check-'));
 const root=path.join(temp,'public'),manifest=path.join(root,'maps/data/maps/m/manifest.json.gz');
+// Node24's native recursive cp fails fast on this Windows runtime; copy fixture files explicitly.
+function copyFixture(source,target){
+  const info=fs.lstatSync(source);assert(!info.isSymbolicLink(),'Linked fixture input');
+  if(info.isDirectory()){fs.mkdirSync(target,{recursive:true});for(const name of fs.readdirSync(source))copyFixture(path.join(source,name),path.join(target,name));}
+  else{assert(info.isFile());fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(source,target);}
+}
 const write=(name,value)=>{const file=path.join(root,name);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,value);};
 const definition={pois:{url:'pois.json.gz'},assets:{mixed:{geometry:'../../assets-snow25933545-20261015/MixedCase.json.gz'},x:{geometry:'../../assets-ea25933545/g.json.gz'},snow:{geometry:'../../assets-snow25933545-20261015/Origin12_1535/snow-b.json.gz',material:{color:[1,.12345678901234567,0]}}},chunks:[]};
 const set=value=>fs.writeFileSync(manifest,gzipSync(JSON.stringify(value)));
@@ -25,6 +31,7 @@ try{
   assert.equal(compactJSON(json).toString(),'{"text":"空 格\\\"\\\\ ","number":9007199254740993,"float":1.2300e+03}');
   assert.throws(()=>compactJSON(Buffer.from('{bad}')));
   write('data/items.json',json);write('index.html','fixture');write('maps/data/maps.json',JSON.stringify([{id:'m',manifest:'maps/m/manifest.json.gz'}]));
+  write('data/enemies.json',json);
   const measured=await tarStreamBytes(root,['index.html']);
   assert(measured.bytes>=1024&&measured.bytes%512===0&&path.isAbsolute(measured.executable));
   await assert.rejects(tarStreamBytes(root,['missing-archive-input']));
@@ -40,7 +47,7 @@ try{
   write('maps/data/assets-snow25933545-20261015/MixedCase.json.gz',gzipSync(JSON.stringify({positions:Array.from({length:9000},(_,i)=>i/7),indices:[]})));
   set(definition);write('maps/data/assets/g.json.gz','different');assert.throws(()=>auditPublic(root));write('maps/data/assets/g.json.gz',same);
   for(const kind of ['lowGeometry','POI','unreferenced']){
-    const failed=path.join(temp,'failure-'+kind);fs.cpSync(root,failed,{recursive:true});
+    const failed=path.join(temp,'failure-'+kind);copyFixture(root,failed);
     const edited=structuredClone(definition),target=path.join(failed,'maps/data/maps/m/manifest.json.gz');
     delete edited.assets.snow.geometry;
     if(kind==='lowGeometry')edited.assets.snow.lowGeometry='../../assets-snow25933545-20261015/Origin12_1535/%73now-b.json.gz';
@@ -53,7 +60,8 @@ try{
   fs.mkdirSync(path.join(temp,'scripts'));fs.copyFileSync(fileURLToPath(new URL('./deployment-assets.mjs',import.meta.url)),path.join(temp,'scripts/deployment-assets.mjs'));
   fs.copyFileSync(fileURLToPath(new URL('./map-geometry-packs.mjs',import.meta.url)),path.join(temp,'scripts/map-geometry-packs.mjs'));
   fs.copyFileSync(fileURLToPath(new URL('./json-bytes.mjs',import.meta.url)),path.join(temp,'scripts/json-bytes.mjs'));
-  fs.cpSync(root,path.join(temp,'dist/client'),{recursive:true});
+  fs.copyFileSync(fileURLToPath(new URL('./gzip-delivery.mjs',import.meta.url)),path.join(temp,'scripts/gzip-delivery.mjs'));
+  copyFixture(root,path.join(temp,'dist/client'));
   const generated=path.join(temp,'dist/client/maps/data/assets/g.json.gz');fs.writeFileSync(generated,'unexpected');
   const run=()=>spawnSync(process.execPath,[path.join(temp,'scripts/deployment-assets.mjs'),'--prune'],{encoding:'utf8'});
   assert.notEqual(run().status,0);assert.equal(fs.readFileSync(generated,'utf8'),'unexpected');assert.deepEqual(fs.readFileSync(path.join(root,'maps/data/assets/g.json.gz')),same);
@@ -61,6 +69,7 @@ try{
   assert(fs.existsSync(path.join(temp,'dist/client/maps/data/assets-snow25933545-20261015/MixedCase.json.gz')),'Referenced mixed-case oversized geometry preserved');
   assert.deepEqual(gunzipSync(fs.readFileSync(path.join(temp,'dist/client',snow))),content);
   assert.deepEqual(fs.readFileSync(path.join(root,'data/items.json')),json);
+  assert.equal(fs.readFileSync(path.join(temp,'dist/client/data/enemies.json'),'utf8'),compactJSON(json).toString());
   assert(!fs.existsSync(path.join(temp,'dist/client/maps/data/assets-snow25933545-20261015/Origin12_1535/snow-b.json.gz')));
   const changedManifest=JSON.parse(gunzipSync(fs.readFileSync(path.join(temp,'dist/client/maps/data/maps/m/manifest.json.gz'))));
   const [packRef,entryId]=changedManifest.assets.snow.geometry.split('#');assert(entryId);
