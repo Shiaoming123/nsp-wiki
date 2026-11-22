@@ -6,6 +6,29 @@
   },
   "records": [
     {
+      "id": "wiki-20261122-markdown-import",
+      "kind": "wiki",
+      "date": "2026-11-22",
+      "version": "20261122-markdown-import",
+      "title": "图文攻略支持 Markdown 导入",
+      "publication": "主站版本 20261122-markdown-import",
+      "verification": "MD/JSON导入、草稿保护、标准排版、账号流程与完整交付检查",
+      "summary": "支持导入MD攻略为新草稿，复杂格式保留源码并可预览阅读；JSON备份、词条关联、配图与原有内容保持。",
+      "source": {
+        "label": "Wiki更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "wiki",
+          "title": "从Markdown开始写攻略",
+          "before": "仅支持导入本站JSON草稿备份，外部Markdown需要手动复制。",
+          "after": "可选择.md或.markdown文件，自动提取标题，保存原稿后新建草稿；表格、代码和链接可预览阅读，复杂正文保持Markdown编辑，图片通过原入口上传。",
+          "links": []
+        }
+      ]
+    },
+    {
       "id": "wiki-20261115-reading-navigation",
       "kind": "wiki",
       "date": "2026-11-15",

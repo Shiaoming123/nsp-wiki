@@ -28,11 +28,12 @@
   // Ordinary wheel input must not cancel the document's existing smooth-scroll handler.
   const stop = () => { cancelAnimationFrame(seekFrame); seekFrame=0;seekRatio=null;anchor=null; };
   const article = host.querySelector(".article-body");
-  const headings = [...(article?.querySelectorAll("h2[id],h3[id]") ?? [])];
+  const headings = [...(article?.querySelectorAll("h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]") ?? [])];
   if(!headings.length){host.classList.add('reading-no-headings');cleanups.push(()=>host.classList.remove('reading-no-headings'));}
   if (article && headings.length) {
     const text = h => h.textContent.replace(/#\s*$/, "").trim();
-    const primary = headings.filter(h => h.tagName === "H2");
+    const level = Math.min(...headings.map(h => Number(h.tagName.slice(1))));
+    const primary = headings.filter(h => Number(h.tagName.slice(1)) === level);
     const sections = primary.length ? primary : headings;
     const nav = document.createElement("nav");
     nav.className = "reading-rail";
@@ -74,7 +75,7 @@
     });
     for (const h of headings) {
       const li = document.createElement("li");
-      if (h.tagName === "H3") li.className = "sub";
+      if (Number(h.tagName.slice(1)) > level) li.className = "sub";
       li.append(makeLink(h));
       mobileList.append(li);
     }

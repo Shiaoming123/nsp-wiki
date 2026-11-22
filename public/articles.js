@@ -42,8 +42,9 @@ function imageHtml(entry, cls='') { const src=safeImage(entry?.image); return sr
 
 function refsFromBody(body) {
   const found = [], seen=new Set();
-  for(const m of body.matchAll(/(?:\[\[|\{\{)(item|enemy|quest):([^|\]\}\n]+)\|([^\]\}\n]+)(?:\]\]|\}\})/g)) {
-    const key=`${m[1]}:${m[2]}`; if(!seen.has(key)) { seen.add(key); found.push({kind:m[1],id:m[2],label:m[3]}); }
+  for(const ref of window.PostMarkdown.references(body)) {
+    if(ref.kind==='media')continue;const key=ref.kind+':'+ref.id;
+    if(!seen.has(key)){seen.add(key);found.push(ref);}
   }
   return found;
 }
@@ -63,13 +64,16 @@ function card(ref) { const entry=entity(ref.kind,ref.id); return `<button class=
 
 function mediaFor(article,id) { if(id==='route-sketch') return {data:'/route-sketch.svg'}; return article.images?.[id]; }
 
+function figureHtml(article,id,caption){const media=mediaFor(article,id);const src=safeImage(media?.data);return `<figure class="article-figure" data-media="${esc(id)}">${src?`<button data-image="${esc(src)}" data-caption="${esc(caption)}" aria-label="放大图片：${esc(caption||'攻略配图')}"><img src="${esc(src)}" alt="${esc(caption||'攻略配图')}" loading="lazy"><span class="zoom-label">${icon('image')} 点击放大</span></button>`:'<div class="missing-image">配图暂不可用，原图注和引用已保留。</div>'}<figcaption>${esc(caption)}</figcaption></figure>`;}
+
 function renderBody(article) {
+  if(!WikiArticleImport.richCompatible(article.body||'')&&window.PostMarkdown)return renderMarkdownDocument(article);
   const lines=(article.body||'').replace(/\r/g,'').split('\n'); let html='',paragraph=[],list=[],quote=[],head=0;
   const flush=()=>{if(paragraph.length){html+=`<p>${inline(paragraph.join(' '))}</p>`;paragraph=[];}if(list.length){html+='<ul>'+list.map(x=>`<li>${inline(x)}</li>`).join('')+'</ul>';list=[];}if(quote.length){html+=`<blockquote><p>${inline(quote.join(' '))}</p></blockquote>`;quote=[];}};
   for(const line of lines){const heading=/^(#{2,3})\s+(.+)$/.exec(line);const image=/^!\[((?:\\.|[^\]\\])*)\]\(media:([\w-]+)\)$/.exec(line);const ref=/^\{\{(item|enemy|quest):([^|}\n]+)\|([^}\n]+)\}\}$/.exec(line);
     if(!line.trim()){flush();continue;}
     if(heading){flush();const tag=heading[1].length===2?'h2':'h3';html+=`<${tag} id="section-${head++}">${inline(heading[2])}</${tag}>`;}
-    else if(image){flush();image[1]=image[1].replace(/\\([\\\[\]])/g,'$1');const media=mediaFor(article,image[2]);const src=safeImage(media?.data);html+=`<figure class="article-figure" data-media="${esc(image[2])}">${src?`<button data-image="${esc(src)}" data-caption="${esc(image[1])}" aria-label="放大图片：${esc(image[1]||'攻略配图')}"><img src="${esc(src)}" alt="${esc(image[1]||'攻略配图')}" loading="lazy"><span class="zoom-label">${icon('image')} 点击放大</span></button>`:'<div class="missing-image">配图暂不可用，原图注和引用已保留。</div>'}<figcaption>${esc(image[1])}</figcaption></figure>`;}
+    else if(image){flush();image[1]=image[1].replace(/\\([\\\[\]])/g,'$1');html+=figureHtml(article,image[2],image[1]);}
     else if(ref){flush();html+=card({kind:ref[1],id:ref[2],label:ref[3]});}
     else if(line.startsWith('- ')){if(paragraph.length||quote.length)flush();list.push(line.slice(2));}
     else if(line.startsWith('> ')){if(paragraph.length||list.length)flush();quote.push(line.slice(2));}
@@ -77,9 +81,24 @@ function renderBody(article) {
   }flush();return html || '<p class="muted">正文还没有内容，返回编辑写下第一段吧。</p>';
 }
 
+// Reuse the existing sanitized Markdown renderer for formats the rich editor cannot serialize.
+function renderMarkdownDocument(article){
+  const node=document.createElement('div');
+  window.PostMarkdown.render(node,article.body,{articleAtom:token=>{
+    const template=document.createElement('template');
+    if(token.type==='image'){
+      if(!token.href.startsWith('media:'))return document.createTextNode(token.raw);
+      template.innerHTML=figureHtml(article,token.href.slice(6),token.text);
+    }else template.innerHTML=token.display==='card'?card(token):inline(token.raw);
+    return template.content;
+  }});
+  node.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach((h,i)=>h.id='section-'+i);
+  return '<div class="post-markdown">'+node.innerHTML+'</div>';
+}
+
 function headingText(text){return text.replace(/\[\[(item|enemy|quest):([^|\]\n]+)\|([^\]\n]+)\]\]/g,(_,kind,id,label)=>entity(kind,id)?.name||label).replace(/\*\*([^*]+)\*\*/g,'$1');}
 
-function headings(body) { return [...body.matchAll(/^(#{2,3})\s+(.+)$/gm)].map((m,i)=>({id:`section-${i}`,text:headingText(m[2]),sub:m[1].length===3})); }
+function headings(body) { if(!WikiArticleImport.richCompatible(body)&&window.PostMarkdown){const t=document.createElement('template');t.innerHTML=renderMarkdownDocument({body});return [...t.content.querySelectorAll('h1,h2,h3,h4,h5,h6')].map(h=>({id:h.id,text:h.textContent,sub:!['H1','H2'].includes(h.tagName)}));}return [...body.matchAll(/^(#{2,3})\s+(.+)$/gm)].map((m,i)=>({id:`section-${i}`,text:headingText(m[2]),sub:m[1].length===3})); }
 
 function tocHtml(article) {return headings(article.body).map(h=>`<a href="#${h.id}" data-section="${h.id}" class="${h.sub?'sub':''}">${esc(h.text)}</a>`).join('');}
 
@@ -103,9 +122,11 @@ function captureDraft(){if(!$('#article-title'))return;if(editorMode==='rich'&&r
 
 function editorRefsHtml(){const rs=refsFromBody(state.draft?.body||'');return rs.length?rs.map(r=>`<button class="sidebar-ref" data-entity="${esc(r.kind+':'+r.id)}" data-label="${esc(r.label)}">${imageHtml(entity(r.kind,r.id))}<span>${esc(entity(r.kind,r.id)?.name||r.label)}<small>${kinds[r.kind]}</small></span></button>`).join(''):'<p class="small-note">从工具栏插入物品、敌怪或任务，这里会自动整理关联清单。</p>';}
 
+function updateMarkdownSupport(){const n=$('#markdown-support');if(!n)return;const complex=!WikiArticleImport.richCompatible(state.draft?.body||'');n.hidden=!complex;n.textContent='正文含表格、代码、链接等可视化编辑器暂不支持的格式，已保留 Markdown 源码。可预览和发布；请继续用 Markdown 编辑以保留格式。普通图片路径不会自动上传，请通过图片按钮重新插入。';$('[data-mode=rich]')?.setAttribute('aria-disabled',String(complex));}
+
 function updateEditorRefs(){const node=$('#editor-refs');if(node)node.innerHTML=editorRefsHtml();}
 
-function renderEditor(){richController?.destroy();richController=null;state.draft||=blankDraft();const d=state.draft;document.title='写攻略 · 查无此地生存手册';$('#article-main').innerHTML=`<div class="editor-heading"><div><h1>${d.id?'继续编辑攻略':'写一篇攻略'}</h1><p>把你的探索经验，留在这本手册里。</p></div><div class="editor-actions"><span class="save-status" id="save-status">${storageProblem?'保存失败，内容已保留':d.title?'已载入账号草稿':'草稿尚未保存'}</span><button class="button" data-action="save">${icon('save')}保存草稿</button><button class="button primary" data-action="preview">${icon('eye')}阅读预览</button></div></div><div class="editor-layout"><section class="editor-paper" aria-label="攻略编辑器"><div class="editor-meta"><input id="article-title" class="editor-title" aria-label="攻略标题" maxlength="80" placeholder="给这篇攻略起个名字" value="${esc(d.title)}"><textarea id="article-summary" class="editor-summary" aria-label="攻略摘要" maxlength="200" placeholder="用一两句话告诉读者，这篇攻略能帮到什么。">${esc(d.summary)}</textarea></div><div class="editor-toolbar" aria-label="正文工具栏"><button class="toolbar-button" data-format="heading" aria-label="插入小标题"><strong>H₂</strong></button><button class="toolbar-button" data-format="bold" aria-label="加粗"><strong>B</strong></button><button class="toolbar-button" data-format="list" aria-label="插入列表">${icon('list')}</button><span class="toolbar-separator"></span><span class="toolbar-label">关联</span>${Object.entries(kinds).map(([kind,label])=>`<button class="toolbar-button" data-picker="${kind}">${icon(kind)}${label}</button>`).join('')}<span class="toolbar-separator"></span><button class="toolbar-button" data-action="image-upload">${icon('image')}图片</button><input type="file" id="image-file" class="media-file" accept="image/png,image/jpeg,image/webp"></div><div class="editor-mode" aria-label="编辑模式"><button data-mode="rich" class="${editorMode==='rich'?'active':''}">所见即所得</button><button data-mode="markdown" class="${editorMode==='markdown'?'active':''}">Markdown</button><button data-mode="preview" class="${editorMode==='preview'?'active':''}">排版预览</button><button class="text-button" data-action="sample" style="margin-left:auto">载入示例</button></div><div id="rich-body" class="rich-body article-body" contenteditable="true" role="textbox" aria-label="攻略正文（所见即所得）" aria-multiline="true" spellcheck="false" ${editorMode==='rich'?'':'hidden'}></div><textarea id="article-body" class="editor-body" aria-label="攻略正文（Markdown）" placeholder="## 小标题&#10;&#10;从第一步开始写吧…" maxlength="30000" ${editorMode==='markdown'?'':'hidden'}>${esc(d.body)}</textarea><div class="editor-inline-preview" id="inline-preview" ${editorMode==='preview'?'':'hidden'}><div class="article-body">${renderBody(d)}</div></div><div class="editor-bottom"><span id="editor-help">${editorMode==='markdown'?'Markdown 模式：可编辑正文标记，也可从工具栏插入词条与图片。':'直接编辑正文；词条显示名称或卡片，图注可在图片下修改。'}</span><span id="word-count">${d.body.length} 字</span></div></section><aside class="editor-side"><section class="settings-box"><h2>文章设置</h2><label class="field"><span>攻略分类</span><select id="article-category">${categories.map(c=>`<option ${d.category===c?'selected':''}>${c}</option>`).join('')}</select></label><label class="field"><span>适用游戏版本</span><input id="article-version" maxlength="50" placeholder="例如：EA 0.7.1 / Build…" value="${esc(d.version)}"><small>请填写你实际体验的版本，和图鉴资料版本分开记录。</small></label><label class="field"><span>剧透程度</span><select id="article-spoiler"><option value="none" ${d.spoiler==='none'?'selected':''}>不含剧情剧透</option><option value="light" ${d.spoiler==='light'?'selected':''}>含少量剧情线索</option></select></label></section><section class="settings-box"><h2>攻略视频</h2><label class="check-label"><input type="checkbox" id="video-enabled" ${d.videoEnabled?'checked':''}><span>附上攻略视频</span></label><div id="video-fields" ${d.videoEnabled?'':'hidden'}><label class="field"><span>B 站视频链接</span><input id="video-url" type="url" placeholder="https://www.bilibili.com/video/BV…" value="${esc(d.videoUrl)}"><small>粘贴完整 BV 链接，发布后自动出现视频区。</small></label><label class="field"><span>视频标题</span><input id="video-title" maxlength="80" placeholder="例如：完整流程演示" value="${esc(d.videoTitle)}"></label><label class="field"><span>视频作者 / 署名</span><input id="video-author" maxlength="80" placeholder="填写原作者，保留出处" value="${esc(d.videoAuthor)}"></label><label class="field"><span>播放分 P</span><input id="video-page" type="number" min="1" max="999" step="1" value="${esc(d.page)}"></label><p id="video-validation" class="small-note"></p></div><p class="small-note">播放器默认不自动播放。请填写你有权使用的视频链接。</p></section><section class="settings-box"><h2>本篇关联</h2><div id="editor-refs">${editorRefsHtml()}</div></section><section class="settings-box"><h2>草稿在这里</h2><p class="small-note">草稿自动保存到当前账号。图片上传后随文章关联；发布前只对你可见。</p><button class="text-button draft-export" data-action="export">导出草稿备份 ${icon('external')}</button><label class="field" style="margin-top:10px"><span>导入草稿备份</span><input id="draft-import" type="file" accept="application/json,.json"></label><p class="small-note">保存草稿后可跨会话继续；发布前请核对版本、署名和图片。</p></section></aside></div>`;initRichEditor();validateVideoUI();}
+function renderEditor(){richController?.destroy();richController=null;state.draft||=blankDraft();const d=state.draft;if(editorMode==='rich'&&!WikiArticleImport.richCompatible(d.body))editorMode='markdown';document.title='写攻略 · 查无此地生存手册';$('#article-main').innerHTML=`<div class="editor-heading"><div><h1>${d.id?'继续编辑攻略':'写一篇攻略'}</h1><p>把你的探索经验，留在这本手册里。</p></div><div class="editor-actions"><span class="save-status" id="save-status">${storageProblem?'保存失败，内容已保留':d.title?'已载入账号草稿':'草稿尚未保存'}</span><button class="button" data-action="save">${icon('save')}保存草稿</button><button class="button primary" data-action="preview">${icon('eye')}阅读预览</button></div></div><div class="editor-layout"><section class="editor-paper" aria-label="攻略编辑器"><div class="editor-meta"><input id="article-title" class="editor-title" aria-label="攻略标题" maxlength="80" placeholder="给这篇攻略起个名字" value="${esc(d.title)}"><textarea id="article-summary" class="editor-summary" aria-label="攻略摘要" maxlength="200" placeholder="用一两句话告诉读者，这篇攻略能帮到什么。">${esc(d.summary)}</textarea></div><div class="editor-toolbar" aria-label="正文工具栏"><button class="toolbar-button" data-format="heading" aria-label="插入小标题"><strong>H₂</strong></button><button class="toolbar-button" data-format="bold" aria-label="加粗"><strong>B</strong></button><button class="toolbar-button" data-format="list" aria-label="插入列表">${icon('list')}</button><span class="toolbar-separator"></span><span class="toolbar-label">关联</span>${Object.entries(kinds).map(([kind,label])=>`<button class="toolbar-button" data-picker="${kind}">${icon(kind)}${label}</button>`).join('')}<span class="toolbar-separator"></span><button class="toolbar-button" data-action="image-upload">${icon('image')}图片</button><input type="file" id="image-file" class="media-file" accept="image/png,image/jpeg,image/webp"></div><div class="editor-mode" aria-label="编辑模式"><button data-mode="rich" class="${editorMode==='rich'?'active':''}">所见即所得</button><button data-mode="markdown" class="${editorMode==='markdown'?'active':''}">Markdown</button><button data-mode="preview" class="${editorMode==='preview'?'active':''}">排版预览</button></div><p id="markdown-support" class="notice" role="status" hidden></p><div id="rich-body" class="rich-body article-body" contenteditable="true" role="textbox" aria-label="攻略正文（所见即所得）" aria-multiline="true" spellcheck="false" ${editorMode==='rich'?'':'hidden'}></div><textarea id="article-body" class="editor-body" aria-label="攻略正文（Markdown）" placeholder="## 小标题&#10;&#10;从第一步开始写吧…" maxlength="30000" ${editorMode==='markdown'?'':'hidden'}>${esc(d.body)}</textarea><div class="editor-inline-preview" id="inline-preview" ${editorMode==='preview'?'':'hidden'}><div class="article-body">${renderBody(d)}</div></div><div class="editor-bottom"><span id="editor-help">${editorMode==='markdown'?'Markdown 模式：可编辑正文标记，也可从工具栏插入词条与图片。':'直接编辑正文；词条显示名称或卡片，图注可在图片下修改。'}</span><span id="word-count">${d.body.length} 字</span></div></section><aside class="editor-side"><section class="settings-box"><h2>文章设置</h2><label class="field"><span>攻略分类</span><select id="article-category">${categories.map(c=>`<option ${d.category===c?'selected':''}>${c}</option>`).join('')}</select></label><label class="field"><span>适用游戏版本</span><input id="article-version" maxlength="50" placeholder="例如：EA 0.7.1 / Build…" value="${esc(d.version)}"><small>请填写你实际体验的版本，和图鉴资料版本分开记录。</small></label><label class="field"><span>剧透程度</span><select id="article-spoiler"><option value="none" ${d.spoiler==='none'?'selected':''}>不含剧情剧透</option><option value="light" ${d.spoiler==='light'?'selected':''}>含少量剧情线索</option></select></label></section><section class="settings-box"><h2>攻略视频</h2><label class="check-label"><input type="checkbox" id="video-enabled" ${d.videoEnabled?'checked':''}><span>附上攻略视频</span></label><div id="video-fields" ${d.videoEnabled?'':'hidden'}><label class="field"><span>B 站视频链接</span><input id="video-url" type="url" placeholder="https://www.bilibili.com/video/BV…" value="${esc(d.videoUrl)}"><small>粘贴完整 BV 链接，发布后自动出现视频区。</small></label><label class="field"><span>视频标题</span><input id="video-title" maxlength="80" placeholder="例如：完整流程演示" value="${esc(d.videoTitle)}"></label><label class="field"><span>视频作者 / 署名</span><input id="video-author" maxlength="80" placeholder="填写原作者，保留出处" value="${esc(d.videoAuthor)}"></label><label class="field"><span>播放分 P</span><input id="video-page" type="number" min="1" max="999" step="1" value="${esc(d.page)}"></label><p id="video-validation" class="small-note"></p></div><p class="small-note">播放器默认不自动播放。请填写你有权使用的视频链接。</p></section><section class="settings-box"><h2>本篇关联</h2><div id="editor-refs">${editorRefsHtml()}</div></section><section class="settings-box"><h2>草稿在这里</h2><p class="small-note">草稿自动保存到当前账号。图片上传后随文章关联；发布前只对你可见。</p><button class="text-button draft-export" data-action="export">导出草稿备份 ${icon('external')}</button><label class="field" style="margin-top:10px"><span>导入 Markdown / JSON 草稿</span><input id="draft-import" type="file" accept=".md,.markdown,.json,text/markdown,text/plain,application/json" aria-describedby="draft-import-help"></label><p id="draft-import-help" class="small-note">支持 UTF-8 的 .md、.markdown 和本站 JSON 备份（256 KiB 内，正文最多 30000 字）。导入前保存当前内容，再创建新草稿；MD 首行 # 标题作为攻略标题，否则使用文件名。图片路径只保留文字，请通过“图片”上传配图；HTML 暂不支持。</p></section></aside></div>`;initRichEditor();updateMarkdownSupport();validateVideoUI();}
 
 function renderRichReference(key,label,display){
   const entry=byKey(key),kind=key.split(':')[0],name=entry?.name||label;
@@ -129,13 +150,14 @@ function initRichEditor(){
 
 function switchEditorMode(mode){
   captureDraft();
+  if(mode==='rich'&&!WikiArticleImport.richCompatible(state.draft.body)){toast('这篇正文含复杂 Markdown，请继续使用 Markdown 模式，以保留原文格式。');return;}
   editorMode=mode;
   $('#article-body').hidden=mode!=='markdown';$('#rich-body').hidden=mode!=='rich';$('#inline-preview').hidden=mode!=='preview';
   if(mode==='rich')richController.setMarkdown(state.draft.body);
   if(mode==='preview')$('#inline-preview').innerHTML=`<div class="article-body">${renderBody(state.draft)}</div>`;
   $$('[data-mode]').forEach(button=>button.classList.toggle('active',button.dataset.mode===mode));
-  $('#editor-help').textContent=mode==='markdown'?'Markdown 模式：可编辑正文标记，也可从工具栏插入词条与图片。':'直接编辑正文；词条显示名称或卡片，图注可在图片下修改。';
-  persist();
+  $('#editor-help').textContent=mode==='markdown'?'Markdown 模式：可编辑正文标记，也可从工具栏插入词条与图片。':mode==='preview'?'排版预览：检查格式、关联与图片，返回编辑模式可继续修改。':'直接编辑正文；词条显示名称或卡片，图注可在图片下修改。';
+  updateMarkdownSupport();persist();
 }
 
 function markdownCaption(text){return text.replace(/\\/g,'\\\\').replace(/\[/g,'\\[').replace(/\]/g,'\\]').replace(/[\r\n]/g,' ');}
@@ -258,7 +280,7 @@ async function saveDraft(){
     }catch(e){if(user===identity&&state.draft===d){if(e.status===409)saveBlocked=true;if(live(ticket,user))showFailure(e);}throw e;}
   })();saveRunning=operation;try{return await operation;}finally{if(saveRunning===operation)saveRunning=null;}
 }
-function autosave(){captureDraft();backupDraft();clearTimeout(saveTimer);updateSaveStatus('有未保存修改');const n=$('#word-count');if(n)n.textContent=(state.draft?.body||'').length+' 字';updateEditorRefs();
+function autosave(){captureDraft();updateMarkdownSupport();backupDraft();clearTimeout(saveTimer);updateSaveStatus('有未保存修改');const n=$('#word-count');if(n)n.textContent=(state.draft?.body||'').length+' 字';updateEditorRefs();
   if(saveBlocked)return;const ticket=viewSerial,user=identity;saveTimer=setTimeout(()=>{if(live(ticket,user)&&state.draft&&fingerprint(state.draft)!==savedFingerprint)saveDraft().catch(()=>{});},1600);
 }
 async function loadGallery(){const seq=++listSequence,ticket=viewSerial,user=identity,params=new URLSearchParams({sort:listState.sort,offset:String(listState.offset)});if(listState.category!=='全部')params.set('category',listState.category);if(listState.query)params.set('q',listState.query);if(listState.saved)params.set('saved','1');if(listState.mine)params.set('mine','1');
@@ -283,6 +305,23 @@ async function confirmImageInsert(){const image=pendingImage;if(!image||image.dr
 function hasDraftContent(d=state.draft){return !!(d?.title?.trim()||d?.body?.trim()||d?.summary?.trim());}
 async function newDraft(){if(state.draft&&fingerprint(state.draft)!==savedFingerprint&&hasDraftContent())await saveDraft();state.draft=blankDraft();savedFingerprint='';saveBlocked=false;editorMode='rich';renderEditor();}
 async function exportDraft(){captureDraft();const blob=new Blob([JSON.stringify({format:'nsp-guide-draft-v1',draft:state.draft},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='wiki-guide-draft.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('已导出当前草稿；账号图片仍受当前账号权限保护。');}
+let importSequence=0;
+async function importDraft(file){
+  const sequence=++importSequence,ticket=viewSerial,user=identity,draft=state.draft;
+  const current=()=>sequence===importSequence&&live(ticket,user)&&viewKind==='write'&&state.draft===draft;
+  try{
+    const imported=await WikiArticleImport.read(file);if(!current())return;
+    captureDraft();clearTimeout(saveTimer);
+    if(state.draft.id||fingerprint(state.draft)!==fingerprint(blankDraft())){
+      const saved=await saveDraft();if(!current())return;
+      captureDraft();if(!saved||fingerprint(state.draft)!==savedFingerprint){autosave();throw Error('保存期间正文有新修改，已保留当前草稿。请保存完成后重新导入。');}
+    }
+    if(!current())return;
+    viewId='';history.replaceState(null,'','#write');state.draft={...blankDraft(),...documentFields(imported.draft)};
+    savedFingerprint='';saveBlocked=false;editorMode=WikiArticleImport.richCompatible(state.draft.body)?'rich':'markdown';
+    renderEditor();autosave();toast('已导入 '+imported.format+' 为新草稿；原草稿已保留。请补充摘要、分类和配图，预览后再发布。');
+  }catch(error){if(current())showFailure(error);}
+}
 async function loadView(){const ticket=++viewSerial;clearTimeout(saveTimer);richController?.destroy();richController=null;readingController?.dispose();readingController=null;entityTrail=[];entityOrigin=null;if(!host?.isConnected)return;
   host.classList.add('article-page');host.innerHTML='<div class="article-account-bar"></div><div id="article-main"><p class="status">正在载入图文攻略…</p></div>'+['entity','picker','publish','image','toc','image-insert'].map(name=>`<dialog id="${name}-dialog" class="${name}-dialog" aria-labelledby="${name==='image-insert'?'image-insert':name==='entity'?'entity':name==='picker'?'picker':name==='publish'?'publish':name==='image'?'image':'toc'}-title"></dialog>`).join('')+'<div id="article-toast" class="toast" role="status" hidden></div>';
   $('#entity-dialog').addEventListener('close',()=>{const origin=entityOrigin;entityTrail=[];entityOrigin=null;if(origin?.node?.isConnected){origin.node.focus({preventScroll:true});window.scrollTo({top:origin.y,behavior:'instant'});}});
@@ -348,7 +387,7 @@ document.addEventListener('change',async event=>{if(!host?.contains(event.target
   if(event.target.name==='reference-display')pickerMode=event.target.value;
   if(event.target.id==='video-enabled'){$('#video-fields').hidden=!event.target.checked;autosave();validateVideoUI();}
   if(event.target.id==='image-file'){const file=event.target.files?.[0];event.target.value='';if(file)openImageComposer(file);}
-  if(event.target.id==='draft-import'){const file=event.target.files?.[0];if(!file)return;if(file.size>262144)throw Error('仅支持256KiB以内的文字草稿备份，图片需重新选择上传');const data=JSON.parse(await file.text());if(data.format!=='nsp-guide-draft-v1'||typeof data.draft?.body!=='string')throw Error('草稿格式不正确');if(hasDraftContent()){await saveDraft();}viewId='';state.draft={...blankDraft(),...documentFields(data.draft)};savedFingerprint='';saveBlocked=false;editorMode='rich';renderEditor();autosave();}
+  if(event.target.id==='draft-import'){const file=event.target.files?.[0];event.target.value='';if(file)await importDraft(file);}
 }catch(e){showFailure(e);}});
 document.addEventListener('submit',async event=>{if(!host?.contains(event.target)||!viewOptions?.isCurrent()||event.target.id!=='comment-form')return;event.preventDefault();const button=event.target.querySelector('button'),input=$('#comment-input'),body=input.value.trim(),id=viewId,ticket=viewSerial,user=identity;if(!body)return;button.disabled=true;try{await api('articles/'+id+'/comments',write('POST',{body}));if(!live(ticket,user))return;const data=await api('articles/'+id+'/comments');if(!live(ticket,user))return;state.comments[id]=data.comments;state.commentMore[id]=data.more;$('.comment-section').outerHTML=commentHtml(currentArticle());toast('评论已发布。');}catch(e){if(live(ticket,user))showFailure(e);}finally{if(button.isConnected)button.disabled=false;}});
 

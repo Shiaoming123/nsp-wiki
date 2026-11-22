@@ -7,7 +7,7 @@ const sources = {
   navigation: ['typography.js','welcome.js','scroll-motion.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js'],
   community: ['typography.js','welcome.js','scroll-motion.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js','vendor/post-markdown.js','community-auth.js','item-community.js','feedback.js'],
   workshop: ['workshop.js','workshop-engine.js','workshop-assembly.js','workshop-model.js','workshop-report.js','workshop-image.js','workshop-state.js'],
-  js: ['typography.js','welcome.js','scroll-motion.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js','vendor/post-markdown.js','community-auth.js','site-notice.js','item-community.js','app.js','tiers.js','posts.js','corruption.js','feedback.js','enemy-variants.js','enemy-guide-videos.js','quest-supplies.js','quest-progress.js','quest-semantics.js','quest-guide.js','npc-recipes.js','updates.js','loot.js','article-editor.js','article-reading.js','articles.js','guides.js','scroll-tools.js']
+  js: ['typography.js','welcome.js','scroll-motion.js','navigation.js','traffic.js','mechanics-calc.js','mechanics.js','card-image.js','vendor/post-markdown.js','community-auth.js','site-notice.js','item-community.js','app.js','tiers.js','posts.js','corruption.js','feedback.js','enemy-variants.js','enemy-guide-videos.js','quest-supplies.js','quest-progress.js','quest-semantics.js','quest-guide.js','npc-recipes.js','updates.js','loot.js','article-import.js','article-editor.js','article-reading.js','articles.js','guides.js','scroll-tools.js']
 };
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 sources.css.push('quest-guide.css');
