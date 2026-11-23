@@ -1,6 +1,6 @@
 {
-  "release": "20261123-game-072",
-  "sourceCommit": "ec323c95e84afecf5832c974144729997987fa13",
+  "release": "20261123-quest-layout",
+  "sourceCommit": "513e3281d5c0c5ed56fa4476873fba03dfca61e9",
   "policyVersion": 1,
   "projectionPolicySHA256": "072efde062033a0d0f1590cf9d8cf4583d6778ed8e397f7c921ed3e695a8dd28",
   "license": "PolyForm-Noncommercial-1.0.0",
@@ -870,7 +870,7 @@
     "public/data/mirror.json": "fc6ef0f8f1449737fc392017e79d038d0bbdc3906c4e2ce1af6a8a6d6dfb00df",
     "public/data/navigation.json": "571659e8af31367ae883b5aae3fc9707f52dc3d5ff0e101e241c95fb768310b3",
     "public/data/npcs.json": "3140b5ceb025469820c3c4cbc2cc48a38d162bcbde3f975d98933c73d5371076",
-    "public/data/quests.json": "d11e92c22c69a80955430662a0415298c4ce7d8b75d46033a6dcf4b99a747b31",
+    "public/data/quests.json": "a97920ab90a6d88ee8ddad4edfb4eb3041104ce30a033b25ce0f31a1a4d703ee",
     "public/data/recipes.json": "840d59186d819733e91a4b9af63e1df4283e1bfa0c1289e7f3e4fd1eabebce17",
     "public/data/search-index.json": "4c0f934466303fa19c2dbbb11719c446345f33fab652fa0fcb117b44f763ea99",
     "public/data/status-effects.json": "9c7640be9f8287ebc7d405b1edc6c5e04510d5e07612f43c0d7cee5a23b32fa4",
