@@ -42,6 +42,7 @@ const esc = x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const plain = x => String(x ?? '').replace(/<\/?(?:b|i|s|u|color|gradient)(?:=[^<>]*)?\s*>/gi, '').replace(/\s+/g, ' ').trim();
 const read = f => { const data=fs.readFileSync(path.join(ROOT,f));return JSON.parse((f.endsWith('.gz')?zlib.gunzipSync(data):data).toString('utf8')); };
 const items = read('data/items.json'), quests = read('data/quests.json'), enemies = read('data/enemies.json'), maps = read('maps/data/maps.json'), mirror=read('data/mirror.json'), corruption=read('data/corruption.json');
+const currentAffixes = corruption.affixes.filter(affix => !affix.archived);
 const npcs=read('data/npcs.json'),recipes=read('data/recipes.json'),updates=read('data/updates.json'),mechanics=read('data/mechanics.json');
 const statuses=read('data/status-effects.json');
 const containerLoot=read('data/container-loot.json');
@@ -87,6 +88,8 @@ for (const r of items.archivedItems || []) routes.set(`#item/${encodeURIComponen
 for(const [kind,values] of [['npc',npcs.npcs],['recipe',recipes.recipes]])for(const r of values)routes.set('#'+kind+'/'+encodeURIComponent(r.id),route(kind==='npc'?'npcs':'recipes',r.id));
 for(const r of corruption.affixes)routes.set('#affix/'+encodeURIComponent(r.id),route('corruption',r.id));
 for (const [kind,records] of [['quest',quests.archivedMissions],['enemy',enemies.archivedEnemies]])for(const r of records||[])routes.set(`#${kind}/${encodeURIComponent(r.id)}`,route(kind==='quest'?'quests':'enemies',r.id));
+const newItems = items.items.filter(item => items.meta.latestGameUpdate && item.introducedIn === items.meta.latestGameUpdate);
+if(newItems.length)routes.set('#items/new','/items/category/new/');
 const link = (href, text) => `<a href="${esc(href)}">${esc(plain(text))}</a>`;
 const nav = sections.map(([kind,label]) => link(route(kind),label)).join('');
 const searchIndex=[];
@@ -95,22 +98,40 @@ function indexRecords(records,kind,type,name='name'){
     if(!r[name])continue;
     const section={item:'items',quest:'quests',enemy:'enemies',npc:'npcs',recipe:'recipes',affix:'corruption',mechanic:'mechanics'}[kind]||kind;
     const channel=WikiNav.data.channels.find(c=>c.sections.some(s=>s.id===section));
-    searchIndex.push({name:plain(r[name]),text:plain([r[name],r.summary||'',r.subcategory||'',...(r.aliases||[])].join(' ')).toLocaleLowerCase(),type:kind==='item'?[type,r.subcategory].filter(Boolean).join(' · '):type,channel:channel?.id||'',route:'/#'+kind+'/'+encodeURIComponent(r.id)});
+    searchIndex.push({name:plain(r[name]),text:plain([r[name],r.summary||'',r.subcategory||'',newItems.includes(r)?'NEW 本版新增':'',...(r.aliases||[])].join(' ')).toLocaleLowerCase(),type:kind==='item'?[type,r.subcategory,newItems.includes(r)?'NEW':null].filter(Boolean).join(' · '):type,channel:channel?.id||'',route:'/#'+kind+'/'+encodeURIComponent(r.id)});
   }
 }
 const mechanicEntries=mechanics.mechanics.filter(t=>t.id!=='magic-hat-three'),hatExample=mechanics.mechanics.find(t=>t.id==='magic-hat-three');
 for(const state of statuses.statuses)searchIndex.push({name:state.name,text:plain([state.name,state.scope||'',state.summary,...state.effects,...state.sources].join(' ')).toLocaleLowerCase(),type:'状态效果'+(state.scope?' · '+state.scope:''),channel:'builds',route:'/#mechanics/status/'+encodeURIComponent(state.id)});
 for(const map of containerLoot.maps)for(const box of map.containers)searchIndex.push({name:box.name,text:plain([map.name,box.name].join(' ')).toLocaleLowerCase(),type:(box.nameKind==='wiki'?'搜刮容器（Wiki识别名） · ':'搜刮容器 · ')+map.name,channel:'explore',route:'/#loot/'+encodeURIComponent(map.id)+'/'+encodeURIComponent(box.id)});
-indexRecords(items.items,'item','物品图鉴');indexRecords(quests.missions,'quest','任务攻略');indexRecords(enemies.enemies,'enemy','敌怪图鉴');indexRecords(npcs.npcs,'npc','NPC 图鉴');indexRecords(recipes.recipes,'recipe','配方手册');indexRecords(corruption.affixes,'affix','腐化词条');indexRecords(maps,'maps','地图全览','title');indexRecords(mechanicEntries.map(t=>t.id==='phase-shift'?{...t,aliases:[hatExample.name,hatExample.summary]}:t),'mechanic','机制手册');
+indexRecords(items.items,'item','物品图鉴');indexRecords(quests.missions,'quest','任务攻略');indexRecords(enemies.enemies,'enemy','敌怪图鉴');indexRecords(npcs.npcs,'npc','NPC 图鉴');indexRecords(recipes.recipes,'recipe','配方手册');indexRecords(currentAffixes,'affix','腐化词条');indexRecords(maps,'maps','地图全览','title');indexRecords(mechanicEntries.map(t=>t.id==='phase-shift'?{...t,aliases:[hatExample.name,hatExample.summary]}:t),'mechanic','机制手册');
 for(const c of WikiNav.data.channels)for(const section of c.sections)searchIndex.push({name:section.name,text:section.name,type:c.name,channel:c.id,route:'/#'+section.id});
 fs.writeFileSync(path.join(ROOT,'data/search-index.json'),JSON.stringify(searchIndex)+'\n');
 const rootTitle = '查无此地攻略：物品、任务、敌怪与地图 | NSP Wiki';
-const rootDesc = `查无此地 EA 攻略：${items.items.length} 件物品、${quests.missions.length} 项任务、${enemies.enemies.length} 个敌怪、${maps.length} 张地图与 ${corruption.affixes.length} 个腐化词条，包含镜柜概率表、玩家夯拉榜和 Wiki 反馈。`;
+const rootDesc = `查无此地 EA 攻略：${items.items.length} 件物品、${quests.missions.length} 项任务、${enemies.enemies.length} 个敌怪、${maps.length} 张地图与 ${currentAffixes.length} 个腐化词条，包含镜柜概率表、玩家夯拉榜和 Wiki 反馈。`;
 const json = x => JSON.stringify(x).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
 function metadata(url, title, description, crumbs = [], image = '', noindex = false) {
   const data = [{'@context':'https://schema.org','@type':url==='/'?'WebSite':'WebPage',name:title,url:ORIGIN+url,description,inLanguage:'zh-CN'}];
   if(crumbs.length) data.push({'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:crumbs.map(([label,href],i)=>({'@type':'ListItem',position:i+1,name:plain(label),item:ORIGIN+href}))});
   return `<title>${esc(title)}</title><meta name="description" content="${esc(description)}"><meta name="robots" content="${noindex||!INDEXABLE?'noindex,follow':'index,follow,max-image-preview:large'}">${noindex?'':`<link rel="canonical" href="${esc(ORIGIN+url)}">`}<meta property="og:type" content="website"><meta property="og:site_name" content="NSP Wiki"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${esc(ORIGIN+url)}"><meta property="og:locale" content="zh_CN"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="${esc(title)}"><meta name="twitter:description" content="${esc(description)}">${image?`<meta property="og:image" content="${esc(ORIGIN+'/'+image)}"><meta name="twitter:image" content="${esc(ORIGIN+'/'+image)}">`:''}<script type="application/ld+json">${json(data)}</script>`;
+}
+function writeReadingPage(filename, markup) {
+  const delays = [100, 300];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      fs.writeFileSync(filename, markup);
+      return;
+    } catch (error) {
+      const transientOpen = process.platform === 'win32' && error.syscall === 'open' &&
+        ['UNKNOWN', 'EBUSY', 'EPERM'].includes(error.code);
+      if (!transientOpen) throw error;
+      if (attempt === delays.length) {
+        error.message += ' (reading page, 3 attempts)';
+        throw error;
+      }
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delays[attempt]);
+    }
+  }
 }
 function write(url, title, description, body, section = '', image = '', noindex = false) {
   const mapWarning=section==='maps'?maps.find(m=>route('maps',m.id)===url)?.updateWarning:null;
@@ -125,11 +146,11 @@ function write(url, title, description, body, section = '', image = '', noindex 
   const stamp='';
   const html = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#202927">${metadata(url,title,description,crumbs,image,noindex)}${WikiBrand.head}<link rel="stylesheet" href="/${uiAssets.css}">${community}</head><body class="seo-page"><a class="skip-link" href="#main-content">跳到攻略内容</a><header class="site-header"><a class="brand" href="/" aria-label="返回攻略首页">${WikiBrand.mark}<span>查无此地 <small>生存手册</small></span></a>${WikiNav.navigation(section,true)}</header><main id="main-content" tabindex="-1"><nav class="breadcrumbs" aria-label="当前位置">${breadcrumb}</nav><article>${stamp?`<p class="guide-note">${esc(stamp)}</p>`:''}${body}</article></main><footer><span>查无此地 · 生存手册</span>${link('/','返回交互图鉴')}</footer></body></html>`;
   const filename = url==='/404.html'?path.join(ROOT,'404.html'):path.join(ROOT,...url.split('/').filter(Boolean),'index.html');
-  fs.mkdirSync(path.dirname(filename),{recursive:true});fs.writeFileSync(filename,withGithubFooter(html).replace(/[ \t]+(?=\r?$)/gm,''));
+  fs.mkdirSync(path.dirname(filename),{recursive:true});writeReadingPage(filename,withGithubFooter(html).replace(/[ \t]+(?=\r?$)/gm,''));
   if(!noindex) pages.push({url,title,description,filename:path.relative(ROOT,filename).replace(/\\/g,'/')});
 }
 function listing(records, kind) {
-  return `<ul class="reading-list">${records.map(r=>`<li>${r.icon||r.image?`<img src="/${esc(r.icon||r.image)}" alt="${esc(plain(r.name||r.title||r.subcategory||'物品'))}" width="48" height="48" loading="lazy" decoding="async">`:''}${link(route(kind,r.id),(r.name||r.title||r.subcategory||'物品')+(kind==='enemies'&&enemyVariants.has(r.id)?' · '+enemyVariants.get(r.id).facts.join(' · '):''))}</li>`).join('')}</ul>`;
+  return `<ul class="reading-list">${records.map(r=>`<li>${r.icon||r.image?`<img src="/${esc(r.icon||r.image)}" alt="${esc(plain(r.name||r.title||r.subcategory||'物品'))}" width="48" height="48" loading="lazy" decoding="async">`:''}${link(route(kind,r.id),(r.name||r.title||r.subcategory||'物品')+(kind==='enemies'&&enemyVariants.has(r.id)?' · '+enemyVariants.get(r.id).facts.join(' · '):''))}${kind==='items'&&newItems.includes(r)?' <span class="item-new-badge">NEW</span>':''}</li>`).join('')}</ul>`;
 }
 function intro(title, copy, hash) {return `<h1>${esc(title)}</h1><p class="description">${esc(copy)}</p><p>${link('/'+hash,'进入交互页面')}</p>`;}
 async function snapshot(page, selector, promoteTitle=true) {
@@ -200,29 +221,33 @@ async function main() {
       await page.waitForFunction(id=>document.querySelector('#detail-content .corruption-detail')?.dataset.affixId===id,r.id);
       const body=await snapshot(page,'#detail-content > .corruption-detail');
       const name=plain(r.name),same=corruption.affixes.filter(a=>plain(a.name)===name),unique=same.length>1?`${name}（词条${same.findIndex(a=>a.id===r.id)+1}）`:name;
-      write(route('corruption',r.id),`${unique}：腐化效果与适用物品 | 查无此地攻略 · NSP Wiki`,`查无此地 ${name}：${plain(r.description).slice(0,90)} 查看效果、适用部位和物品。`,body+`<p>${link('/#affix/'+encodeURIComponent(r.id),'在交互资料中查看')}</p>`,'corruption');
+      write(route('corruption',r.id),`${unique}：腐化效果与适用物品 | 查无此地攻略 · NSP Wiki`,`查无此地 ${name}：${plain(r.description).slice(0,90)} 查看效果、适用部位和物品。`,body+`<p>${link('/#affix/'+encodeURIComponent(r.id),'在交互资料中查看')}</p>`,'corruption','',Boolean(r.archived));
     }
     console.log(`Rendered ${corruption.affixes.length} corruption pages`);
-    const corruptionIntro='按装备、近战和枪械查看效果、适用部位与物品。';
-    write('/corruption/','查无此地腐化词条：装备、近战与枪械 | NSP Wiki',`${versionLabel('corruption')} 的 ${corruption.affixes.length} 个腐化词条，查看效果、候选部位及适用物品。`,intro('腐化词条',corruptionIntro,'#corruption')+corruption.categories.map(c=>`<section><h2>${link('/corruption/category/'+c.id+'/',c.name)}</h2>${listing(corruption.affixes.filter(a=>a.categories.includes(c.id)),'corruption')}</section>`).join(''),'corruption');
-    for(const c of corruption.categories){const values=corruption.affixes.filter(a=>a.categories.includes(c.id));write('/corruption/category/'+c.id+'/',`${c.name}：候选词条与适用物品 | NSP Wiki`,`${versionLabel('corruption')} ${c.name}的 ${values.length} 个候选词条，实际效果待实测。`,intro(c.name,corruptionIntro,'#corruption')+listing(values,'corruption'),'corruption');}
+    const corruptionIntro=corruption.meta.latestReview.directoryIntroduction;
+    const affixHighlights='<h2>已核实的 0.7.2 词条变化</h2><ul class="guide-lines">'+corruption.meta.latestReview.highlights.map(text=>'<li>'+esc(text)+'</li>').join('')+'</ul>';
+    write('/corruption/','查无此地腐化词条：装备、近战与枪械 | NSP Wiki',`${versionLabel('corruption')} 的 ${currentAffixes.length} 个腐化词条，查看效果、候选部位及适用物品。`,intro('腐化词条',corruptionIntro,'#corruption')+affixHighlights+'<p>'+link(corruption.meta.latestReview.balanceAnnouncementUrl,'查看 Steam 词条专项公告')+'</p>'+corruption.categories.map(c=>`<section><h2>${link('/corruption/category/'+c.id+'/',c.name)}</h2>${listing(currentAffixes.filter(a=>a.categories.includes(c.id)),'corruption')}</section>`).join(''),'corruption');
+    for(const c of corruption.categories){const values=currentAffixes.filter(a=>a.categories.includes(c.id));write('/corruption/category/'+c.id+'/',`${c.name}：候选词条与适用物品 | NSP Wiki`,`${versionLabel('corruption')} ${c.name}的 ${values.length} 个候选词条，实际效果待实测。`,intro(c.name,corruptionIntro,'#corruption')+listing(values,'corruption'),'corruption');}
     for(const c of items.categories) {
       const values=items.items.filter(i=>i.category===c.id);
       write(`/items/category/${encodeURIComponent(c.id)}/`,`${plain(c.name)}图鉴：属性与获取方式 | 查无此地攻略 · NSP Wiki`,`查无此地 EA ${plain(c.name)}图鉴，收录 ${values.length} 件物品的属性、使用效果及静态来源候选与待确认线索。`,intro(`${plain(c.name)}图鉴`,`${values.length} 件物品。选择名称查看详情。`,'#items')+listing(values,'items'),'items');
     }
+    if(newItems.length)write('/items/category/new/', 'NEW · 本版新增物品 | NSP Wiki',
+      `查无此地 ${items.meta.latestGameUpdate} 新增的 ${newItems.length} 件物品。`,
+      intro('NEW · 本版新增', `${items.meta.latestGameUpdate} 新增 ${newItems.length} 件物品。`, '#items/new')+listing(newItems,'items'),'items');
     for(const r of items.archivedItems||[]) write(route('items',r.id),`${plain(r.name)}：历史条目 | NSP Wiki`,'此条目已从当前物品图鉴移除，仅保留旧链接与玩家榜单中的身份。',intro(`${plain(r.name)}（历史条目）`,'当前物品图鉴不再收录此条目。旧榜单与评论记录仍予保留。',`#item/${encodeURIComponent(r.id)}`),'items','',true);
     for(const [kind,records,label] of [['quests',quests.archivedMissions,'任务'],['enemies',enemies.archivedEnemies,'敌怪']])for(const r of records||[])write(route(kind,r.id),`${plain(r.name||r.id)}：历史条目 | NSP Wiki`,`此${label}已不在当前EA攻略目录中，仅保留旧链接提示。`,`<h1>${esc(plain(r.name||r.id))}（历史条目）</h1><p>${esc(plain(r.reason)||'当前资料不再收录此条目，内容待核实。')}</p><p>${link(route(kind),'返回'+label+'目录')}</p>`,kind,'',true);
-    write('/items/','查无此地物品图鉴：分类、属性与获取方式 | NSP Wiki',`查无此地 EA ${items.items.length} 件物品图鉴，包含武器、弹药、装备、消耗品和材料的属性与来源。`,intro('物品图鉴',`${items.items.length} 件物品，按类别查找属性与来源。`,'#items')+items.categories.map(c=>`<section><h2>${link('/items/category/'+encodeURIComponent(c.id)+'/',c.name)}</h2>${listing(items.items.filter(i=>i.category===c.id),'items')}</section>`).join(''),'items');
+    write('/items/','查无此地物品图鉴：分类、属性与获取方式 | NSP Wiki',`查无此地 EA ${items.items.length} 件物品图鉴，包含武器、弹药、装备、消耗品和材料的属性与来源。`,intro('物品图鉴',`${items.items.length} 件物品，按类别查找属性与来源。`,'#items')+(newItems.length?`<section><h2>${link('/items/category/new/','NEW · 本版新增')}</h2>${listing(newItems,'items')}</section>`:'')+items.categories.map(c=>`<section><h2>${link('/items/category/'+encodeURIComponent(c.id)+'/',c.name)}</h2>${listing(items.items.filter(i=>i.category===c.id),'items')}</section>`).join(''),'items');
     await page.evaluate(data=>{const guide=window.QuestGuide.render(data);guide.id='quest-reading-guide';document.getElementById('guide-root').append(guide);},quests);
     const questReadingGuide=await snapshot(page,'#quest-reading-guide',false);
     write('/quests/','查无此地任务攻略：前置、目标与奖励 | NSP Wiki',`查无此地 ${versionLabel('quests')} ${quests.missions.length} 项任务的接取条件、前置关系、目标和奖励；未核实依赖保留说明。`,intro('任务攻略','查看任务接取、目标、补给与后续流程。手动完成标记仅保存在交互页面的当前浏览器，不读取游戏存档。','#quests')+questReadingGuide+'<h2>全部任务条目</h2>'+listing(quests.missions,'quests'),'quests');
-    write('/enemies/','查无此地敌怪图鉴：出没、属性与掉落 | NSP Wiki',`查无此地 ${versionLabel('enemies')} ${enemies.enemies.length} 个敌怪与特殊对象的基础属性、出没条件和战利品。随身物资与额外掉落分别说明。`,intro('敌怪图鉴','同名变体分别列出，生成机会与击杀掉落概率分别说明；未核实内容明确标注。','#enemies')+listing(enemies.enemies,'enemies'),'enemies');
+    write('/enemies/','查无此地敌怪图鉴：出没、属性与掉落 | NSP Wiki',`查无此地 ${versionLabel('enemies')} ${enemies.enemies.length} 个敌怪与特殊对象的基础属性、出没条件和战利品。随身物资与额外掉落分别说明。`,intro('敌怪图鉴','同名变体分别列出。出没、装备与掉落概率沿用原核验版本，未核实内容明确标注。','#enemies')+listing(enemies.enemies,'enemies'),'enemies');
     await page.goto(origin+'/#mirror');await page.locator('#mirror-table tbody tr').first().waitFor();
-    write('/mirror/','查无此地迷失镜柜：兑换规则与概率表 | NSP Wiki',`查无此地 EA Build ${mirror.meta.buildId} 迷失镜柜投入门槛、兑换规则与 ${mirror.items.length} 种候选的配置理论概率，实际领取与频率待实测。`,await snapshot(page,'#guide-root')+`<p>${link('/#mirror','进入交互兑换表')}</p>`,'mirror');
+    write('/mirror/','查无此地迷失镜柜：出售、升级与抽奖参考 | NSP Wiki','查无此地 0.7.2 迷失镜柜出售物资换软盘、升级材料与抽奖门槛，附历史版本的配置概率参考。',await snapshot(page,'#guide-root')+`<p>${link('/#mirror','进入交互镜柜资料')}</p>`,'mirror');
     write('/maps/',`查无此地地图：${maps.length}张EA地图、安全屋与教程 | NSP Wiki`,`查无此地地图目录，包含 ${maps.length} 张地图的平面概览、3D实景与资源点。`,intro('地图全览','先查看平面概览，手动选择3D实景。默认流畅画质，可切换原始。','#maps')+listing(maps,'maps'),'maps');
     const lootNotes='<details class="loot-notes"><summary>搜刮说明 · 名称、数量与预估概率</summary>'+containerLoot.meta.notes.map(note=>'<p class="guide-note">'+esc(note)+'</p>').join('')+'</details>';
     write('/loot/','容器与搜刮：各地图物品、数量与预估概率 | NSP Wiki','按地图查看垃圾堆、保险箱等容器的物品、数量范围与预估概率。',intro('容器与搜刮','选择地图，查看容器中可能找到的物品。','#loot')+lootNotes+`<ul class="reading-list">${containerLoot.maps.map(m=>`<li>${link('/loot/'+m.id+'/',m.name+' · '+m.containers.length+' 个物资方案')}</li>`).join('')}</ul>`,'loot');
-    for(const map of containerLoot.maps){const boxes=map.containers.map(box=>`<section class="loot-container" id="loot-box-${esc(box.id)}"><div class="loot-container-title">${box.icon?`<img class="loot-container-icon" src="/${esc(box.icon)}" width="48" height="48" alt="" loading="lazy">`:''}<h2>${esc(box.name)}</h2>${box.nameKind==='wiki'?'<span class="loot-name-kind">Wiki识别名</span>':''}${box.variantLabel?`<span class="guide-note">${esc(box.variantLabel)}</span>`:''}</div>${box.spawnNote?`<p class="guide-note">${esc(box.spawnNote)}</p>`:''}${box.note?`<p class="guide-note">${esc(box.note)}</p>`:''}<div class="loot-items">${box.items.map(row=>{const item=items.items.find(i=>i.id===row.id);if(!item)throw Error('Loot item missing from Wiki: '+row.id);return `<a class="loot-item" href="/items/${encodeURIComponent(item.id)}/">${item.icon?`<img src="/${esc(item.icon)}" width="32" height="32" alt="" loading="lazy">`:''}<span class="loot-item-copy"><strong>${esc(plain(item.name))}</strong><span class="loot-chance">${esc(row.probabilityText)}</span><small>数量：${esc(row.quantityText)}</small>${row.note?`<small class="loot-item-note">${esc(row.note)}</small>`:''}</span></a>`;}).join('')}</div>${box.items.length||box.note?'':'<p class="guide-note">此容器的物品内容尚待核实。</p>'}</section>`).join('');write('/loot/'+map.id+'/',map.name+'搜刮指南：容器物品与预估概率 | NSP Wiki','查看'+map.name+'的容器、物品数量范围和单次生成预估概率。',intro(map.name+' · 容器与搜刮','按容器查找物品。','#loot/'+map.id)+`<p>${link('/maps/'+map.id+'/','查看对应地图 ↗')}</p>`+lootNotes+(boxes||'<p>此地图暂未找到可核实的搜刮容器。</p>'),'loot');}
+    for(const map of containerLoot.maps){const boxes=map.containers.map(box=>`<section class="loot-container" id="loot-box-${esc(box.id)}"><div class="loot-container-title">${box.icon?`<img class="loot-container-icon" src="/${esc(box.icon)}" width="48" height="48" alt="" loading="lazy">`:''}<h2>${esc(box.name)}</h2>${box.nameKind==='wiki'?'<span class="loot-name-kind">Wiki识别名</span>':''}${box.variantLabel?`<span class="guide-note">${esc(box.variantLabel)}</span>`:''}</div>${box.spawnNote?`<p class="guide-note">${esc(box.spawnNote)}</p>`:''}${box.note?`<p class="guide-note">${esc(box.note)}</p>`:''}<div class="loot-items">${box.items.map(row=>{const item=items.items.find(i=>i.id===row.id);if(!item)throw Error('Loot item missing from Wiki: '+row.id);return `<a class="loot-item" href="/items/${encodeURIComponent(item.id)}/">${item.icon?`<img src="/${esc(item.icon)}" width="32" height="32" alt="" loading="lazy">`:''}<span class="loot-item-copy"><strong>${esc(plain(item.name))}${newItems.includes(item)?' <span class="item-new-badge">NEW</span>':''}</strong><span class="loot-chance">${esc(row.probabilityText)}</span><small>数量：${esc(row.quantityText)}</small>${row.note?`<small class="loot-item-note">${esc(row.note)}</small>`:''}</span></a>`;}).join('')}</div>${box.items.length||box.note?'':'<p class="guide-note">此容器的物品内容尚待核实。</p>'}</section>`).join('');write('/loot/'+map.id+'/',map.name+'搜刮指南：容器物品与预估概率 | NSP Wiki','查看'+map.name+'的容器、物品数量范围和单次生成预估概率。',intro(map.name+' · 容器与搜刮','按容器查找物品。','#loot/'+map.id)+`<p>${link('/maps/'+map.id+'/','查看对应地图 ↗')}</p>`+lootNotes+(boxes||'<p>此地图暂未找到可核实的搜刮容器。</p>'),'loot');}
     for(const m of maps){
       const {manifest,poiCount}=mapData.get(m.id), gaps=[...new Set((manifest.issues||[]).map(i=>plain(i.impact)||'部分场景内容待核实'))];
       const title=plain(m.title)||'地图',same=maps.filter(r=>plain(r.title)===title),unique=same.length>1?`${title}（区域${same.findIndex(r=>r.id===m.id)+1}）`:title;
@@ -232,7 +257,7 @@ async function main() {
       write(route('maps',m.id),`查无此地${unique}地图：概览与3D实景 | NSP Wiki`,`查无此地${title}地图，${poiCount} 个资源点；查看平面概览、3D实景及任务与敌怪入口。`,intro(`${unique}地图`,`${poiCount} 个资源点。`, `#maps/${encodeURIComponent(m.id)}`)+`<details><summary>资料版本</summary><p>地点资料 EA Build ${esc(manifest.dataBuild)}；场景资源 Build ${esc(manifest.geometryBuild)}。</p></details>`+(gaps.length?`<details><summary>场景缺项</summary><p>${esc(gaps.join('；'))}。</p></details>`:'')+`<h2>浏览地图</h2><ul class="guide-lines"><li>默认平面概览；点击“3D实景”才加载模型，缩放不会自动切换模式。</li><li>默认流畅：降低渲染分辨率；原始：完整渲染分辨率，可手动选择。</li><li>资源高亮不隐藏其他点位；选择点位后“查看实景”定位。</li><li>进入室内后可切换屋顶显示；支持拖动、缩放、旋转以及小地图定位。</li></ul><p>${link('/#maps/'+encodeURIComponent(m.id),'打开'+title+'交互地图')}</p>`+related+'<p>'+link('/loot/'+m.id+'/','查看本图容器与物品刷新 ↗')+'</p>','maps');
     }
     write('/tiers/','查无此地夯拉榜：制作自己的物品排行榜 | NSP Wiki','使用EA物品库制作个人夯拉榜，保留原有排序、玩家帖子与评论。',intro('夯拉榜','从EA物品库挑选物品，按自己的体验排入夯、顶级、人上人、NPC、拉五档；历史草稿、帖子和评论继续保留。','#tiers')+'<h2>制作与分享</h2><ol class="guide-lines"><li>按类别、子分类或名称查找物品，加入待排区。</li><li>拖动到对应档位，或选择物品后通过档位按钮调整。“一键清空”可重新开始。</li><li>复制或导出榜单图片，也可在页面下方“发布攻略”，附上昵称、标题与最多1000字的文字。</li><li>浏览玩家帖子，点赞多的攻略排在前面；点击图片查看完整文字并评论。</li></ol><p>未发布的榜单草稿只保存在当前浏览器。主动发布的图片和文字由本站保存，其他访问者可以看到、点赞和评论；不读取或同步游戏存档。</p>','tiers');
-    write('/workshop/','武器工坊：部件装配与腐化方案 | NSP Wiki','查无此地 EA 武器工坊：选择主武器，按槽位和口径装配部件，查看腐化词条效果并保存本地方案。',intro('武器工坊','先选择主武器，再点击槽位或拖入兼容部件；近战武器直接设置词条。数值采用腐化进度100%、效果倍率1的静态基准，触发效果分别列出。方案保存在当前浏览器。','#workshop'),'workshop');
+    write('/workshop/','武器工坊：部件装配与腐化方案 | NSP Wiki','查无此地 EA 武器工坊：选择主武器，按槽位和口径装配部件，查看腐化词条效果并保存本地方案。',intro('武器工坊','先选择主武器，再点击槽位或拖入兼容部件；近战武器直接设置词条。工坊仍按较早的配置与计算规则模拟，适合查看旧方案。0.7.2 调整了数值叠加和词条冲突组。方案保存在当前浏览器。','#workshop'),'workshop');
     await page.goto(origin+'/#updates');await page.locator('.updates-record').first().waitFor();
     await page.locator('.updates-change').evaluateAll(nodes=>nodes.forEach(n=>n.open=true));
     await page.locator('.updates-tools').evaluate(node=>node.remove());

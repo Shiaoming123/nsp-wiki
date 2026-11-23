@@ -4,7 +4,7 @@
     "title": "森林地区 · 时间线 1961",
     "manifest": "maps/Origin00_1961/manifest.json.gz",
     "dataBuild": "25989531",
-    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateWarning": "底图与资源点沿用既有测绘，资源点位的核对版本为 Build 26240042。",
     "updateHistoryHref": "#updates",
     "metadataReviewBuild": "26157750",
     "pointBuildId": "26240042"
@@ -14,7 +14,7 @@
     "title": "燃烧林 · 时间线 1963",
     "manifest": "maps/Origin00_1963/manifest.json.gz",
     "dataBuild": "25989531",
-    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateWarning": "底图与资源点沿用既有测绘，资源点位的核对版本为 Build 26240042。",
     "updateHistoryHref": "#updates",
     "metadataReviewBuild": "26157750",
     "pointBuildId": "26240042"
@@ -24,7 +24,7 @@
     "title": "森林地区 · 时间线 1951",
     "manifest": "maps/Origin00_1951/manifest.json.gz",
     "dataBuild": "25989531",
-    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateWarning": "底图与资源点沿用既有测绘，资源点位的核对版本为 Build 26240042。",
     "updateHistoryHref": "#updates",
     "metadataReviewBuild": "26157750",
     "pointBuildId": "26240042"
@@ -34,7 +34,7 @@
     "title": "灰桦山 15：35",
     "manifest": "maps/Origin12_1535/manifest.json.gz",
     "dataBuild": "25989531",
-    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateWarning": "底图与资源点沿用既有测绘，资源点位的核对版本为 Build 26240042。",
     "updateHistoryHref": "#updates",
     "metadataReviewBuild": "26157750",
     "pointBuildId": "26240042"
@@ -44,7 +44,7 @@
     "title": "灰桦山 15：27",
     "manifest": "maps/Origin12_1527/manifest.json.gz",
     "dataBuild": "25989531",
-    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateWarning": "底图与资源点沿用既有测绘，资源点位的核对版本为 Build 26240042。",
     "updateHistoryHref": "#updates",
     "metadataReviewBuild": "26157750",
     "pointBuildId": "26240042"
@@ -54,8 +54,8 @@
     "title": "白门街88号 · 时间线 1999",
     "manifest": "maps/Origin08_1999/manifest.json.gz",
     "dataBuild": "25989531",
-    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
-    "updateHistoryHref": "#updates",
+    "updateWarning": "0.7.2 优化了白门街88号的电梯表现。底图与资源点沿用既有测绘，资源点位的核对版本为 Build 26240042。",
+    "updateHistoryHref": "#updates/game-072/maps/game",
     "metadataReviewBuild": "26157750",
     "pointBuildId": "26240042"
   },
@@ -64,7 +64,7 @@
     "title": "“市场”",
     "manifest": "maps/Neutral_82/manifest.json.gz",
     "dataBuild": "25989531",
-    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateWarning": "底图与资源点沿用既有测绘，资源点位的核对版本为 Build 26240042。",
     "updateHistoryHref": "#updates",
     "metadataReviewBuild": "26157750",
     "pointBuildId": "26240042"
@@ -74,8 +74,8 @@
     "title": "安全屋",
     "manifest": "maps/SafeHouse/manifest.json.gz",
     "dataBuild": "25989531",
-    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
-    "updateHistoryHref": "#updates",
+    "updateWarning": "0.7.2 终端提供任务与消息、商店和物资协调。迷失镜柜初始用于回收物品，升级后开放抽奖。底图与资源点沿用既有测绘，资源点位的核对版本为 Build 26240042。",
+    "updateHistoryHref": "#updates/game-072/loot/game",
     "metadataReviewBuild": "26157750",
     "pointBuildId": "26240042"
   },
@@ -84,7 +84,7 @@
     "title": "新手关卡",
     "manifest": "maps/NewbieLevel/manifest.json.gz",
     "dataBuild": "25989531",
-    "updateWarning": "底图与场景模型沿用既有地图；资源点位已按当前游戏配置复核。地面物资在标记附近生成。",
+    "updateWarning": "底图与资源点沿用既有测绘，资源点位的核对版本为 Build 26240042。",
     "updateHistoryHref": "#updates",
     "metadataReviewBuild": "26157750",
     "pointBuildId": "26240042"

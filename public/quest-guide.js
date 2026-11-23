@@ -63,6 +63,7 @@
     const completed=options.completed||new Set(),byId=new Map(data.missions.map(x=>[x.id,x]));
     const guide={status,appendRich},heading=(parent,text)=>parent.append(el('h3','detail-section-title',text));
     const variantLabel=options.variantLabel||(()=>''),enemies=options.enemies;
+    if(m.taskType)body.append(el('p','detail-tag',m.taskType));
     if(options.context){
       const semantic=options.classifyMission(m,options.itemIds||new Set()),entry=entryLabel(m,data.edges);
       if(entry)body.append(el('p','quest-entry-summary',entry));

@@ -4,8 +4,8 @@
   const state = { data: null, category: 'all', query: '', subcategory: '', sort: 'default', direction: 'desc', selected: null, open: false };
   let itemIndex=new Map(), itemSearch=new Map(), categoryGroups=new Map();
   const getItem=id=>itemIndex.get(String(id));
-  const symbols = { all: '▦', weapons: '⚔', ammo: '▥', attachments: '⊕', equipment: '◈', consumables: '✚', materials: '⬡', other: '◇' };
-  const names = { all: '全部物品', weapons: '武器', ammo: '弹药', attachments: '配件', equipment: '装备', consumables: '消耗品', materials: '材料', other: '其他' };
+  const symbols = { all: '▦', new: '✦', weapons: '⚔', ammo: '▥', attachments: '⊕', equipment: '◈', consumables: '✚', materials: '⬡', other: '◇' };
+  const names = { all: '全部物品', new: 'NEW · 本版新增', weapons: '武器', ammo: '弹药', attachments: '配件', equipment: '装备', consumables: '消耗品', materials: '材料', other: '其他' };
   const gameTag = /<(\/?)(b|i|s|u|color|gradient)(?:=(?:"([^"]*)"|'([^']*)'|([^<>]*)))?\s*>/gi;
   const gameColors = {'#569af0':'#91bfff','#65af6a':'#9ed29e','#c05a67':'#e89ca8',purple:'#c7a5eb',orange:'#e7b978'};
   const plainText = value => String(value).replace(gameTag, '');
@@ -57,6 +57,24 @@
     } else missing();
     return wrap;
   }
+  function isNewItem(item) {
+    const currentVersion = state.data.meta?.latestGameUpdate;
+    return Boolean(currentVersion && item.introducedIn === currentVersion);
+  }
+  function newItemBadge(item) {
+    const badge = el('span', 'item-new-badge', 'NEW');
+    badge.title = item.introducedIn + ' 新增物品';
+    return badge;
+  }
+  function openNewItems() {
+    if (state.open && state.category === 'new') return;
+    state.category = 'new';
+    $('search').value = state.query = '';
+    state.subcategory = '';
+    state.open = true;
+    refreshSubcategories();
+    render();
+  }
   function categoryName(id) { return state.data.categories.find(c => c.id === id)?.name || names[id] || id; }
   function categoryItems() { return state.category === 'all' ? state.data.items : categoryGroups.get(state.category)||[]; }
   function renderCategories() {
@@ -64,13 +82,27 @@
     const fragment=document.createDocumentFragment();
     const categories = [...state.data.categories];
     if (!categories.some(c => c.id === 'all')) categories.unshift({ id: 'all', name: '全部物品' });
+    if (categoryGroups.has('new')) categories.splice(1, 0, { id: 'new', name: names.new });
     categories.forEach(category => {
       const count = category.id === 'all' ? state.data.items.length : (categoryGroups.get(category.id)||[]).length;
       const button = el('button', 'category'); button.type = 'button'; button.dataset.category = category.id;
       button.setAttribute('aria-pressed', String(state.open && state.category === category.id));
       const copy = el('span', 'category-copy'); copy.append(el('span', 'category-name', category.name || categoryName(category.id)), el('span', 'category-count', `${count} 件物品`));
       button.append(art(category.icon, 'category-symbol', symbols[category.id] || '◇'), copy, el('span', 'category-arrow', '›'));
-      button.addEventListener('click', () => { state.category = category.id; state.subcategory = ''; state.open = true; refreshSubcategories(); render(); const current = [...$('categories').children].find(node => node.dataset.category === category.id); if (current) current.focus({ preventScroll: true }); $('browser').scrollIntoView({ block: 'start' }); });
+      button.addEventListener('click', () => {
+        state.category = category.id;
+        state.subcategory = '';
+        state.open = true;
+        if (window.Guide && /^#items(?:\/new)?$/.test(location.hash)) {
+          const route = category.id === 'new' ? '#items/new' : '#items';
+          if (location.hash !== route) history.replaceState(null, '', route);
+          window.Guide.baseRoute = route;
+        }
+        refreshSubcategories();
+        render();
+        button.focus({ preventScroll: true });
+        $('browser').scrollIntoView({ block: 'start' });
+      });
       fragment.append(button);
     });$('categories').append(fragment);
   }
@@ -104,7 +136,12 @@
     const fragment=document.createDocumentFragment(); $('empty').hidden = items.length !== 0;
     items.forEach(item => {
       const button = el('button', 'item reference-card reference-item-card'); button.type = 'button'; button.dataset.item = String(item.id); button.setAttribute('aria-label', `查看 ${item.name || item.subcategory || '物品'} 的属性与获取方式`);
-      button.append(art(item.icon, 'item-art'), el('span', 'item-name', item.name || item.subcategory || '物品'), el('span', 'item-type', item.subcategory || categoryName(item.category)));
+      const itemName = el('span', 'item-name', item.name || item.subcategory || '物品');
+      if (isNewItem(item)) {
+        itemName.append(' ', newItemBadge(item));
+        button.setAttribute('aria-label', button.getAttribute('aria-label') + '，本版新增');
+      }
+      button.append(art(item.icon, 'item-art'), itemName, el('span', 'item-type', item.subcategory || categoryName(item.category)));
       if (!['default','name'].includes(state.sort)) {
         const value=sortValue(item,state.sort), field=sortFields.find(field=>field.key===state.sort), stat=item.stats?.find(stat=>'stat:'+stat.key===state.sort);
         const label=$('item-sort').selectedOptions[0].textContent;
@@ -241,7 +278,9 @@
     const fragment = el('div', 'compact-item-details'+(detailsOnly?'':' terminal-item')); const hero = el('div', 'detail-hero'); const heading = el('div');
     fragment.dataset.cardKind='item';fragment.dataset.cardName=item.name||item.subcategory||'物品';fragment.dataset.cardCompact=String(detailsOnly);
     const title = el('h2', '', item.name || item.subcategory || '物品'); title.id = titleId;
-    heading.append(el('p', 'detail-tag', [categoryName(item.category), item.subcategory].filter(Boolean).join(' / ')), title);
+    const category = el('p', 'detail-tag', [categoryName(item.category), item.subcategory].filter(Boolean).join(' / '));
+    if (isNewItem(item)) category.append(' ', newItemBadge(item));
+    heading.append(category, title);
     hero.append(art(item.icon, 'detail-art'), heading);
     const body = el('div', 'detail-body'),summary=detailsOnly?body:el('div','item-detail-summary');
     if(detailsOnly)fragment.append(hero,body);
@@ -254,6 +293,7 @@
     const properties = el('dl', 'properties');
     if (!detailsOnly) property(properties, '稀有度', valueText(item.rarity));
     property(properties, '占用格数', Array.isArray(item.size) && item.size.length === 2 ? `${item.size[0]} × ${item.size[1]}` : '未记录');
+    if (item.storageSize?.length === 2) property(properties, '内部容量', item.storageSize.join(' × ') + ' 格');
     property(properties, '最大堆叠', valueText(item.maxStack)); property(properties, '购买价格', valueText(item.buyPrice)); summary.append(properties);
     if (item.category === 'weapons' && Array.isArray(item.compatibleAmmo) && item.compatibleAmmo.length) {
       body.append(el('h3', 'detail-section-title', '适配弹药'));
@@ -322,10 +362,10 @@
   document.addEventListener('keydown', event => { if (event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName) && !$('detail').open) { event.preventDefault(); (window.Guide?.focusSearch || (()=>$('search').focus()))(); } });
   document.querySelector('.skip-link').addEventListener('click', event => { event.preventDefault(); $('main-content').focus(); $('main-content').scrollIntoView({block:'start'}); });
   window.addEventListener('hashchange', syncHash);
-  window.Wiki = {get data(){return state.data;}, el, art, getItem, plainText, itemDetails, itemEffects, showItem, closeDetail, nativeStat, sortItems, sortValue};
+  window.Wiki = {get data(){return state.data;}, el, art, getItem, plainText, openNewItems, isNewItem, newItemBadge, itemDetails, itemEffects, showItem, closeDetail, nativeStat, sortItems, sortValue};
   fetch('data/items.json',{cache:'no-cache'}).then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); }).then(data => {
     if (!Array.isArray(data.items) || !Array.isArray(data.categories)) throw new Error('资料格式不正确');
-    state.data = data; itemIndex=new Map([...(data.archivedItems||[]),...data.items].map(i=>[String(i.id),i]));itemSearch=new Map(data.items.map(i=>[i.id,plainText([i.name,...(i.aliases||[]),i.id,i.description,i.subcategory].filter(Boolean).join(' ')).toLocaleLowerCase()]));categoryGroups=new Map();data.items.forEach(i=>{if(!categoryGroups.has(i.category))categoryGroups.set(i.category,[]);categoryGroups.get(i.category).push(i);});const meta = data.meta || {}; $('edition').textContent = (meta.edition==='EA'?'EA 物品 · '+(meta.currentReview?'静态复核 Build '+meta.currentReview.buildId:meta.acquisitionBuildId?'来源核对 Build '+meta.acquisitionBuildId:'Build '+meta.buildId):meta.version) || '资料版本待核实'; $('total-count').textContent = `${data.items.length} 件物品`;
+    state.data = data; itemIndex=new Map([...(data.archivedItems||[]),...data.items].map(i=>[String(i.id),i]));itemSearch=new Map(data.items.map(i=>[i.id,plainText([i.name,...(i.aliases||[]),i.id,i.description,i.subcategory,isNewItem(i)?'NEW 本版新增':''].filter(Boolean).join(' ')).toLocaleLowerCase()]));categoryGroups=new Map();data.items.forEach(i=>{if(!categoryGroups.has(i.category))categoryGroups.set(i.category,[]);categoryGroups.get(i.category).push(i);});const newItems = data.items.filter(isNewItem); if (newItems.length) categoryGroups.set('new', newItems); const meta = data.meta || {}; $('edition').textContent = (meta.edition==='EA'?'EA 物品 · '+(meta.currentReview?'静态复核 Build '+meta.currentReview.buildId:meta.acquisitionBuildId?'来源核对 Build '+meta.acquisitionBuildId:'Build '+meta.buildId):meta.version) || '资料版本待核实'; $('total-count').textContent = `${data.items.length} 件物品`;
     document.title = '查无此地攻略：物品、任务、敌怪与地图 | NSP Wiki'; $('updated-at').textContent = meta.updatedAt ? `资料更新：${meta.updatedAt}` : '静态资料手册';
     const versionNotes=$('version-notes');if(versionNotes&&Array.isArray(meta.mechanismUpdates)){versionNotes.querySelector('ul').replaceChildren(...meta.mechanismUpdates.map(note=>el('li','',note)));versionNotes.hidden=!meta.mechanismUpdates.length;}
     fetch('data/updates.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('更新档案暂时无法读取');return r.json();}).then(d=>window.WikiUpdates.renderSummary($('updates-summary'),d)).catch(()=>{const summary=$('updates-summary');summary.replaceChildren(el('a','inline-link','查看更新档案'));summary.firstChild.href='#updates';summary.hidden=false;});

@@ -63,7 +63,7 @@
         {
           "id": "mirror",
           "name": "迷失镜柜",
-          "description": "兑换档位与奖励"
+          "description": "出售、升级和抽奖"
         }
       ],
       "art": "ui/quest-mail.png"

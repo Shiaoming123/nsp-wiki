@@ -7,8 +7,13 @@
       "预估概率表示该搜索点生成一次物资时，至少产生1件该物品的机会，不是箱子在地图上的出现概率。数量为出现时的生成件数范围；装备装配、容器容量和场景状态可能改变最终可搜刮内容，未进行游戏内搜刮实测。",
       "容器外观为原生模型静态预览。",
       "此地图存在该类搜索点；具体是否出现及能否打开，以当前时间线、任务和场景状态为准。同名容器存在不同物资方案，不代表每个同名箱子都能刷新全部候选。",
-      "Wiki识别名按绑定模型、场景配置及用途交叉确认，便于查找，不代表游戏内的原生正式标题；无法确认的物体仍保留待核实。"
-    ]
+      "Wiki识别名按绑定模型、场景配置及用途交叉确认，便于查找，不代表游戏内的原生正式标题；无法确认的物体仍保留待核实。",
+      "操控台的 0.7.2 候选已更新。其他容器沿用各自的历史静态资料，游戏内实际刷新率待实测。"
+    ],
+    "currentUpdate": {
+      "buildId": "26866383",
+      "scope": "两个时间线的操控台物资候选"
+    }
   },
   "maps": [
     {
@@ -3101,39 +3106,40 @@
           "icon": "assets/containers/eaddf1bfdff52a7d3dafa6bdf8b16b16c168f125ad1b773c15402f1a45d4675a.png",
           "spawnNote": "",
           "iconCaption": "原生模型静态预览",
-          "contentStatus": "known",
+          "contentStatus": "unknown",
           "items": [
             {
               "id": "material_dataTape",
               "quantityText": "1–3 个",
-              "probabilityText": "预估 34.93%",
-              "probabilityPct": 34.933333333333316
+              "probabilityText": "有概率刷新"
             },
             {
               "id": "material_electronicComponent",
               "quantityText": "1–3 个",
-              "probabilityText": "预估 34.93%",
-              "probabilityPct": 34.933333333333316
+              "probabilityText": "有概率刷新"
             },
             {
               "id": "material_capacitor",
               "quantityText": "1–3 个",
-              "probabilityText": "预估 34.93%",
-              "probabilityPct": 34.933333333333316
+              "probabilityText": "有概率刷新"
             },
             {
               "id": "material_brokenWires",
               "quantityText": "1–3 个",
-              "probabilityText": "预估 34.93%",
-              "probabilityPct": 34.933333333333316
+              "probabilityText": "有概率刷新"
             },
             {
               "id": "material_commonCircuitBoard",
               "quantityText": "1–3 个",
-              "probabilityText": "预估 34.93%",
-              "probabilityPct": 34.933333333333316
+              "probabilityText": "有概率刷新"
+            },
+            {
+              "id": "material_machineJoystick",
+              "quantityText": "1–3 个",
+              "probabilityText": "有概率刷新"
             }
-          ]
+          ],
+          "note": "0.7.2 更新了此操控台的物资候选，当前生成概率待复核。"
         },
         {
           "id": "9888890ca3e2e7930d5a",
@@ -9454,39 +9460,40 @@
           "icon": "assets/containers/eaddf1bfdff52a7d3dafa6bdf8b16b16c168f125ad1b773c15402f1a45d4675a.png",
           "spawnNote": "",
           "iconCaption": "原生模型静态预览",
-          "contentStatus": "known",
+          "contentStatus": "unknown",
           "items": [
             {
               "id": "material_dataTape",
               "quantityText": "1–3 个",
-              "probabilityText": "预估 34.93%",
-              "probabilityPct": 34.933333333333316
+              "probabilityText": "有概率刷新"
             },
             {
               "id": "material_electronicComponent",
               "quantityText": "1–3 个",
-              "probabilityText": "预估 34.93%",
-              "probabilityPct": 34.933333333333316
+              "probabilityText": "有概率刷新"
             },
             {
               "id": "material_capacitor",
               "quantityText": "1–3 个",
-              "probabilityText": "预估 34.93%",
-              "probabilityPct": 34.933333333333316
+              "probabilityText": "有概率刷新"
             },
             {
               "id": "material_brokenWires",
               "quantityText": "1–3 个",
-              "probabilityText": "预估 34.93%",
-              "probabilityPct": 34.933333333333316
+              "probabilityText": "有概率刷新"
             },
             {
               "id": "material_commonCircuitBoard",
               "quantityText": "1–3 个",
-              "probabilityText": "预估 34.93%",
-              "probabilityPct": 34.933333333333316
+              "probabilityText": "有概率刷新"
+            },
+            {
+              "id": "material_machineJoystick",
+              "quantityText": "1–3 个",
+              "probabilityText": "有概率刷新"
             }
-          ]
+          ],
+          "note": "0.7.2 更新了此操控台的物资候选，当前生成概率待复核。"
         },
         {
           "id": "6c7bdb2d584e401ff1d0",

@@ -109,6 +109,7 @@
       for (const reward of npc.shopUnlocks) {
         const group = el('details', 'npc-shop-unlock');
         group.append(el('summary', '', reward.questName + ' · ' + reward.stage + ' · ' + reward.offers.length + ' 件商品'));
+        if (reward.target) group.append(el('p', 'detail-tag', reward.target));
         group.append(el('p', 'guide-note', reward.conditions));
         if (reward.public) group.append(link('查看任务', '#quest/' + encodeURIComponent(reward.questId)));
         materials(group, reward.offers, 'offers'); body.append(group);
@@ -231,6 +232,7 @@
     const s = state[kind]; const heading = el('div', 'guide-heading npc-recipe-heading reference-heading');
     heading.append(el('p', 'kicker', '生存手册 / 资料库'), el('h1', '', labels[kind]),
       el('p', 'intro-copy', kind === 'npcs' ? '查角色、商店与任务关系。' : '查材料、产出与研究条件。'));
+    if (kind === 'recipes') lines(heading, data.meta.usageNotes);
     const tools = el('div', 'guide-tools npc-recipe-tools reference-toolbar'), search = el('input');
     search.type = 'search'; search.placeholder = kind === 'npcs' ? '搜索角色、地点或服务' : '搜索配方、原料、产出或解锁条件'; search.setAttribute('aria-label', search.placeholder); search.value = s.query;
     const count = el('p', 'result-count reference-count'); count.setAttribute('aria-live', 'polite');

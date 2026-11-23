@@ -1,13 +1,13 @@
 # wiki-ui:cache
-/wiki-ui.3c29fb28a26bf4e1b4b5.js
+/wiki-ui.144abf2276c181562b9d.js
   Cache-Control: public, max-age=31536000, immutable
-/wiki-ui.dbe71d5ff7ac121c719b.css
+/wiki-ui.95327b3ce1f4577c5212.css
   Cache-Control: public, max-age=31536000, immutable
 /community-ui.1c377911267444be148e.js
   Cache-Control: public, max-age=31536000, immutable
 /navigation-ui.3f7dedf2ed28d09c7aa6.js
   Cache-Control: public, max-age=31536000, immutable
-/workshop-ui.2df410435ae4af602193.js
+/workshop-ui.0bba96c9fd9dec00fa6b.js
   Cache-Control: public, max-age=31536000, immutable
 /fonts/geist-2ffebe993e96.woff2
   Cache-Control: public, max-age=31536000, immutable

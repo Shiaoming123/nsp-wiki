@@ -46,7 +46,7 @@ export function mountWorkshop(root) {
     const data = await (dataPromise ||= fetch('/data/workshop.json',{cache:'no-cache'}).then(response=>{
       if (!response.ok) throw Error('工坊资料暂时无法读取');
       return response.json();
-    }).catch(error=>{dataPromise=null;throw error;}));
+    }).then(value=>{if(!value.meta?.latestReview?.notice||!value.meta?.latestReview?.announcementUrl)throw Error('工坊版本说明不完整');return value;}).catch(error=>{dataPromise=null;throw error;}));
     const assemblyData=await (assemblyPromise ||= fetch('/data/assembly-ui.json',{cache:'no-cache'}).then(response=>{if(!response.ok)throw Error('原生装配图暂时无法读取');return response.json();}).catch(error=>{assemblyPromise=null;throw error;}));
     if (disposed) return;
     const engine = createEngine(data), {el,art,getItem,nativeStat} = window.Wiki;
@@ -60,6 +60,18 @@ export function mountWorkshop(root) {
     let plans = readPlans(storage), busy = false;
     const section=el('div','workshop-page'), heading=el('div','workshop-heading reference-heading');
     const basis=el('p','workshop-basis');for(const text of ['EA','腐化进度 100%','效果倍率 1'])basis.append(el('span','',text));heading.append(el('h1','','武器工坊'),basis);
+    const versionNotice=el('aside','guide-note workshop-version-note');
+    versionNotice.append(el('p','',data.meta.latestReview.notice));
+    const versionLinks=el('div','related-links');
+    const corruptionLink=el('a','inline-link','查看 0.7.2 词条与候选部件');
+    corruptionLink.href='#corruption';
+    const mechanicsLink=el('a','inline-link','查看数值变化说明');
+    mechanicsLink.href='#mechanic/corruption';
+    versionLinks.append(corruptionLink,mechanicsLink);
+    const announcementLink=el('a','inline-link','查看 Steam 0.7.2 公告');
+    announcementLink.href=data.meta.latestReview.announcementUrl;announcementLink.target='_blank';announcementLink.rel='noopener noreferrer';
+    versionLinks.append(announcementLink);
+    versionNotice.append(versionLinks);
     const controls=el('div','workshop-controls'),primaryControls=el('div','workshop-controls-primary'),secondaryControls=el('div','workshop-controls-secondary'),outputActions=el('div','workshop-output-actions'),trialActions=el('div','workshop-trial-actions');
     primaryControls.setAttribute('aria-label','当前试装与本地方案');secondaryControls.setAttribute('aria-label','比较、导出与分享');controls.append(primaryControls,secondaryControls);secondaryControls.append(trialActions,outputActions);
     const weaponLabel=el('label','','主武器'), weaponSelect=el('select');
@@ -83,7 +95,7 @@ export function mountWorkshop(root) {
     const compare=button('加入对比',()=>addComparison(currentInput()));
     const restore=button('恢复上次试装',restoreTrial);trialActions.append(compare,restore);
     const intro=el('p','workshop-intro','编辑当前试装；保存为本地方案，或加入独立快照对比。');
-    section.append(heading,intro,controls,status,downloadFrozen,workspace,overview,comparison);root.replaceChildren(section);
+    section.append(heading,versionNotice,intro,controls,status,downloadFrozen,workspace,overview,comparison);root.replaceChildren(section);
     postsMount=window.TierPosts.mount(section,{kind:'workshop',captureCurrentShare,applyPostedBuild,comparePostedBuild});
     outputActions.append(button('发布配装',()=>postsMount.openComposer()));
     if (plans.message) status.textContent=plans.message;

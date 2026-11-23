@@ -21,7 +21,8 @@
     "skill-growth",
     "armor-plates",
     "maximum-health",
-    "corruption"
+    "corruption",
+    "weapon-movement"
   ],
   "npc": [
     "Trader_Newbie",
@@ -366,7 +367,11 @@
     "Mission_InsuranceItemFinded",
     "Mission_InsuranceOrigin00",
     "CorruptedEquipmentNotice",
-    "SkeletonAgentDefault"
+    "SkeletonAgentDefault",
+    "CookieCrumb_1961_AbnormalSignal",
+    "CookieCrumb_1961_StrongholdClearOut",
+    "CookieCrumb_1961_RoadsidePicnic",
+    "CookieCrumb_1961_LordOfTheWasteland"
   ],
   "enemy": [
     "Stake",

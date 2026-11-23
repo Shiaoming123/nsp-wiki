@@ -3,7 +3,13 @@
   "meta": {
     "buildId": "26160218",
     "note": "状态按当前版本规则整理；列出基础效果，部分效果与持续时间会受到来源、装备和天赋影响。尚未进行游戏内实测。",
-    "coverageNote": "此页整理可识别名称的角色状态；暂未核实的状态将继续补充。"
+    "coverageNote": "此页整理可识别名称的角色状态；暂未核实的状态将继续补充。",
+    "currentReview": {
+      "buildId": "26866383",
+      "reviewedAt": "2026-11-23",
+      "scope": "尼古丁装填修正和三档负重触发阈值；其他状态保留此前核对结果",
+      "runtimeVerified": false
+    }
   },
   "statuses": [
     {
@@ -26,7 +32,7 @@
     {
       "id": "status-5d4a0df1b81b",
       "name": "中毒",
-      "summary": "每1秒造成10点伤害。",
+      "summary": "普通型中毒，每1秒造成10点伤害。",
       "category": "减益",
       "duration": "持续时间由触发来源决定；不同来源可能不同。",
       "stacking": "通常刷新同一状态的倒计时；额外层数由来源决定，不能把所有数值都直接乘层数。",
@@ -37,7 +43,24 @@
       "sources": [
         "可由战斗、环境、装备或其他状态引起；具体触发来源尚未全部核实。"
       ],
-      "scope": "敌怪专用；与玩家身上的“毒雾”不同",
+      "scope": "普通型配置。真菌侵扰改用可叠加的中毒。",
+      "icon": "assets/status-effects/69c23021c1245d228fa47ab0d382079639c5bcae91127048a224e36de423997f.png"
+    },
+    {
+      "id": "status-fad617a610d8",
+      "name": "中毒（可叠加）",
+      "summary": "每层每秒造成25点伤害，最多99层。",
+      "category": "减益",
+      "duration": "真菌侵扰施加的每一层持续10秒。",
+      "stacking": "各层独立计时，最多99层。",
+      "removal": "各层在自己的倒计时结束后消退。",
+      "effects": [
+        "每层每秒造成25点伤害。按官方专项说明，伤害不受伤害修正或抗性影响。"
+      ],
+      "sources": [
+        "真菌侵扰Ⅰ／Ⅱ／Ⅲ可在造成伤害时分别以25%／30%／35%的基础几率施加一层。"
+      ],
+      "scope": "0.7.2 真菌侵扰所用的叠加状态。",
       "icon": "assets/status-effects/69c23021c1245d228fa47ab0d382079639c5bcae91127048a224e36de423997f.png"
     },
     {
@@ -449,13 +472,13 @@
     {
       "id": "status-7f01d8d4b8a4",
       "name": "尼古丁",
-      "summary": "影响装填、扩散恢复与体力消耗；本版装填所需时间增加15%。",
+      "summary": "影响装填、扩散恢复与体力消耗；当前静态配置使正装填时间增加10%。",
       "category": "利弊并存",
       "duration": "已核实物品来源的基础持续时间：60秒；其他来源可能不同。",
       "stacking": "重复获得会加层，但当前层的剩余倒计时会保留；到期减少1层。最多5层。",
       "removal": "逐层计时消退，最后一层结束后解除。角色死亡时结束。",
       "effects": [
-        "装填时间增加15%。",
+        "当前配置使正装填时间增加10%；官方0.7.2公告写作减少10%，两者方向存在差异。",
         "扩散恢复速度增加10%。",
         "体力消耗增加30%。"
       ],
@@ -467,7 +490,8 @@
         "使用“塔牌”香烟可获得，基础持续60秒。"
       ],
       "scope": "玩家与普通角色状态",
-      "icon": "assets/status-effects/311367da7e04b672323da9fa62fdf8da891b0bbbf6069ff35cd81defc2d77fd1.png"
+      "icon": "assets/status-effects/311367da7e04b672323da9fa62fdf8da891b0bbbf6069ff35cd81defc2d77fd1.png",
+      "sourceBuild": "26866383"
     },
     {
       "id": "status-4f82f7041ae6",
@@ -622,10 +646,11 @@
         "体力消耗增加50%。相关天赋可以减轻这项惩罚。"
       ],
       "sources": [
-        "携带重量相对当前负重能力过高时出现。"
+        "携带重量严格超过当前负重能力的70%且不超过90%时触发。"
       ],
       "scope": "玩家与普通角色状态",
-      "icon": "assets/status-effects/a2ddf80103e1046d77814413db19335a6c28d656b32646cb8a1a9dc73ba5fb37.png"
+      "icon": "assets/status-effects/a2ddf80103e1046d77814413db19335a6c28d656b32646cb8a1a9dc73ba5fb37.png",
+      "sourceBuild": "26866383"
     },
     {
       "id": "status-427fed8964b3",
@@ -641,10 +666,11 @@
         "不能翻滚。相关天赋可解除这项限制。"
       ],
       "sources": [
-        "携带重量相对当前负重能力过高时出现。"
+        "携带重量严格超过当前负重能力的90%且不超过100%时触发。"
       ],
       "scope": "玩家与普通角色状态",
-      "icon": "assets/status-effects/ff7a55cbffd9fca648d1563c5f11cb745185b9e6955412888f5792954197b447.png"
+      "icon": "assets/status-effects/ff7a55cbffd9fca648d1563c5f11cb745185b9e6955412888f5792954197b447.png",
+      "sourceBuild": "26866383"
     },
     {
       "id": "status-d29b4429078a",
@@ -660,10 +686,11 @@
         "不能翻滚。"
       ],
       "sources": [
-        "携带重量相对当前负重能力过高时出现。"
+        "携带重量严格超过当前负重能力的100%时触发。"
       ],
       "scope": "玩家与普通角色状态",
-      "icon": "assets/status-effects/3a6f589a21e131b471e65616b0d3cccbd94a673f8ac70a79a84c2a114cb61d9d.png"
+      "icon": "assets/status-effects/3a6f589a21e131b471e65616b0d3cccbd94a673f8ac70a79a84c2a114cb61d9d.png",
+      "sourceBuild": "26866383"
     },
     {
       "id": "status-af0a52228bc2",

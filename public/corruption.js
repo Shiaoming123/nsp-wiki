@@ -10,7 +10,7 @@
       if (!response.ok) throw Error('腐化资料暂时无法读取');
       return response.json();
     }).then(data => {
-      if (!data.meta || !Array.isArray(data.affixes) || !Array.isArray(data.categories) || !data.itemApplicability) {
+      if (!data.meta || !data.meta.latestReview?.notice || !data.meta.latestReview?.announcementUrl || !Array.isArray(data.affixes) || !Array.isArray(data.categories) || !data.itemApplicability) {
         throw Error('腐化资料格式不完整');
       }
       return data;
@@ -44,8 +44,9 @@
     title.id = 'detail-title';
     const heading=el('header','reference-heading corruption-detail-heading'),actions=el('div','reference-actions');
     actions.append(link('打开完整词条页', '/corruption/' + encodeURIComponent(affix.id) + '/', 'static-guide-link'));
-    heading.append(el('p', 'detail-tag', '腐化词条 · EA'), title,actions);body.append(heading);
+    heading.append(el('p', 'detail-tag', affix.archived ? '腐化词条 · 历史' : '腐化词条 · 0.7.2'), title,actions);body.append(heading);
     body.append(el('p', 'description', affix.description));
+    if (affix.archived) body.append(el('p', 'guide-note', '旧版词条。0.7.2 当前候选池未见此词条，历史资料仍可查阅。'));
     const classNames = affix.categories.map(id => data.categories.find(c => c.id === id)?.name || '分类待核实');
     body.append(el('p', 'guide-note', '适用分类：' + classNames.join('、')),
       el('p', 'guide-note', '适用部位：' + affix.positions.join('、')));
@@ -55,6 +56,17 @@
       body.append(native);
     }
     noteLines(body, (affix.notes||[]).filter(text=>text!=='中文译名与说明待核实。'));
+    if (affix.conflicts?.length) {
+      const group = el('details', 'loot-pool');
+      group.append(el('summary', '', '冲突分组'));
+      group.append(el('p', 'guide-note', '以下每一组与当前词条共享一次抽取机会。候选关系取决于装备使用的词条池。'));
+      for (const ids of affix.conflicts) {
+        const links = el('div', 'related-links');
+        for (const id of ids) links.append(affixLink(data.affixes.find(record => record.id === id)));
+        group.append(links);
+      }
+      body.append(group);
+    }
     const ids = Object.entries(data.itemApplicability)
       .filter(([, binding]) => binding.status === 'bound' && binding.affixIds.includes(affix.id))
       .map(([id]) => id).filter(id => window.Wiki.getItem(id) && !window.Wiki.getItem(id).archived);
@@ -98,6 +110,27 @@
       if(affixId&&root.querySelector('.corruption-categories')){const affix=data.affixes.find(x=>x.id===affixId);if(affix){showAffix(data,affix);return;}}
       const heading = el('div', 'guide-heading corruption-heading reference-heading');
       heading.append(el('h1', '', '腐化词条'));
+      const updateNotice = el('aside', 'guide-note corruption-version-note');
+      updateNotice.append(el('p', '', data.meta.latestReview.notice));
+      const highlights = el('details', 'loot-pool');
+      highlights.append(el('summary', '', '已核实的 0.7.2 词条变化'));
+      const facts = el('ul', 'guide-lines');
+      for (const text of data.meta.latestReview.highlights) facts.append(el('li', '', text));
+      highlights.append(facts);
+      updateNotice.append(highlights);
+      const updateLinks = el('div', 'related-links');
+      updateLinks.append(
+        link('查看数值变化说明', '#mechanic/corruption'),
+        link('查看旧版静态模拟器', '#workshop')
+      );
+      const announcementLink=link('查看 Steam 0.7.2 公告',data.meta.latestReview.announcementUrl);
+      announcementLink.target='_blank';announcementLink.rel='noopener noreferrer';
+      updateLinks.append(announcementLink);
+      const balanceLink = link('查看 Steam 词条专项公告', data.meta.latestReview.balanceAnnouncementUrl);
+      balanceLink.target = '_blank'; balanceLink.rel = 'noopener noreferrer';
+      updateLinks.append(balanceLink);
+      updateNotice.append(updateLinks);
+      const currentAffixes = data.affixes.filter(affix => !affix.archived);
       const categories=el('div','corruption-categories');categories.setAttribute('aria-label','腐化分类');
       const buttons=[{id:'all',name:'全部'},...data.categories].map(c=>{const b=el('button','',c.name.replace('腐化',''));b.type='button';b.dataset.category=c.id;b.setAttribute('aria-pressed',String(category===c.id));b.onclick=()=>{category=c.id;buttons.forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.category===category)));draw();};categories.append(b);return b;});
       const tools = el('div', 'guide-tools corruption-tools reference-toolbar');
@@ -108,7 +141,7 @@
       searchWrap.append(el('span','','词条关键词'),search);
       const parts = el('select');
       parts.setAttribute('aria-label', '适用部位');
-      ['all', ...new Set(data.affixes.flatMap(a => a.positions))].forEach(value => {
+      ['all', ...new Set(currentAffixes.flatMap(a => a.positions))].forEach(value => {
         const option = el('option', '', value === 'all' ? '全部部位' : value); option.value = value; parts.append(option);
       });
       parts.value = position;
@@ -120,13 +153,13 @@
       const table=el('table','corruption-table'),head=el('thead'),header=el('tr');
       ['词条','效果','部位','适用物品'].forEach(text=>{const th=el('th','',text);th.scope='col';header.append(th);});head.append(header);
       const grid = el('tbody'); grid.id = 'corruption-grid';table.append(head,grid);
-      root.replaceChildren(heading,categories, tools, count, table);
+      root.replaceChildren(heading, updateNotice, categories, tools, count, table);
       function draw() {
         const needle = query.toLowerCase().trim();
         const itemNeedle=itemQuery.trim().toLowerCase();
         const matching=itemNeedle?Object.entries(data.itemApplicability).filter(([id,b])=>b.status==='bound'&&window.Wiki.getItem(id)?.name.toLowerCase().includes(itemNeedle)):null;
         const allowed=matching?new Set(matching.flatMap(([,b])=>b.affixIds)):null;
-        const list = data.affixes.filter(a => (category === 'all' || a.categories.includes(category)) &&
+        const list = currentAffixes.filter(a => (category === 'all' || a.categories.includes(category)) &&
           (position === 'all' || a.positions.includes(position)) &&
           (!allowed||allowed.has(a.id))&&
           (!needle || `${a.name} ${a.description} ${a.nativeDescription} ${a.positions.join(' ')}`.toLowerCase().includes(needle)));

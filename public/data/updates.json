@@ -1,10 +1,293 @@
 {
   "schemaVersion": 1,
   "currentInstallation": {
-    "buildId": "26240042",
-    "note": "当前安装版本已用于本轮地图点位复核；各类资料按已完成的核对范围持续维护。"
+    "buildId": "26866383",
+    "note": "已对比 0.7.2 物品、任务、配方及相关规则的静态配置"
   },
   "records": [
+    {
+      "id": "wiki-20261123-game-072",
+      "kind": "wiki",
+      "date": "2026-11-23",
+      "version": "20261123-game-072",
+      "title": "0.7.2 Wiki 资料更新",
+      "publication": "主站版本 20261123-game-072",
+      "verification": "配置对照、页面与资料链接检查",
+      "summary": "图鉴新增红球摇杆及 NEW 分类，更新饼干渣任务、配方、镜柜与腐化词条资料。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "items",
+          "title": "红球摇杆与 NEW 分类",
+          "after": "按两版游戏物品 ID 确认新增物品，使用原生贴图并标明已确认的操控台来源。",
+          "links": [
+            {
+              "label": "NEW · 本版新增",
+              "route": "#items/new"
+            }
+          ]
+        },
+        {
+          "module": "quests",
+          "title": "回归任务与解锁",
+          "after": "恢复四条饼干渣任务及六项弹药配方来源，同步终端与购买权限。",
+          "links": [
+            {
+              "label": "任务攻略",
+              "route": "#quests"
+            },
+            {
+              "label": "配方手册",
+              "route": "#recipes"
+            }
+          ]
+        },
+        {
+          "module": "workshop",
+          "title": "现行腐化资料",
+          "after": "更新159个现行词条和装备候选。工坊的数值模拟保留旧规则，页面标明版本。",
+          "links": [
+            {
+              "label": "腐化词条",
+              "route": "#corruption"
+            },
+            {
+              "label": "武器工坊",
+              "route": "#workshop"
+            }
+          ]
+        },
+        {
+          "module": "loot",
+          "title": "镜柜与搜刮",
+          "after": "新增出售物资和升级说明，更新两个时间线的红球摇杆搜刮候选。",
+          "links": [
+            {
+              "label": "迷失镜柜",
+              "route": "#mirror"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "game-072-corruption",
+      "kind": "game",
+      "date": "2026-11-23",
+      "version": "0.7.2",
+      "title": "0.7.2 腐化词条调整",
+      "publication": "官方专项公告",
+      "verification": "官方公告与当前安装配置对照",
+      "verifiedBuild": null,
+      "summary": "腐化词条分档和投放部位调整，新增冲突组与三组手部装填词条，可叠加的中毒独立计时。",
+      "source": {
+        "label": "Steam 腐化词条专项公告",
+        "url": "https://steamcommunity.com/games/3299050/announcements/detail/704411368981267642",
+        "announcementId": "1849827110441624",
+        "eventId": "704411368981267642",
+        "publishedAt": 1795439135
+      },
+      "changes": [
+        {
+          "module": "workshop",
+          "title": "冲突分组与机匣词条",
+          "after": "枪管、瞄具和机匣各有冲突分组。双倍下注、三重爆发、一锤定音按枪型和射击模式分配。",
+          "links": [
+            {
+              "label": "词条目录",
+              "route": "#corruption"
+            }
+          ]
+        },
+        {
+          "module": "mechanics",
+          "title": "可叠加的中毒",
+          "after": "真菌侵扰三档使用新的中毒状态。最多99层，每层每秒25点伤害，单层独立结束。",
+          "links": [
+            {
+              "label": "中毒状态",
+              "route": "#mechanics/status/status-fad617a610d8"
+            }
+          ]
+        },
+        {
+          "module": "workshop",
+          "title": "装填与既有词条",
+          "after": "已有快装系统调整为10%减免，现行候选改为按枪类区分的手部装填词条。公告另标出哪些变动会影响已经拥有的词条。",
+          "links": [
+            {
+              "label": "装填说明",
+              "route": "#mechanic/reload-time"
+            }
+          ]
+        },
+        {
+          "module": "workshop",
+          "title": "配置与公告差异",
+          "after": "前三发的第三发数值和一锤定音的松扳机重置条件存在差异，词条页同时保留两个出处。",
+          "links": [
+            {
+              "label": "前三发",
+              "route": "#affix/ItemBuff_FirstThree"
+            },
+            {
+              "label": "一锤定音",
+              "route": "#affix/ItemBuff_OneOpening"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "game-072",
+      "kind": "game",
+      "date": "2026-11-23",
+      "version": "0.7.2",
+      "title": "0.7.2 后勤内务整理",
+      "publication": "官方公告",
+      "verification": "Steam 公告与已核实资料链接",
+      "verifiedBuild": null,
+      "summary": "任务终端与安全屋交易调整，迷失镜柜新增回收，工作台可批量制作，部分词条与负重规则变化。",
+      "source": {
+        "label": "Steam 官方更新公告",
+        "url": "https://store.steampowered.com/news/app/3299050/view/704411368981267549?l=schinese",
+        "publishedAt": 1795429213,
+        "announcementId": "1849827110441139",
+        "eventId": "704411368981267549"
+      },
+      "changes": [
+        {
+          "module": "items",
+          "title": "红球摇杆与物品调整",
+          "after": "新增迷失镜柜升级材料红球摇杆；普通软盘的基础买卖价调整为 1000 信用点。",
+          "note": "新增条目依据两版物品 ID 比对。武器定义没有新增 ID。",
+          "links": [
+            {
+              "label": "NEW · 本版新增",
+              "route": "#items/new"
+            },
+            {
+              "label": "红球摇杆",
+              "route": "#item/material_machineJoystick"
+            },
+            {
+              "label": "软盘",
+              "route": "#item/material_floppyDisk"
+            }
+          ]
+        },
+        {
+          "module": "quests",
+          "title": "任务与消息、回归支线",
+          "after": "终端合并任务和消息，主线优先，已完成项归档。饼干渣支线及弹药蓝图回归；部分包含钥匙的任务也会解锁购买权限。",
+          "links": [
+            {
+              "label": "任务攻略",
+              "route": "#quests"
+            },
+            {
+              "label": "饼干渣 · 异常信号",
+              "route": "#quest/CookieCrumb_1961_AbnormalSignal"
+            },
+            {
+              "label": "配方手册",
+              "route": "#recipes"
+            }
+          ]
+        },
+        {
+          "module": "loot",
+          "title": "商店、物资协调与镜柜回收",
+          "after": "安全屋终端区分稳定供应的商店与库存波动的物资协调。初始迷失镜柜可回收物品，按售价的 80% 折成软盘并向下取整，升级后解锁抽奖。",
+          "links": [
+            {
+              "label": "NPC 图鉴",
+              "route": "#npcs"
+            },
+            {
+              "label": "迷失镜柜",
+              "route": "#mirror"
+            }
+          ]
+        },
+        {
+          "module": "mechanics",
+          "title": "负重和操作",
+          "after": "两级负重阈值调整至 70% 和 90%。容器支持同类及全部存取，物品支持快速拆分；追踪任务面板可通过 PDA 关闭。",
+          "links": [
+            {
+              "label": "机制手册",
+              "route": "#mechanics"
+            },
+            {
+              "label": "容器与搜刮",
+              "route": "#loot"
+            }
+          ],
+          "note": "默认操作为 E／Shift+E 存入同类／全部，T／Shift+T 取出同类／全部，Ctrl+左键拆半，Ctrl+右键拆出一个。还可在搜索界面切换临近目标。"
+        },
+        {
+          "module": "mechanics",
+          "title": "安全屋制造和研究",
+          "after": "工作台可读取安全屋内容器里的材料，支持批量制造；研究台显示研究产出。",
+          "links": [
+            {
+              "label": "配方手册",
+              "route": "#recipes"
+            },
+            {
+              "label": "安全屋地图",
+              "route": "#maps/SafeHouse"
+            }
+          ]
+        },
+        {
+          "module": "workshop",
+          "title": "词条、装填与数值计算",
+          "after": "部分词条加入冲突组。受调整的数值先合计固定值再乘算，同一数值的百分比先合计再计算。官方公告另列出多项装填效果调整。",
+          "note": "详细词条改动以官方后续专项公告与实际版本为准。",
+          "links": [
+            {
+              "label": "腐化词条",
+              "route": "#corruption"
+            },
+            {
+              "label": "武器工坊",
+              "route": "#workshop"
+            },
+            {
+              "label": "机制手册",
+              "route": "#mechanics"
+            }
+          ]
+        },
+        {
+          "module": "maps",
+          "title": "地图与场景显示",
+          "after": "地图展开动画每次部署只播一次；白门街88号更新电梯表现，复杂场景的遮挡显示也有优化。",
+          "links": [
+            {
+              "label": "白门街88号地图",
+              "route": "#maps/Origin08_1999"
+            }
+          ]
+        },
+        {
+          "module": "other",
+          "title": "准星、引导与动画",
+          "after": "准星增加预设颜色，伤害被抵消达到40%时显示抵抗提示。引导显示自定义键位。部分消耗品和射击动画修正。",
+          "links": [
+            {
+              "label": "机制手册",
+              "route": "#mechanics"
+            }
+          ]
+        }
+      ]
+    },
     {
       "id": "wiki-20261122-markdown-import",
       "kind": "wiki",
