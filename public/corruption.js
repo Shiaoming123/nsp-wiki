@@ -44,12 +44,12 @@
     title.id = 'detail-title';
     const heading=el('header','reference-heading corruption-detail-heading'),actions=el('div','reference-actions');
     actions.append(link('打开完整词条页', '/corruption/' + encodeURIComponent(affix.id) + '/', 'static-guide-link'));
-    heading.append(el('p', 'detail-tag', affix.archived ? '腐化词条 · 历史' : '腐化词条 · 0.7.2'), title,actions);body.append(heading);
+    heading.append(el('p', 'detail-tag', affix.archived ? '腐化词条 · 历史' : affix.availability === 'unbound' ? '腐化词条 · 当前无已核实候选' : '腐化词条 · 0.7.2'), title,actions);body.append(heading);
     body.append(el('p', 'description', affix.description));
     if (affix.archived) body.append(el('p', 'guide-note', '旧版词条。0.7.2 当前候选池未见此词条，历史资料仍可查阅。'));
     const classNames = affix.categories.map(id => data.categories.find(c => c.id === id)?.name || '分类待核实');
-    body.append(el('p', 'guide-note', '适用分类：' + classNames.join('、')),
-      el('p', 'guide-note', '适用部位：' + affix.positions.join('、')));
+    body.append(el('p', 'guide-note', '分类：' + classNames.join('、')),
+      el('p', 'guide-note', '配置部位：' + affix.positions.join('、')));
     if (affix.nativeDescription && affix.nativeDescription !== affix.description) {
       const native = el('details', 'loot-pool');
       native.append(el('summary', '', '游戏原文'), el('p', 'description', affix.nativeDescription));
@@ -59,7 +59,7 @@
     if (affix.conflicts?.length) {
       const group = el('details', 'loot-pool');
       group.append(el('summary', '', '冲突分组'));
-      group.append(el('p', 'guide-note', '以下每一组与当前词条共享一次抽取机会。候选关系取决于装备使用的词条池。'));
+      group.append(el('p', 'guide-note', '以下是这个词条在部分装备池共享的抽取子组。新生成时同一子组只抽一个。当前单槽重洗流程未检查新词条与已持有词条是否同组，实际并存待实测。'));
       for (const ids of affix.conflicts) {
         const links = el('div', 'related-links');
         for (const id of ids) links.append(affixLink(data.affixes.find(record => record.id === id)));
@@ -71,9 +71,10 @@
       .filter(([, binding]) => binding.status === 'bound' && binding.affixIds.includes(affix.id))
       .map(([id]) => id).filter(id => window.Wiki.getItem(id) && !window.Wiki.getItem(id).archived);
     const related = el('section', 'corruption-related reference-related');
-    related.append(el('h3', 'detail-section-title', '适用物品'));
+    related.append(el('h3', 'detail-section-title', '0.7.2 配置抽取候选'));
+    if (ids.length) related.append(el('p', 'guide-note', '装备池有绑定时列在这里。词条能否生效，还取决于具体武器和攻击条件。'));
     const tools = el('div', 'corruption-related-tools reference-toolbar');
-    const search = el('input'); search.type='search'; search.placeholder='查找适用物品'; search.setAttribute('aria-label',search.placeholder);
+    const search = el('input'); search.type='search'; search.placeholder='查找配置候选'; search.setAttribute('aria-label',search.placeholder);
     const select = el('select');select.setAttribute('aria-label','适用物品分类');
     const all = el('option','','全部分类');all.value='all';select.append(all);
     for(const c of window.Wiki.data.categories){if(!ids.some(id=>window.Wiki.getItem(id).category===c.id))continue;const option=el('option','',c.name);option.value=c.id;select.append(option);}
@@ -81,13 +82,17 @@
     let expanded=false;
     function drawItems(){
       const needle=search.value.trim().toLowerCase(),matches=ids.filter(id=>{const i=window.Wiki.getItem(id);return(select.value==='all'||i.category===select.value)&&(!needle||i.name.toLowerCase().includes(needle));});
-      grid.replaceChildren();count.textContent=`${matches.length} 件物品 · 腐化或重洗时可能获得`;
+      grid.replaceChildren();count.textContent=`${matches.length} 件配置候选`;
       matches.forEach((id,index)=>{const i=window.Wiki.getItem(id),card=link('', '#item/'+encodeURIComponent(id),'corruption-item reference-card');card.dataset.itemId=id;card.hidden=!expanded&&index>=16;card.append(window.Wiki.art(i.icon,'tiny-art'),el('span','',i.name));grid.append(card);});
       if(!matches.length)grid.append(el('p','empty','没有匹配物品。'));
       more.hidden=expanded||matches.length<=16;more.textContent=`显示全部 ${matches.length} 件`;
     }
     search.oninput=()=>{expanded=false;drawItems();};select.onchange=()=>{expanded=false;drawItems();};more.onclick=()=>{expanded=true;drawItems();};
-    tools.append(search,select);related.append(tools,count,grid,more);drawItems();
+    if (ids.length) {
+      tools.append(search,select);related.append(tools,count,grid,more);drawItems();
+    } else {
+      related.append(el('p', 'guide-note', '当前装备池未找到可确认的抽取候选。'));
+    }
     body.append(related);
     window.WikiNavigation.cancelDialogClose(dialog);
     window.WikiNavigation.replaceDetail('affix:'+affix.id,[body]);
@@ -151,7 +156,7 @@
       tools.append(searchWrap,partField,itemField,reset);
       const count = el('p', 'result-count reference-count'); count.id = 'corruption-count';count.setAttribute('role','status');
       const table=el('table','corruption-table'),head=el('thead'),header=el('tr');
-      ['词条','效果','部位','适用物品'].forEach(text=>{const th=el('th','',text);th.scope='col';header.append(th);});head.append(header);
+      ['词条','效果','配置部位','抽取候选'].forEach(text=>{const th=el('th','',text);th.scope='col';header.append(th);});head.append(header);
       const grid = el('tbody'); grid.id = 'corruption-grid';table.append(head,grid);
       root.replaceChildren(heading, updateNotice, categories, tools, count, table);
       function draw() {
@@ -162,7 +167,7 @@
         const list = currentAffixes.filter(a => (category === 'all' || a.categories.includes(category)) &&
           (position === 'all' || a.positions.includes(position)) &&
           (!allowed||allowed.has(a.id))&&
-          (!needle || `${a.name} ${a.description} ${a.nativeDescription} ${a.positions.join(' ')}`.toLowerCase().includes(needle)));
+          (!needle || `${a.name} ${a.description} ${a.nativeDescription} ${a.positions.join(' ')} ${(a.aliases||[]).join(' ')}`.toLowerCase().includes(needle)));
         count.textContent = `${list.length} 个词条${matching?` · 匹配 ${matching.length} 件物品`:''}`;
         grid.replaceChildren();
         for (const affix of list) {
@@ -170,9 +175,9 @@
           card.dataset.affixId = affix.id;
           const name=el('td','corruption-name');name.append(affixLink(affix));
           const effect=el('td','corruption-copy',affix.description);effect.dataset.label='效果';
-          const locations=el('td','corruption-positions',affix.positions.join('、'));locations.dataset.label='部位';
+          const locations=el('td','corruption-positions',affix.positions.join('、'));locations.dataset.label='配置部位';
           const amount=Object.values(data.itemApplicability).filter(b=>b.status==='bound'&&b.affixIds.includes(affix.id)).length;
-          const applicable=el('td','corruption-applicable');applicable.dataset.label='适用物品';applicable.append(link(amount+' 件','#affix/'+encodeURIComponent(affix.id)));
+          const applicable=el('td','corruption-applicable');applicable.dataset.label='抽取候选';applicable.append(link(amount+' 件','#affix/'+encodeURIComponent(affix.id)));
           card.append(name,effect,locations,applicable);
           grid.append(card);
         }
@@ -210,9 +215,9 @@
       }
       const section = el('section', 'corruption-item-section');
       section.dataset.itemId = item.id;
-      section.append(el('h3', 'detail-section-title', '适用腐化词条'));
+      section.append(el('h3', 'detail-section-title', '腐化词条候选'));
       if (binding.status === 'bound') {
-        if (detailsOnly) section.append(link(`查看 ${binding.affixIds.length} 个适用词条`, '#corruption'));
+        if (detailsOnly) section.append(link(`查看 ${binding.affixIds.length} 个配置候选`, '#corruption'));
         else {
           const details = el('details', 'loot-pool');
           details.append(el('summary', '', `腐化词条 · ${binding.affixIds.length} 项`));
@@ -220,6 +225,13 @@
           binding.affixIds.forEach(id => { const affix = data.affixes.find(a => a.id === id); if (affix) links.append(affixLink(affix)); });
           details.append(links); section.append(details);
         }
+      }
+      const limits = data.affixes.filter(affix => affix.activationExclusions?.[item.id]);
+      if (limits.length) {
+        const detail = el('details', 'loot-pool');
+        detail.append(el('summary', '', '此装备的触发限制'));
+        for (const affix of limits) detail.append(affixLink(affix), el('p', 'guide-note', affix.activationExclusions[item.id]));
+        section.append(detail);
       }
       section.append(link('查看全部腐化资料', '#corruption'));
       body.append(section);

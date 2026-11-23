@@ -221,13 +221,13 @@ async function main() {
       await page.waitForFunction(id=>document.querySelector('#detail-content .corruption-detail')?.dataset.affixId===id,r.id);
       const body=await snapshot(page,'#detail-content > .corruption-detail');
       const name=plain(r.name),same=corruption.affixes.filter(a=>plain(a.name)===name),unique=same.length>1?`${name}（词条${same.findIndex(a=>a.id===r.id)+1}）`:name;
-      write(route('corruption',r.id),`${unique}：腐化效果与适用物品 | 查无此地攻略 · NSP Wiki`,`查无此地 ${name}：${plain(r.description).slice(0,90)} 查看效果、适用部位和物品。`,body+`<p>${link('/#affix/'+encodeURIComponent(r.id),'在交互资料中查看')}</p>`,'corruption','',Boolean(r.archived));
+      write(route('corruption',r.id),`${unique}：腐化效果与抽取候选 | 查无此地攻略 · NSP Wiki`,`查无此地 ${name}：${plain(r.description).slice(0,90)} 查看配置候选和触发条件。`,body+`<p>${link('/#affix/'+encodeURIComponent(r.id),'在交互资料中查看')}</p>`,'corruption','',Boolean(r.archived));
     }
     console.log(`Rendered ${corruption.affixes.length} corruption pages`);
     const corruptionIntro=corruption.meta.latestReview.directoryIntroduction;
     const affixHighlights='<h2>已核实的 0.7.2 词条变化</h2><ul class="guide-lines">'+corruption.meta.latestReview.highlights.map(text=>'<li>'+esc(text)+'</li>').join('')+'</ul>';
-    write('/corruption/','查无此地腐化词条：装备、近战与枪械 | NSP Wiki',`${versionLabel('corruption')} 的 ${currentAffixes.length} 个腐化词条，查看效果、候选部位及适用物品。`,intro('腐化词条',corruptionIntro,'#corruption')+affixHighlights+'<p>'+link(corruption.meta.latestReview.balanceAnnouncementUrl,'查看 Steam 词条专项公告')+'</p>'+corruption.categories.map(c=>`<section><h2>${link('/corruption/category/'+c.id+'/',c.name)}</h2>${listing(currentAffixes.filter(a=>a.categories.includes(c.id)),'corruption')}</section>`).join(''),'corruption');
-    for(const c of corruption.categories){const values=currentAffixes.filter(a=>a.categories.includes(c.id));write('/corruption/category/'+c.id+'/',`${c.name}：候选词条与适用物品 | NSP Wiki`,`${versionLabel('corruption')} ${c.name}的 ${values.length} 个候选词条，实际效果待实测。`,intro(c.name,corruptionIntro,'#corruption')+listing(values,'corruption'),'corruption');}
+    write('/corruption/','查无此地腐化词条：装备、近战与枪械 | NSP Wiki',`${versionLabel('corruption')} 的 ${currentAffixes.length} 个腐化词条，查看配置候选和触发条件。`,intro('腐化词条',corruptionIntro,'#corruption')+affixHighlights+'<p>'+link(corruption.meta.latestReview.balanceAnnouncementUrl,'查看 Steam 词条专项公告')+'</p>'+corruption.categories.map(c=>`<section><h2>${link('/corruption/category/'+c.id+'/',c.name)}</h2>${listing(currentAffixes.filter(a=>a.categories.includes(c.id)),'corruption')}</section>`).join(''),'corruption');
+    for(const c of corruption.categories){const values=currentAffixes.filter(a=>a.categories.includes(c.id));write('/corruption/category/'+c.id+'/',`${c.name}：词条与装备池候选 | NSP Wiki`,`${versionLabel('corruption')} ${c.name}的 ${values.length} 个候选词条，实际效果待实测。`,intro(c.name,corruptionIntro,'#corruption')+listing(values,'corruption'),'corruption');}
     for(const c of items.categories) {
       const values=items.items.filter(i=>i.category===c.id);
       write(`/items/category/${encodeURIComponent(c.id)}/`,`${plain(c.name)}图鉴：属性与获取方式 | 查无此地攻略 · NSP Wiki`,`查无此地 EA ${plain(c.name)}图鉴，收录 ${values.length} 件物品的属性、使用效果及静态来源候选与待确认线索。`,intro(`${plain(c.name)}图鉴`,`${values.length} 件物品。选择名称查看详情。`,'#items')+listing(values,'items'),'items');

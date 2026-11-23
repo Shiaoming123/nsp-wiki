@@ -327,9 +327,52 @@ export function mountWorkshop(root) {
       if(!isMelee){drawParts();workspace.append(inspector);}
     }
 
+    function currentAffixCandidates(host){
+      const details=el('details','loot-pool workshop-current-affixes'),content=el('div');
+      details.append(el('summary','','查当前 0.7.2 词条候选'),content);
+      let loading=false,loaded=false;
+      async function load(){
+        if(loading||loaded)return;
+        loading=true;content.replaceChildren(el('p','guide-note','正在读取当前词条候选…'));
+        try{
+          const current=await window.Corruption.load();
+          if(!active()||!content.isConnected)return;
+          const binding=current.itemApplicability[host.itemId];
+          content.replaceChildren(el('p','guide-note','以下为 0.7.2 装备池候选。新生成受抽取组限制；词条实际效果还取决于攻击条件。此列表仅供查询，不参与旧版试装计算。'));
+          if(!binding||!['bound','no-pool','not-equipment'].includes(binding.status)){
+            content.append(el('p','guide-note','此部件的当前候选尚未核实。'));
+          }else{
+            const list=el('ul','guide-lines workshop-current-affix-list');
+            for(const id of binding.affixIds||[]){
+              const affix=current.affixes.find(value=>value.id===id);
+              if(!affix)continue;
+              const row=el('li'),link=el('a','inline-link',affix.name);
+              link.href='#affix/'+encodeURIComponent(id);row.dataset.affixId=id;row.append(link);
+              if(!data.items[host.itemId].affixIds.includes(id))row.append(el('span','guide-note',' · 旧版工坊未收录'));
+              if(affix.description)row.append(el('p','',affix.description));
+              const exclusion=affix.activationExclusions?.[host.itemId];
+              if(exclusion)row.append(el('p','guide-note',exclusion));
+              list.append(row);
+            }
+            content.append(list.childElementCount?list:el('p','guide-note','当前配置未绑定可抽取的腐化词条。'));
+            const currentIds = new Set(binding.affixIds);
+            const legacyOnly = data.items[host.itemId].affixIds.filter(id => !currentIds.has(id));
+            if (legacyOnly.length) content.append(el('p','guide-note','仅旧版试装可选：'+legacyOnly.map(id => affixes[id].name).join('、')));
+          }
+          loaded=true;
+        }catch{
+          if(active()&&content.isConnected){
+            content.replaceChildren(el('p','guide-note','当前词条候选暂时无法读取。'));
+            content.append(button('重试读取当前候选',load));
+          }
+        }finally{loading=false;}
+      }
+      details.addEventListener('toggle',()=>{if(details.open)load();});
+      return details;
+    }
     function drawAffixes(host,path){
       const editor=el('section','workshop-affixes'), item=data.items[host.itemId];
-      const head=el('div','workshop-section-head');head.append(el('h2','',itemName(host.itemId)),el('span','',item.affixIds.length?'腐化词条':'部件设置'));editor.append(head);
+      const head=el('div','workshop-section-head');head.append(el('h2','',itemName(host.itemId)),el('span','',item.affixIds.length?'旧版试装 · 腐化词条':'部件设置'));editor.append(head);
       editor.append(itemProperties(host.itemId));
       if(item.typeMask===data.enums.EquipType.Bullet&&path.length){
         const capacity=engine.directCapacity(engine.nodeAt(build,path.slice(0,-1)));
@@ -346,12 +389,14 @@ export function mountWorkshop(root) {
         const remove=button('移除',()=>mutate(next=>engine.nodeAt(next,path).affixes.splice(index,1),'affix-select-'+pathKey(path),path));remove.setAttribute('aria-label','移除第'+(index+1)+'个词条');actions.append(up,remove);row.append(copy,actions);list.append(row);
       });editor.append(list);
       if(item.affixIds.length){
-      const options=el('select');options.dataset.focus='affix-select-'+pathKey(path);options.setAttribute('aria-label','选择适用腐化词条');options.append(el('option','','选择适用词条'));
+      editor.append(el('p','guide-note','旧版试装的候选与数值基于 EA Build '+data.meta.buildId+(data.meta.partialUpdate?'，部件含 Build '+data.meta.partialUpdate.buildId+' 局部补充。':'。')));
+      const options=el('select');options.dataset.focus='affix-select-'+pathKey(path);options.setAttribute('aria-label','选择适用腐化词条');options.append(el('option','','旧版试装 · 选择适用词条'));
       for(const id of item.affixIds){const option=el('option','',affixes[id].name);option.value=id;options.append(option);}options.firstChild.value='';
       const add=button('增加词条',()=>{if(options.value)mutate(next=>engine.nodeAt(next,path).affixes.push(options.value),'affix-select-'+pathKey(path));});
       add.disabled=!item.affixIds.length||host.affixes.length>=item.affixLimit;
       const tools=el('div','workshop-affix-tools');tools.append(options,add,el('span','guide-note',`${host.affixes.length} / ${item.affixLimit} 个词条`));editor.append(tools);
       }
+      editor.append(currentAffixCandidates(host));
       if(path.length){const parentPath=path.slice(0,-1), index=path.at(-1);editor.append(button('卸下此部件及其下属部件',()=>{selectedPath=[];selectedSlot=null;mutate(next=>{const parent=engine.nodeAt(next,parentPath);parent.children=parent.children.filter(child=>child.slotIndex!==index);},'main');},'workshop-remove'));}
       (inspectorRoot||workspace).append(editor);
     }
