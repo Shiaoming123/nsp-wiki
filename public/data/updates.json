@@ -1,10 +1,211 @@
 {
   "schemaVersion": 1,
   "currentInstallation": {
-    "buildId": "26866383",
-    "note": "已对比 0.7.2 物品、任务、配方及相关规则的静态配置"
+    "buildId": "26889039",
+    "note": "已静态比对 0.7.2-3 安装版的物品、任务、配方、词条和装备池。"
   },
   "records": [
+    {
+      "id": "wiki-20261124-072-hotfixes",
+      "kind": "wiki",
+      "date": "2026-11-24",
+      "version": "20261124-072-hotfixes",
+      "title": "0.7.2-2／0.7.2-3 Wiki 资料更新",
+      "publication": "主站版本 20261124-072-hotfixes",
+      "verification": "Build 26889039 静态对照、页面与资料链接检查",
+      "verifiedBuild": "26889039",
+      "summary": "核对全量腐化词条候选，更新雄狮 M90、前三发、三重爆发、弹匣冲突组和工作台操作说明。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "workshop",
+          "title": "机匣词条与触发条件",
+          "after": "雄狮 M90 改为可抽取一锤定音，粗木弓仍有候选但射击不触发。前三发缩至27件候选。三重爆发保留6件，增伤与重置参数沿用原配置。",
+          "links": [
+            {
+              "label": "雄狮 M90",
+              "route": "#item/reciver_SVG_M90"
+            },
+            {
+              "label": "一锤定音",
+              "route": "#affix/ItemBuff_OneOpening"
+            },
+            {
+              "label": "前三发",
+              "route": "#affix/ItemBuff_FirstThree"
+            },
+            {
+              "label": "三重爆发",
+              "route": "#affix/ItemBuff_TripleBurst"
+            }
+          ]
+        },
+        {
+          "module": "workshop",
+          "title": "手部、弹匣与重复池",
+          "after": "肌肉记忆恢复24件手部装备候选。轻装载和重装载在弹匣新生成时同组只抽一个。另更新上风向三档的候选。",
+          "links": [
+            {
+              "label": "肌肉记忆",
+              "route": "#affix/ItemBuff_MuscleMemory"
+            },
+            {
+              "label": "轻装载",
+              "route": "#affix/ItemBuff_LightLoad"
+            },
+            {
+              "label": "腐化词条",
+              "route": "#corruption"
+            }
+          ]
+        },
+        {
+          "module": "mechanics",
+          "title": "新增操作说明",
+          "after": "记录按下鼠标键即触发快速移动或拆分，以及取消制作或减少数量时的材料返还规则。",
+          "links": [
+            {
+              "label": "配方手册",
+              "route": "#recipes"
+            },
+            {
+              "label": "容器与搜刮",
+              "route": "#loot"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "game-072-3",
+      "kind": "game",
+      "date": "2026-11-24",
+      "version": "0.7.2-3",
+      "title": "0.7.2-3 修复与优化",
+      "publication": "官方公告",
+      "verification": "官方公告核对",
+      "verifiedBuild": null,
+      "summary": "调整快速移动和拆分的触发时机，制作取消或减量退还多余材料，修复雄狮 M90 词条组与多处界面问题。",
+      "source": {
+        "label": "Steam 官方更新公告",
+        "url": "https://steamcommunity.com/games/3299050/announcements/detail/704411368981267887?l=schinese",
+        "announcementId": "1849827110445464",
+        "eventId": "704411368981267886",
+        "noticeAliases": [
+          "704411368981267887"
+        ],
+        "publishedAt": 1795512153
+      },
+      "changes": [
+        {
+          "module": "mechanics",
+          "title": "快速操作与制作返还",
+          "after": "快速移动、拆分改为鼠标按键按下时触发。取消制作或减少数量时，多余材料退回原处。",
+          "links": [
+            {
+              "label": "配方手册",
+              "route": "#recipes"
+            },
+            {
+              "label": "容器与搜刮",
+              "route": "#loot"
+            }
+          ]
+        },
+        {
+          "module": "workshop",
+          "title": "雄狮 M90 与重复词条",
+          "after": "修复萨维奇雄狮 M90 使用错误词条分组，以及部分词条组存在重复词条的问题。",
+          "links": [
+            {
+              "label": "雄狮 M90",
+              "route": "#item/reciver_SVG_M90"
+            },
+            {
+              "label": "腐化词条",
+              "route": "#corruption"
+            }
+          ]
+        },
+        {
+          "module": "other",
+          "title": "动画、工作台和教程",
+          "after": "修复开拓者丛林刀切枪动画、回溯器退出界面后未重置、部分配方需求物品显示错位及储物箱教程图片顺序错误。英文公告另列出英日文本修正。",
+          "links": [
+            {
+              "label": "开拓者丛林刀",
+              "route": "#item/reciver_cold_AIDEN_Kukri"
+            },
+            {
+              "label": "配方手册",
+              "route": "#recipes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "game-072-2",
+      "kind": "game",
+      "date": "2026-11-24",
+      "version": "0.7.2-2",
+      "title": "0.7.2-2 修复与优化",
+      "publication": "官方公告",
+      "verification": "官方公告核对",
+      "verifiedBuild": null,
+      "summary": "修复上锁搜索点与可能导致死档的配置问题，调整前三发投放并增加轻重装载冲突组。",
+      "source": {
+        "label": "Steam 官方更新公告",
+        "url": "https://steamcommunity.com/games/3299050/announcements/detail/704411368981267862?l=schinese",
+        "announcementId": "1849827110444619",
+        "eventId": "704411368981267861",
+        "noticeAliases": [
+          "704411368981267862"
+        ],
+        "publishedAt": 1795489682
+      },
+      "changes": [
+        {
+          "module": "loot",
+          "title": "搜索点开锁",
+          "after": "修复上锁搜索点无法使用钥匙打开的问题。",
+          "links": [
+            {
+              "label": "容器与搜刮",
+              "route": "#loot"
+            }
+          ]
+        },
+        {
+          "module": "workshop",
+          "title": "词条投放、重复与冲突",
+          "after": "修复前三发错误出现在所有突击步枪上及枪口配件的重复词条。轻装载和重装载加入同一冲突组。",
+          "links": [
+            {
+              "label": "前三发",
+              "route": "#affix/ItemBuff_FirstThree"
+            },
+            {
+              "label": "轻装载",
+              "route": "#affix/ItemBuff_LightLoad"
+            },
+            {
+              "label": "腐化词条",
+              "route": "#corruption"
+            }
+          ]
+        },
+        {
+          "module": "other",
+          "title": "配置修复",
+          "after": "官方报告修复了一个可能导致死档的配置错误。",
+          "links": []
+        }
+      ]
+    },
     {
       "id": "wiki-20261123-game-072",
       "kind": "wiki",
@@ -80,14 +281,17 @@
       "version": "0.7.2",
       "title": "0.7.2 腐化词条调整",
       "publication": "官方专项公告",
-      "verification": "官方公告与当前安装配置对照",
+      "verification": "官方修订后的中文公告与 Build 26889039 静态对照",
       "verifiedBuild": null,
       "summary": "腐化词条分档和投放部位调整，新增冲突组与三组手部装填词条，可叠加的中毒独立计时。",
       "source": {
         "label": "Steam 腐化词条专项公告",
-        "url": "https://steamcommunity.com/games/3299050/announcements/detail/704411368981267642",
+        "url": "https://steamcommunity.com/games/3299050/announcements/detail/704411368981267642?l=schinese",
         "announcementId": "1849827110441624",
-        "eventId": "704411368981267642",
+        "eventId": "704411368981267641",
+        "noticeAliases": [
+          "704411368981267642"
+        ],
         "publishedAt": 1795439135
       },
       "changes": [
@@ -126,8 +330,8 @@
         },
         {
           "module": "workshop",
-          "title": "配置与公告差异",
-          "after": "前三发的第三发数值和一锤定音的松扳机重置条件存在差异，词条页同时保留两个出处。",
+          "title": "中文专项公告后续修订",
+          "after": "11月24日修订后的中文公告将前三发第三发写为最终伤害增加400%，将一锤定音重置写为松开扳机3秒，与本次安装配置一致。",
           "links": [
             {
               "label": "前三发",

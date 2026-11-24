@@ -63,7 +63,7 @@ export function mountWorkshop(root) {
     const versionNotice=el('aside','guide-note workshop-version-note');
     versionNotice.append(el('p','',data.meta.latestReview.notice));
     const versionLinks=el('div','related-links');
-    const corruptionLink=el('a','inline-link','查看 0.7.2 词条与候选部件');
+    const corruptionLink=el('a','inline-link','查看现行词条与候选部件');
     corruptionLink.href='#corruption';
     const mechanicsLink=el('a','inline-link','查看数值变化说明');
     mechanicsLink.href='#mechanic/corruption';
@@ -329,7 +329,7 @@ export function mountWorkshop(root) {
 
     function currentAffixCandidates(host){
       const details=el('details','loot-pool workshop-current-affixes'),content=el('div');
-      details.append(el('summary','','查当前 0.7.2 词条候选'),content);
+      details.append(el('summary','','查当前词条候选'),content);
       let loading=false,loaded=false;
       async function load(){
         if(loading||loaded)return;
@@ -338,7 +338,7 @@ export function mountWorkshop(root) {
           const current=await window.Corruption.load();
           if(!active()||!content.isConnected)return;
           const binding=current.itemApplicability[host.itemId];
-          content.replaceChildren(el('p','guide-note','以下为 0.7.2 装备池候选。新生成受抽取组限制；词条实际效果还取决于攻击条件。此列表仅供查询，不参与旧版试装计算。'));
+          content.replaceChildren(el('p','guide-note',current.meta.latestReview.gameVersion + ' 装备池候选。新生成受抽取组限制，触发条件见词条详情。旧版试装使用独立规则。'));
           if(!binding||!['bound','no-pool','not-equipment'].includes(binding.status)){
             content.append(el('p','guide-note','此部件的当前候选尚未核实。'));
           }else{

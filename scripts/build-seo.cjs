@@ -205,7 +205,8 @@ async function main() {
     }
     for(const [kind,data,records,label] of [['npcs',npcs,npcs.npcs,'NPC 图鉴'],['recipes',recipes,recipes.recipes,'配方手册']]){
       const singular=kind==='npcs'?'npc':'recipe';
-      write(route(kind),`查无此地${label}：资料与关联 | NSP Wiki`,`${versionLabel(kind)} 的 ${records.length} 项${label}资料。`,intro(label,'选择条目查看详情与关联资料。','#'+kind)+listing(records,kind),kind);
+      const usageNotes=kind==='recipes'?'<ul class="guide-lines">'+data.meta.usageNotes.map(note=>'<li>'+esc(note)+'</li>').join('')+'</ul>':'';
+      write(route(kind),`查无此地${label}：资料与关联 | NSP Wiki`,`${versionLabel(kind)} 的 ${records.length} 项${label}资料。`,intro(label,'选择条目查看详情与关联资料。','#'+kind)+usageNotes+listing(records,kind),kind);
       for(const r of records){
         await page.evaluate(hash=>{location.hash=hash;},'#'+singular+'/'+encodeURIComponent(r.id));
         await page.waitForFunction(({singular,id})=>document.querySelector('#detail-content .npc-recipe-detail')?.getAttribute('data-'+singular+'-id')===id,{singular,id:r.id});
@@ -225,8 +226,8 @@ async function main() {
     }
     console.log(`Rendered ${corruption.affixes.length} corruption pages`);
     const corruptionIntro=corruption.meta.latestReview.directoryIntroduction;
-    const affixHighlights='<h2>已核实的 0.7.2 词条变化</h2><ul class="guide-lines">'+corruption.meta.latestReview.highlights.map(text=>'<li>'+esc(text)+'</li>').join('')+'</ul>';
-    write('/corruption/','查无此地腐化词条：装备、近战与枪械 | NSP Wiki',`${versionLabel('corruption')} 的 ${currentAffixes.length} 个腐化词条，查看配置候选和触发条件。`,intro('腐化词条',corruptionIntro,'#corruption')+affixHighlights+'<p>'+link(corruption.meta.latestReview.balanceAnnouncementUrl,'查看 Steam 词条专项公告')+'</p>'+corruption.categories.map(c=>`<section><h2>${link('/corruption/category/'+c.id+'/',c.name)}</h2>${listing(currentAffixes.filter(a=>a.categories.includes(c.id)),'corruption')}</section>`).join(''),'corruption');
+    const affixHighlights='<h2>已核实的 '+esc(corruption.meta.latestReview.gameVersion)+' 词条变化</h2><ul class="guide-lines">'+corruption.meta.latestReview.highlights.map(text=>'<li>'+esc(text)+'</li>').join('')+'</ul>';
+    write('/corruption/','查无此地腐化词条：装备、近战与枪械 | NSP Wiki',`${versionLabel('corruption')} 的 ${currentAffixes.length} 个腐化词条，查看配置候选和触发条件。`,intro('腐化词条',corruptionIntro,'#corruption')+affixHighlights+'<p>'+link(corruption.meta.latestReview.announcementUrl,'查看 Steam '+corruption.meta.latestReview.gameVersion+' 公告')+' · '+link(corruption.meta.latestReview.balanceAnnouncementUrl,'查看 Steam 词条专项公告')+'</p>'+corruption.categories.map(c=>`<section><h2>${link('/corruption/category/'+c.id+'/',c.name)}</h2>${listing(currentAffixes.filter(a=>a.categories.includes(c.id)),'corruption')}</section>`).join(''),'corruption');
     for(const c of corruption.categories){const values=currentAffixes.filter(a=>a.categories.includes(c.id));write('/corruption/category/'+c.id+'/',`${c.name}：词条与装备池候选 | NSP Wiki`,`${versionLabel('corruption')} ${c.name}的 ${values.length} 个候选词条，实际效果待实测。`,intro(c.name,corruptionIntro,'#corruption')+listing(values,'corruption'),'corruption');}
     for(const c of items.categories) {
       const values=items.items.filter(i=>i.category===c.id);
@@ -257,7 +258,7 @@ async function main() {
       write(route('maps',m.id),`查无此地${unique}地图：概览与3D实景 | NSP Wiki`,`查无此地${title}地图，${poiCount} 个资源点；查看平面概览、3D实景及任务与敌怪入口。`,intro(`${unique}地图`,`${poiCount} 个资源点。`, `#maps/${encodeURIComponent(m.id)}`)+`<details><summary>资料版本</summary><p>地点资料 EA Build ${esc(manifest.dataBuild)}；场景资源 Build ${esc(manifest.geometryBuild)}。</p></details>`+(gaps.length?`<details><summary>场景缺项</summary><p>${esc(gaps.join('；'))}。</p></details>`:'')+`<h2>浏览地图</h2><ul class="guide-lines"><li>默认平面概览；点击“3D实景”才加载模型，缩放不会自动切换模式。</li><li>默认流畅：降低渲染分辨率；原始：完整渲染分辨率，可手动选择。</li><li>资源高亮不隐藏其他点位；选择点位后“查看实景”定位。</li><li>进入室内后可切换屋顶显示；支持拖动、缩放、旋转以及小地图定位。</li></ul><p>${link('/#maps/'+encodeURIComponent(m.id),'打开'+title+'交互地图')}</p>`+related+'<p>'+link('/loot/'+m.id+'/','查看本图容器与物品刷新 ↗')+'</p>','maps');
     }
     write('/tiers/','查无此地夯拉榜：制作自己的物品排行榜 | NSP Wiki','使用EA物品库制作个人夯拉榜，保留原有排序、玩家帖子与评论。',intro('夯拉榜','从EA物品库挑选物品，按自己的体验排入夯、顶级、人上人、NPC、拉五档；历史草稿、帖子和评论继续保留。','#tiers')+'<h2>制作与分享</h2><ol class="guide-lines"><li>按类别、子分类或名称查找物品，加入待排区。</li><li>拖动到对应档位，或选择物品后通过档位按钮调整。“一键清空”可重新开始。</li><li>复制或导出榜单图片，也可在页面下方“发布攻略”，附上昵称、标题与最多1000字的文字。</li><li>浏览玩家帖子，点赞多的攻略排在前面；点击图片查看完整文字并评论。</li></ol><p>未发布的榜单草稿只保存在当前浏览器。主动发布的图片和文字由本站保存，其他访问者可以看到、点赞和评论；不读取或同步游戏存档。</p>','tiers');
-    write('/workshop/','武器工坊：部件装配与腐化方案 | NSP Wiki','查无此地 EA 武器工坊：选择主武器，按槽位和口径装配部件，查看腐化词条效果并保存本地方案。',intro('武器工坊','先选择主武器，再点击槽位或拖入兼容部件；近战武器直接设置词条。工坊仍按较早的配置与计算规则模拟，适合查看旧方案。0.7.2 调整了数值叠加和词条冲突组。方案保存在当前浏览器。','#workshop'),'workshop');
+    write('/workshop/','武器工坊：部件装配与腐化方案 | NSP Wiki','查无此地 EA 武器工坊：选择主武器，按槽位和口径装配部件，查看腐化词条效果并保存本地方案。',intro('武器工坊','先选择主武器，再点击槽位或拖入兼容部件；近战武器直接设置词条。工坊仍按较早的配置与计算规则模拟，适合查看旧方案。现行候选可在词条目录或工坊的候选查询区查看。方案保存在当前浏览器。','#workshop'),'workshop');
     await page.goto(origin+'/#updates');await page.locator('.updates-record').first().waitFor();
     await page.locator('.updates-change').evaluateAll(nodes=>nodes.forEach(n=>n.open=true));
     await page.locator('.updates-tools').evaluate(node=>node.remove());

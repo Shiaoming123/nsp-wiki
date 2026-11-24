@@ -40,13 +40,14 @@
     const dialog = document.getElementById('detail');
     const body = el('div', 'detail-body guide-detail corruption-detail reference-detail');
     body.dataset.affixId = affix.id;
+    const gameVersion = data.meta.latestReview.gameVersion;
     const title = el('h2', '', affix.name);
     title.id = 'detail-title';
     const heading=el('header','reference-heading corruption-detail-heading'),actions=el('div','reference-actions');
     actions.append(link('打开完整词条页', '/corruption/' + encodeURIComponent(affix.id) + '/', 'static-guide-link'));
-    heading.append(el('p', 'detail-tag', affix.archived ? '腐化词条 · 历史' : affix.availability === 'unbound' ? '腐化词条 · 当前无已核实候选' : '腐化词条 · 0.7.2'), title,actions);body.append(heading);
+    heading.append(el('p', 'detail-tag', affix.archived ? '腐化词条 · 历史' : affix.availability === 'unbound' ? '腐化词条 · 当前无已核实候选' : '腐化词条 · ' + gameVersion), title,actions);body.append(heading);
     body.append(el('p', 'description', affix.description));
-    if (affix.archived) body.append(el('p', 'guide-note', '旧版词条。0.7.2 当前候选池未见此词条，历史资料仍可查阅。'));
+    if (affix.archived) body.append(el('p', 'guide-note', '旧版词条。当前配置候选池未见此词条。'));
     const classNames = affix.categories.map(id => data.categories.find(c => c.id === id)?.name || '分类待核实');
     body.append(el('p', 'guide-note', '分类：' + classNames.join('、')),
       el('p', 'guide-note', '配置部位：' + affix.positions.join('、')));
@@ -71,7 +72,7 @@
       .filter(([, binding]) => binding.status === 'bound' && binding.affixIds.includes(affix.id))
       .map(([id]) => id).filter(id => window.Wiki.getItem(id) && !window.Wiki.getItem(id).archived);
     const related = el('section', 'corruption-related reference-related');
-    related.append(el('h3', 'detail-section-title', '0.7.2 配置抽取候选'));
+    related.append(el('h3', 'detail-section-title', gameVersion + ' 配置抽取候选'));
     if (ids.length) related.append(el('p', 'guide-note', '装备池有绑定时列在这里。词条能否生效，还取决于具体武器和攻击条件。'));
     const tools = el('div', 'corruption-related-tools reference-toolbar');
     const search = el('input'); search.type='search'; search.placeholder='查找配置候选'; search.setAttribute('aria-label',search.placeholder);
@@ -118,7 +119,7 @@
       const updateNotice = el('aside', 'guide-note corruption-version-note');
       updateNotice.append(el('p', '', data.meta.latestReview.notice));
       const highlights = el('details', 'loot-pool');
-      highlights.append(el('summary', '', '已核实的 0.7.2 词条变化'));
+      highlights.append(el('summary', '', '已核实的 ' + data.meta.latestReview.gameVersion + ' 词条变化'));
       const facts = el('ul', 'guide-lines');
       for (const text of data.meta.latestReview.highlights) facts.append(el('li', '', text));
       highlights.append(facts);
@@ -128,7 +129,7 @@
         link('查看数值变化说明', '#mechanic/corruption'),
         link('查看旧版静态模拟器', '#workshop')
       );
-      const announcementLink=link('查看 Steam 0.7.2 公告',data.meta.latestReview.announcementUrl);
+      const announcementLink=link('查看 Steam ' + data.meta.latestReview.gameVersion + ' 公告',data.meta.latestReview.announcementUrl);
       announcementLink.target='_blank';announcementLink.rel='noopener noreferrer';
       updateLinks.append(announcementLink);
       const balanceLink = link('查看 Steam 词条专项公告', data.meta.latestReview.balanceAnnouncementUrl);
