@@ -5,11 +5,12 @@ import {createReportModel} from './workshop-report.js';
 import {statDifference,createComparisons,createTrialRecovery,applyPostedTrial,comparisonReason} from './workshop-state.js';
 import {renderWorkshopImage,copyWorkshopImage,downloadWorkshopImage} from './workshop-image.js';
 
-let dataPromise, assemblyPromise;
-const editions={current:{drafts:new Map(),currentId:''},legacy:{drafts:new Map(),currentId:''},historical:{drafts:new Map(),currentId:''}};
+let dataPromise, assemblyPromise, previousPromise;
+const editions={current:{drafts:new Map(),currentId:''},legacy:{drafts:new Map(),currentId:''},previous:{drafts:new Map(),currentId:''},historical:{drafts:new Map(),currentId:''}};
 const storage = {getItem:key=>localStorage.getItem(key), setItem:(key,value)=>localStorage.setItem(key,value)};
 
-function currentNativeEffects(part){
+function currentNativeEffects(part,useCatalogEffects){
+  if(!useCatalogEffects)return part.nativeEffects;
   const effects=window.Wiki.getItem(part.itemId)?.specialEffects?.filter(effect=>effect.kind==='innate');
   return effects?.length?effects.map(effect=>effect.name+' · '+effect.description):part.nativeEffects;
 }
@@ -17,7 +18,7 @@ function additionalEffects(report){
   return report.conditionalEffects.filter(effect=>!report.parts.some(part=>part.path.length===effect.path?.length&&part.path.every((slot,i)=>slot===effect.path[i])&&part.nativeEffects.some(text=>text===effect.text||text.endsWith(' · '+effect.text))));
 }
 
-function renderWorkshopReport(report,{el,art}){
+function renderWorkshopReport(report,{el,art,useCatalogEffects}){
   const root=el('div');root.append(el('h2','','整套配装与词条'));
   const state=report.validation.complete?'装配完整':'未完成配装 · 待补齐必需件';root.append(el('p','guide-note',state+(report.validation.kind!=='melee'&&!report.validation.fireable?' · 当前不能开火':'')));
   for(const missing of report.validation.missingRequired)root.append(el('p','guide-note','待补齐 · '+missing.label));
@@ -26,7 +27,7 @@ function renderWorkshopReport(report,{el,art}){
     const title=el('h3','',part.name);if(part.icon)title.prepend(art(part.icon,'tiny-art'));block.append(title);
     if(part.ammoCount!==null)block.append(el('p','','装填数量 · '+part.ammoCount));
     for(const affix of part.affixes){const row=el('p','workshop-overview-affix');row.dataset.affixId=affix.id;row.append(el('strong','workshop-affix-label',affix.name),el('span','',affix.description));block.append(row);}
-    for(const text of currentNativeEffects(part))block.append(el('p','workshop-native-effect',text));root.append(block);
+    for(const text of currentNativeEffects(part,useCatalogEffects))block.append(el('p','workshop-native-effect',text));root.append(block);
   }
   root.append(el('p','guide-note','变化量对照：'+report.statBaseline.label));
   const stats=el('dl','workshop-overview-stats');for(const stat of report.stats){const row=el('div'),value=el('dd','',stat.formatted);value.append(differenceLabel(stat.difference,el));row.append(el('dt','',stat.label),value);stats.append(row);}root.append(stats);
@@ -49,11 +50,16 @@ export function mountWorkshop(root, mode='current') {
       if (!response.ok) throw Error('工坊资料暂时无法读取');
       return response.json();
     }).then(value=>{if(!value.meta?.latestReview?.notice||!value.meta?.latestReview?.announcementUrl)throw Error('工坊版本说明不完整');return value;}).catch(error=>{dataPromise=null;throw error;}));
-    const corruption=legacy?null:await window.Corruption.load();
+    const previous=mode==='previous'||mode==='historical';
+    const corruption=legacy?null:previous?await (previousPromise ||= fetch('/workshop/history-26889039.json',{cache:'no-cache'}).then(response=>{
+      if(!response.ok)throw Error('0.7.2-3 工坊资料暂时无法读取');
+      return response.json();
+    }).catch(error=>{previousPromise=null;throw error;})):await window.Corruption.load();
+    const useCatalogEffects=mode==='current';
     const projection=corruption?.workshopProjection, base=projection?.baseEquipment;
     const historical=mode==='historical';
     const data=legacy?oldRules:currentWorkshopRules(oldRules,corruption,{historical});
-    const recoverySuffix=historical||!base?'-current':'-equipment';
+    const recoverySuffix=historical?'-current':previous?'-equipment':'-build-'+data.meta.buildId;
     const recoveryStorage=legacy?storage:{getItem:key=>storage.getItem(key+recoverySuffix),setItem:(key,value)=>storage.setItem(key+recoverySuffix,value)};
     const oldAssembly=await (assemblyPromise ||= fetch('/data/assembly-ui.json',{cache:'no-cache'}).then(response=>{if(!response.ok)throw Error('原生装配图暂时无法读取');return response.json();}).catch(error=>{assemblyPromise=null;throw error;}));
     const assemblyData=base&&!historical?{...oldAssembly,items:{...oldAssembly.items,
@@ -78,10 +84,13 @@ export function mountWorkshop(root, mode='current') {
     const editionLink=el('a','inline-link',legacy?'切到现行试装':'查看旧版试装');
     editionLink.href=legacy?'#workshop':'#workshop/legacy';
     versionLinks.append(editionLink);
-    if(historical){
-      const link=el('a','inline-link','切到现行试装');link.href='#workshop';versionLinks.append(link);
-    }else if(base){
-      const link=el('a','inline-link','查看上一版试装');link.href='#workshop/historical';versionLinks.append(link);
+    for(const [editionMode,label,route] of [
+      ['current','切到现行试装','#workshop'],
+      ['previous','查看 0.7.2-3 热修试装','#workshop/previous'],
+      ['historical','查看 0.7.2-3 初版试装','#workshop/historical']
+    ]){
+      if(editionMode===mode||(legacy&&editionMode==='current'))continue;
+      const link=el('a','inline-link',label);link.href=route;versionLinks.append(link);
     }
     section.dataset.workshopRules=mode;
     const corruptionLink=el('a','inline-link','查看现行词条与候选部件');
@@ -140,9 +149,7 @@ export function mountWorkshop(root, mode='current') {
     function checkPostEdition(stored){
       if(supportsIdentity(stored.rulesIdentity))return;
       if(!legacy&&legacyIdentities.has(stored.rulesIdentity))throw Error('请切到旧版试装，再应用这份方案。');
-      if(base&&!historical&&stored.rulesIdentity===projection.rulesIdentity)throw Error('请切到上一版试装，再应用这份方案。');
-      if(base&&historical&&stored.rulesIdentity===base.rulesIdentity)throw Error('请切到现行试装，再应用这份方案。');
-      throw Error(legacy?'请选择这份方案对应的试装版本。':'暂不支持这份方案的规则版本。');
+      throw Error('请选择这份方案对应的试装版本，再应用配装。');
     }
     async function applyPostedBuild(stored){
       checkPostEdition(stored);
@@ -186,7 +193,7 @@ export function mountWorkshop(root, mode='current') {
         const detail=el('details','workshop-comparison-details');detail.append(el('summary','','完整装配与计算条件 · '+report.parts.length+' 件'));
         for(const missing of report.validation.missingRequired)detail.append(el('p','guide-note','待补齐 · '+missing.label));
         for(const container of c.containers)detail.append(el('p','',container.name+' · 容量 '+(container.capacity.status==='known'?container.capacity.value:'—')));
-        for(const part of report.parts){detail.append(el('p','',part.name+(part.ammoCount!==null?' × '+part.ammoCount:'')));for(const affix of part.affixes)detail.append(el('p','workshop-affix-label',affix.name+' · '+affix.description));for(const text of currentNativeEffects(part))detail.append(el('p','workshop-native-effect',text));}
+        for(const part of report.parts){detail.append(el('p','',part.name+(part.ammoCount!==null?' × '+part.ammoCount:'')));for(const affix of part.affixes)detail.append(el('p','workshop-affix-label',affix.name+' · '+affix.description));for(const text of currentNativeEffects(part,useCatalogEffects))detail.append(el('p','workshop-native-effect',text));}
         detail.append(el('p','','腐化100% · 效果倍率1 · 重量倍率1'));
         for(const effect of additionalEffects(report))detail.append(el('p','guide-note',effect.text||'—'));card.append(detail);scroll.append(card);
       }
@@ -196,7 +203,7 @@ export function mountWorkshop(root, mode='current') {
       if(!build)throw Error('请先选择主武器');
       imageOperation?.abort();imageOperation=new AbortController();
       const report=reportModel.capture({name:nameInput.value,build}),input={schemaVersion:1,name:report.name,rulesIdentity:report.rulesIdentity,basis:report.basis,build:report.build};
-      const image=await renderWorkshopImage(report,assemblyData,{signal:imageOperation.signal,statStyles:window.Wiki.data.meta.nativeStatStyles,nativeEffects:Object.fromEntries(report.parts.map(part=>[part.itemId,currentNativeEffects(part)]))});
+      const image=await renderWorkshopImage(report,assemblyData,{signal:imageOperation.signal,statStyles:window.Wiki.data.meta.nativeStatStyles,nativeEffects:Object.fromEntries(report.parts.map(part=>[part.itemId,currentNativeEffects(part,useCatalogEffects)]))});
       return {report,input,reportDigest:image.reportDigest,image};
     }
     async function exportCurrent(copy){
@@ -328,7 +335,7 @@ export function mountWorkshop(root, mode='current') {
       inspectorRoot=null;workspace.replaceChildren();overview.replaceChildren();overview.hidden=!build;copyImage.disabled=downloadImage.disabled=compare.disabled=!build;downloadImage.onclick=()=>exportCurrent(false);save.disabled=!build||busy||plans.blocked;
       if(!build){workspace.classList.remove('is-melee');workspace.append(el('div','workshop-empty','选择主武器，开始装配。'));return;}
       const validation=validatePlan(build),result=engine.calculate(build),stats=engine.displayStats(build),isMelee=data.items[build.itemId].kind==='melee';
-      try{liveReport=reportModel.capture({name:nameInput.value,build});overview.append(renderWorkshopReport(liveReport,{el,art}));}catch(error){liveReport=null;overview.append(el('p','guide-note',error.message));}
+      try{liveReport=reportModel.capture({name:nameInput.value,build});overview.append(renderWorkshopReport(liveReport,{el,art,useCatalogEffects}));}catch(error){liveReport=null;overview.append(el('p','guide-note',error.message));}
       workspace.classList.toggle('is-melee',isMelee);save.disabled=save.disabled||!validation.valid;save.textContent=validation.complete?'保存方案':'保存未完成草稿';
       const available=visibleSlots();if(!paletteSlot||!available.some(slot=>slot.index===paletteSlot.index&&pathKey(slot.path)===pathKey(paletteSlot.path))){const first=available.find(slot=>slot.required&&!slot.installed)||available[0];paletteSlot=first?{path:first.path,index:first.index}:null;}
       const assembly=el('section','workshop-assembly'),title=el('div','workshop-section-head');title.append(el('h2','','装配台'),el('span','',validation.complete?'装配完整':'待补齐必需件'));assembly.append(title,previewGun());

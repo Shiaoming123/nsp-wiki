@@ -46,8 +46,19 @@ export function currentWorkshopRules(legacy, corruption, {historical=false}={}) 
   }));
   return {...legacy,items,affixes,nativeLogics:{...legacy.nativeLogics,...base?.nativeLogics},meta:{...legacy.meta,buildId:projection.buildId,rulesIdentity:base?.rulesIdentity||projection.rulesIdentity,
     assemblySha256:corruption.meta.assemblySha256,bundleSha256:corruption.meta.bundleSha256,configTableSha256:corruption.meta.configTableSha256,
-    combinedModifiers:true,partialUpdate:base?{buildId:base.buildId,scope:base.affixLimitOnly?'已核对现行词条上限。装备基础与接口沿用既有资料。':'装备基础参数、原生动作、固有效果、接口与腐化规则已静态复核。原生贴图沿用既有资料。'}:{buildId:legacy.meta.partialUpdate.buildId,scope:'基础装备参数与槽位沿用既有核对版本，腐化候选、常驻词条参数及属性合并按现行规则'},
-    latestReview:{...review,notice:`当前试装使用 ${review.gameVersion}（Build ${projection.buildId}）的腐化候选、词条参数和常驻属性合并规则。${base?(base.affixLimitOnly?'已核对词条数量上限。':'已复核装备基础参数、固有效果与接口。'):'装备基础与接口沿用既有资料。'}触发型效果单独列出。`}}};
+    combinedModifiers:true,partialUpdate:base?{buildId:base.buildId,scope:base.scope || (base.affixLimitOnly?'已核对现行词条上限。装备基础与接口沿用既有资料。':'装备基础参数、原生动作、固有效果、接口与腐化规则已静态复核。原生贴图沿用既有资料。')}:{buildId:legacy.meta.partialUpdate.buildId,scope:'基础装备参数与槽位沿用既有核对版本，腐化候选、常驻词条参数及属性合并按现行规则'},
+    latestReview:{...review,notice:`当前试装使用 ${review.gameVersion}（Build ${projection.buildId}）的腐化候选、词条参数和常驻属性合并规则。${base?(base.notice || (base.affixLimitOnly?'已核对词条数量上限。':'已复核装备基础参数、固有效果与接口。')):'装备基础与接口沿用既有资料。'}触发型效果单独列出。`}}};
+}
+
+export function resolveWorkshopRules(legacy, corruption, previous, identity) {
+  if (identity === legacy.meta.rulesIdentity) return legacy;
+  const projection = corruption.workshopProjection;
+  const active = projection.baseEquipment?.rulesIdentity ?? projection.rulesIdentity;
+  if (identity === active) return currentWorkshopRules(legacy, corruption);
+  const frozen = previous.workshopProjection;
+  if (identity === frozen.baseEquipment?.rulesIdentity) return currentWorkshopRules(legacy, previous);
+  if (identity === frozen.rulesIdentity) return currentWorkshopRules(legacy, previous, {historical:true});
+  return null;
 }
 
 export function tagMatch(left, right) {

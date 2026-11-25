@@ -21,7 +21,7 @@ export function packageApi({adapterRoot,out,release}){
   files.set('independent.mjs',Buffer.from(adapted));
   take(root,'lib/articles.js');
   take(root,'lib/vendor/article-markdown.js');
-  for(const file of ['lib/community.js','lib/community-access.js','lib/community-admin.js','lib/auth.js','lib/mirror-auth.js','lib/tencent-mirror-policy.js','lib/item-ids.json','lib/affix-ids.json','lib/wiki-page-ids.json','lib/workshop-post.js','lib/workshop-items.json','public/workshop-report.js','public/workshop-engine.js','public/workshop-model.js','public/workshop-state.js','public/data/workshop.json','public/data/corruption.json'])take(root,file);
+  for(const file of ['lib/community.js','lib/community-access.js','lib/community-admin.js','lib/auth.js','lib/mirror-auth.js','lib/tencent-mirror-policy.js','lib/item-ids.json','lib/affix-ids.json','lib/wiki-page-ids.json','lib/workshop-post.js','lib/workshop-items.json','public/workshop-report.js','public/workshop-engine.js','public/workshop-model.js','public/workshop-state.js','public/data/workshop.json','public/data/corruption.json','public/workshop/history-26889039.json'])take(root,file);
   for(const file of readdirSync(path.join(root,'drizzle')).filter(f=>/^\d+_.+\.sql$/.test(f)).sort())take(root,'drizzle/'+file);
   const sha256={};mkdirSync(path.dirname(out),{recursive:true});mkdirSync(out);
   for(const [file,bytes]of [...files].sort(([a],[b])=>a.localeCompare(b))){const target=path.join(out,file);mkdirSync(path.dirname(target),{recursive:true});writeFileSync(target,bytes,{flag:'wx'});sha256[file]=hash(bytes);}

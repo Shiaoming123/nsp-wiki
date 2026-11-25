@@ -1,10 +1,160 @@
 {
   "schemaVersion": 1,
   "currentInstallation": {
-    "buildId": "26889039",
-    "note": "已静态比对 0.7.2-3 安装版的物品、任务、配方、词条和装备池。"
+    "buildId": "26916298",
+    "note": "已按 0.7.2-4 校对本次变动的基础价格、装备模式、腐化词条、原生计算和任务邮件。各栏目保留各自核验版本。"
   },
   "records": [
+    {
+      "id": "wiki-20261125-game-0724",
+      "kind": "wiki",
+      "date": "2026-11-25",
+      "version": "20261125-game-0724",
+      "title": "0.7.2-4 Wiki 资料更新",
+      "publication": "主站版本 20261125-game-0724",
+      "verification": "Build 26916298 原生配置、消费代码、工坊与资料页回归核对",
+      "verifiedBuild": "26916298",
+      "summary": "同步 0.7.2-4 价格、腐化词条关系、KB 爪刀及条件效果。工坊保留历史试装和分享规则。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "workshop",
+          "title": "候选与历史试装",
+          "after": "24 件手套增加切换射击关系。烧灼霰弹枪和废料霰弹枪移除模糊插槽。当前、0.7.2-3 热修、0.7.2-3 初版和旧版试装分别按原规则保存与分享。",
+          "links": [
+            {
+              "label": "武器工坊",
+              "route": "#workshop"
+            },
+            {
+              "label": "腐化词条",
+              "route": "#corruption"
+            }
+          ]
+        },
+        {
+          "module": "items",
+          "title": "价格、武器变体与固有效果",
+          "after": "对齐黄金47、O44 黄金和雨夜的基础价格，修正三种伽玛多普勒爪刀的面板和招式。钱力按出售价值计算。冷雨夜说明按原生配置校正为每层加 6 个百分点、最多 10 层、每层 2 秒。",
+          "links": [
+            {
+              "label": "绿洲 黄金47",
+              "route": "#item/reciver_OAS_A47"
+            },
+            {
+              "label": "雨夜",
+              "route": "#item/reciver_SVG_B59S_thunderstorm"
+            }
+          ]
+        },
+        {
+          "module": "quests",
+          "title": "任务邮件",
+          "after": "同步探索寺庙简中文案。任务条件及奖励配置相同。",
+          "links": [
+            {
+              "label": "任务攻略",
+              "route": "#quests"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "game-072-4",
+      "kind": "game",
+      "date": "2026-11-25",
+      "version": "0.7.2-4",
+      "title": "0.7.2-4 修复与优化",
+      "publication": "官方公告",
+      "verification": "官方公告核对",
+      "verifiedBuild": null,
+      "summary": "修复拳击及部分近战动作、稳定化显示、商店价格和腐化词条，优化研究台升级、任务固定和配件高亮。",
+      "source": {
+        "label": "Steam 官方更新公告",
+        "url": "https://steamcommunity.com/games/3299050/announcements/detail/704412002724872246?l=schinese",
+        "announcementId": "1850460852980466",
+        "noticeAliases": [
+          "704412002724872246"
+        ],
+        "publishedAt": 1795599678
+      },
+      "changes": [
+        {
+          "module": "other",
+          "title": "问题修复",
+          "after": "修复拳击缺少动作、部分双手近战动作错误、稳定化后词条未立即显示和商店价格未更新。部分艾登 KB 爪子刀变体改用自身数据。",
+          "links": [
+            {
+              "label": "KB 爪子刀伽玛多普勒",
+              "route": "#item/reciver_cold_AIDEN_KBKarambit_gammaD_0"
+            },
+            {
+              "label": "腐化词条",
+              "route": "#corruption"
+            }
+          ]
+        },
+        {
+          "module": "quests",
+          "title": "体验优化",
+          "after": "升级研究台可用容器内材料。新任务自动固定，固定任务与终端顺序一致。悬停机匣会高亮背包与当前容器的兼容配件。终端及安全屋建造界面的 NEW 提示增强。",
+          "links": [
+            {
+              "label": "任务攻略",
+              "route": "#quests"
+            },
+            {
+              "label": "配方手册",
+              "route": "#recipes"
+            },
+            {
+              "label": "武器工坊",
+              "route": "#workshop"
+            }
+          ]
+        },
+        {
+          "module": "workshop",
+          "title": "腐化词条",
+          "after": "修复重复配置、切换射击无法获得、钱力计算错误。无接口的双管霰弹枪移除模糊插槽。",
+          "links": [
+            {
+              "label": "切换射击",
+              "route": "#affix/ItemBuff_SwitchShooting"
+            },
+            {
+              "label": "模糊插槽",
+              "route": "#affix/ItemBuff_UniversalSocket"
+            }
+          ]
+        },
+        {
+          "module": "items",
+          "title": "装备价格",
+          "after": "上调绿洲 黄金47 的售价及绿洲 O44 黄金的买价与售价。",
+          "links": [
+            {
+              "label": "绿洲 黄金47",
+              "route": "#item/reciver_OAS_A47"
+            },
+            {
+              "label": "绿洲 O44 黄金",
+              "route": "#item/reciver_OAS_O44"
+            }
+          ]
+        },
+        {
+          "module": "other",
+          "title": "本地化",
+          "after": "修正部分英文和日文，以及先前更新公告中的部分错误和翻译。",
+          "links": []
+        }
+      ]
+    },
     {
       "id": "wiki-20261125-workshop-072",
       "kind": "wiki",
