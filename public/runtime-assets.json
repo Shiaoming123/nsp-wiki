@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "inputs": {
-    "maps/map-viewer.js": "e77d48064749a6ffb98b892e3e56694feffd6e3c0fdfb35ea5396036b15ee4bb",
+    "maps/map-viewer.js": "fb9598acf1a7bf54f1fdc9d19e1843f3bfe707adf35c9cf282b84e4863aaf538",
     "maps/floor-guide.js": "a39d0b266e3cb383d56b7a5af3ff70a6ac79a4e0c1d7eecf37234274656a94c1",
     "maps/floor-tower.js": "ab8fe7a0454ec343583764658485edb07fda07e9f401ae351955760e22c497f6",
     "maps/office-transit.js": "cf529483532cc3a01fc742f4741c3c6d52c5b9e7c9c732aaa1c804549916a2eb",
@@ -90,7 +90,7 @@
     "fonts/noto-sc-u30c00-f5e4d48f14c9.woff2": "f5e4d48f14c983ffc7b4c9d3317e2aeeb28e4d1d86cd085106dcfc625ff66a6e",
     "fonts/noto-sc-u31000-6e3e375d6aac.woff2": "6e3e375d6aac6f8d441822a4b22147b8c568757bad7400dd05588cfa7807a386",
     "fonts/manifest.json": "5bf00a3d5fc94926d023930ae69456342e9e40be3e78287f9d63632c177c1b6c",
-    "styles.css": "aaaf4011fb15effaf329e9a727cd88c573dc41c8b04217b23c7ef09f854d4f0a",
+    "styles.css": "8360d87ed98d1b07a156302eb0cce7bfc1642a995b9fbe84eaebf0c32011a79f",
     "guides.css": "6dd7a00dcb03d3668d814973d5e01f749f6776ba46c62fa372536f98f1268686",
     "loot.css": "43aae8d99af49cd45c6d9ff77f7c979b88eb403e15f471c5ec1b40ec0605c1a3",
     "corruption.css": "097642438d82f5888ae63896b6d40d8018965b7b1bd9067cf0d2df1b4dd6c210",
@@ -139,7 +139,7 @@
     "community-auth.js": "b558e2071f263e05cdd5c8a078d7b2531fea3d241391b218102880f1abd20b64",
     "site-notice.js": "13ce39942d92b23dbe01e2d5fd699638761cf34b2ec414651636859e7323283d",
     "item-community.js": "0d4acd3e53d52d25eda10aaaeb9fba2b9466b14b3233dbbb51eeabae8bdd3365",
-    "app.js": "c8afc47127b8418e56c4fdf8eea599f1551bed997c89af88eaf5d508425d25f1",
+    "app.js": "11c904a9c9df504be33a22f0077e6a16d7787bcd4a08224f9b5ff5220d5d04f1",
     "tiers.js": "aa849288e50656e14bac3c4861f9a1f1da837fc8cc096b3596970eef28a30c00",
     "posts.js": "21f330e5b9e11419eab6047d8c7e6056b9a6d7765f815643048b66ac9bb51e6e",
     "corruption.js": "7d4a6048fe527ca48f6d5550e71713efabf5f8dabfa5e1a5d9f8d590553d77c6",
@@ -162,10 +162,10 @@
     "admin.js": "eae08700b883aae2c5c257341790c33aa9fb87b355f31a67e8e5f0246b5c5f9f"
   },
   "retired": [],
-  "mapVersion": "c8d1395eb9a000cd5917",
+  "mapVersion": "f2685fd502708b4da363",
   "workshop": "workshop-ui.4b2dd6138a2720fa4cd0.js",
-  "css": "wiki-ui.00ae39f27c06946b1d65.css",
-  "js": "wiki-ui.053204d1b95a64037f04.js",
+  "css": "wiki-ui.9e06ca6d838736c090db.css",
+  "js": "wiki-ui.69bef6487113fd1c1737.js",
   "community": "community-ui.1c377911267444be148e.js",
   "navigation": "navigation-ui.3f7dedf2ed28d09c7aa6.js"
 }

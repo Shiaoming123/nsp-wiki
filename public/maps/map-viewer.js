@@ -93,6 +93,7 @@ export function mountMapViewer(container, options = {}) {
   const pickRoot=new THREE.Group(),maskScene=new THREE.Scene(),maskRoot=new THREE.Group();pickRoot.scale.z=maskRoot.scale.z=-1;maskScene.add(maskRoot);
   let silhouettePass=null,filtersOpen=matchMedia('(min-width:701px)').matches;
   let lootData=null,lootLinks=null,lootRequest=null,lootFailed=false,lootTypeIndex=new Map();
+  let verifiedContainers=null,verifiedContainersRequest=null,verifiedContainersFailed=false;
   const markerImages=new Map();
   let maskBatchSignature='';const maskBatches=[];
   const palette=['#f2c66d','#71cee3','#b8df79','#ee968b','#b5a2ed','#e6a9cd','#8bbbea','#d4b789'];
@@ -174,7 +175,33 @@ export function mountMapViewer(container, options = {}) {
   function boxesFor(point){const ids=lootLinks?.maps[stats.mapId]?.points[point.id]||[];return mapBoxes().filter(b=>ids.includes(b.id));}
   function typeBox(typeId){return lootTypeIndex.get(stats.mapId)?.icons.get(typeId);}
   function art(box,cls){const img=node('img',cls);img.src='/'+box.icon;img.alt='';img.width=img.height=40;return img;}
+  async function ensureVerifiedContainers(){
+    if(verifiedContainers)return verifiedContainers;
+    if(verifiedContainersRequest)return verifiedContainersRequest;
+    verifiedContainersFailed=false;
+    verifiedContainersRequest=window.Wiki.readItemMapLocations().then(data=>{
+      if(disposed)return null;
+      const byIndex=new Map(),byId=new Map();
+      data.points.forEach((point,index)=>{
+        if(point.kind!=='container')return;
+        const record={point,items:[]};
+        byIndex.set(index,record);
+        byId.set(point.pointId,record);
+      });
+      for(const [id,indices] of Object.entries(data.items)){
+        for(const index of indices)byIndex.get(index)?.items.push({id,probabilityText:'随机候选'});
+      }
+      verifiedContainers=byId;
+      refreshSelection();
+      return byId;
+    }).catch(()=>{
+      if(!disposed){verifiedContainersFailed=true;refreshSelection();}
+      return null;
+    }).finally(()=>{verifiedContainersRequest=null;});
+    return verifiedContainersRequest;
+  }
   async function ensureLoot(){
+    ensureVerifiedContainers();
     if(lootData)return;if(lootRequest)return lootRequest;
     lootFailed=false;
     lootRequest=Promise.all([json(new URL('../data/container-loot.json',import.meta.url)),json(new URL('./data/loot-links.json',import.meta.url))]).then(([data,links])=>{if(disposed)return;lootData=data;lootLinks=links;lootTypeIndex=indexLootTypes(data,links);refreshPanels();refreshSelection();invalidate();drawAtlas();}).catch(error=>{if(error.name!=='AbortError'&&!disposed){lootFailed=true;refreshSelection();}}).finally(()=>{lootRequest=null;});
@@ -408,13 +435,26 @@ export function mountMapViewer(container, options = {}) {
     const previous=new Map([...selectionCard.querySelectorAll('.wm-poi-card')].map(card=>[card.dataset.poiId,{open:card.querySelector('details')?.open,scroll:card.querySelector('.loot-items')?.scrollTop||0}]));
     selectionCard.replaceChildren();selectionCard.hidden=!selectedPois.size;
     for(const id of selectedPois){const point=pois.find(p=>p.id===id);if(!point)continue;
-      const boxes=boxesFor(point),box=boxes[0],ground=point.generationAnchor,groundItems=point.groundLoot||[],card=node('article','wm-poi-card');card.dataset.poiId=id;
+      const boxes=boxesFor(point),box=boxes[0],verified=verifiedContainers?.get(id),ground=point.generationAnchor,groundItems=point.groundLoot||[],card=node('article','wm-poi-card');card.dataset.poiId=id;
       const details=node('details','wm-poi-details'),summary=node('summary','wm-poi-heading');details.open=previous.get(id)?.open||false;
       if(box?.icon)summary.append(art(box,'wm-poi-art'));
-      const copy=node('div','wm-poi-copy');copy.append(node('strong','',box?.name||(ground?point.title:point.typeTitle)||point.title),node('small','',`X ${point.position[0].toFixed(1)} / Z ${point.position[2].toFixed(1)}${point.visualState?' · '+point.visualState:''}`));
+      const copy=node('div','wm-poi-copy');copy.append(node('strong','',verified?.point.label||box?.name||(ground?point.title:point.typeTitle)||point.title),node('small','',`X ${point.position[0].toFixed(1)} / Z ${point.position[2].toFixed(1)}${point.visualState?' · '+point.visualState:''}`));
       summary.append(copy,node('span','wm-poi-chevron','⌄'));details.append(summary);
       const content=node('div','wm-poi-content');
-      if(!lootData){content.append(node('p','wm-empty',lootFailed?'物资资料暂时无法读取。':'正在读取物资…'));if(lootFailed){const retry=node('button','','重试');retry.dataset.action='retry-loot';content.append(retry);}}
+      if(verified){
+        const pool=node('section','wm-poi-pool');
+        pool.dataset.verifiedContainer=id;
+        const note=verified.point.nameKind==='wiki'?'容器名为 Wiki 识别名。':'';
+        pool.append(node('p','wm-poi-condition',note+'此容器点位的随机候选。实际所得受搜刮结果和容量影响。'),
+          window.WikiLoot.itemGrid(verified.items));
+        content.append(pool);
+      }else if(verifiedContainersFailed&&!ground){
+        content.append(node('p','wm-empty','此点位的核对资料暂时无法读取。'));
+        const retry=node('button','','重试点位资料');
+        retry.dataset.action='retry-verified-containers';content.append(retry);
+      }else if(!ground&&!verifiedContainers&&verifiedContainersRequest){
+        content.append(node('p','wm-empty','正在核对点位物资…'));
+      }else if(!lootData){content.append(node('p','wm-empty',lootFailed?'物资资料暂时无法读取。':'正在读取物资…'));if(lootFailed){const retry=node('button','','重试');retry.dataset.action='retry-loot';content.append(retry);}}
       else if(ground){if(groundItems.length)content.append(window.WikiLoot.itemGrid(groundItems));else content.append(node('p','wm-empty','物品会在标记附近生成。'));}
       else if(boxes.length){
         if(boxes.length>1)content.append(node('p','wm-empty','此类容器有多个物资方案，分别查看。'));
@@ -425,7 +465,7 @@ export function mountMapViewer(container, options = {}) {
         }
       }else{content.append(node('p','wm-empty','暂无对应的搜刮物资。'));const browse=node('a','','查看本图搜刮目录');browse.href=lootLink.href;content.append(browse);}
       details.append(content);card.append(details);
-      const itemCount=ground?groundItems.length:box?.items.length;const preview=node('button','wm-poi-preview',itemCount?`${itemCount} 种可能物资 · 查看物资`:'查看物资');preview.dataset.action='toggle-loot';preview.dataset.poiId=id;preview.setAttribute('aria-expanded',String(details.open));
+      const itemCount=ground?groundItems.length:(verified?.items.length??box?.items.length);const preview=node('button','wm-poi-preview',itemCount?`${itemCount} 种可能物资 · 查看物资`:'查看物资');preview.dataset.action='toggle-loot';preview.dataset.poiId=id;preview.setAttribute('aria-expanded',String(details.open));
       const actions=node('div','wm-poi-actions');
       const locate=node('button','','平面定位');locate.dataset.action='focus-poi';locate.dataset.poiId=id;
       const go=node('button','','3D实景');go.dataset.action='view-poi';go.dataset.poiId=id;
@@ -539,6 +579,11 @@ export function mountMapViewer(container, options = {}) {
     }
     selectedPois.clear();
     selectPoi(point.id);
+    const verified=await ensureVerifiedContainers();
+    if(current()&&routePoint===point.id&&verified?.has(point.id)){
+      const card=[...selectionCard.querySelectorAll('.wm-poi-card')].find(row=>row.dataset.poiId===point.id);
+      if(card)card.querySelector('details').open=true;
+    }
   }
   function openAtlas(){stopMainZoom();cancelAtlasZoom();if(disposed||dialog.open||!manifest)return;floorGuide?.close({restoreFocus:false});atlasReturnFocus=document.activeElement;dialog.showModal();enemyLayer?.syncContainer();if(viewMode==='overview'&&camera){updateCamera();atlasView={rotation:rotation*Math.PI/2,center:[focus.x,-focus.z],scale:Math.max(1,stage.clientHeight)/(overviewCamera.top-overviewCamera.bottom)};}drawAtlas();atlasFitScale=rectFor(atlasBounds||manifest.bounds,atlasCanvas).scale;dialog.querySelector('[data-action="coordinate"]').textContent=viewMode==='overview'?'定位':'查看实景';dialog.querySelector('[data-coordinate="x"]').value=focus.x.toFixed(1);dialog.querySelector('[data-coordinate="z"]').value=(-focus.z).toFixed(1);dialog.querySelector('[data-action="close-atlas"]').focus();}
   function closeAtlas(){cancelAtlasZoom();if(dialog.open){if(viewMode==='overview'&&atlasView&&manifest&&sceneCamera&&!fallback){setFocus([atlasView.center[0],0,atlasView.center[1]]);height=targetHeight=stage.clientHeight/(atlasView.scale*4*Math.tan(sceneCamera.fov*Math.PI/360));zoomAnchor=null;invalidate();}dialog.close();}enemyLayer?.syncContainer();if(atlasReturnFocus?.isConnected)atlasReturnFocus.focus();else stage.focus();}
@@ -625,6 +670,7 @@ export function mountMapViewer(container, options = {}) {
     if(action==='floor-guide'){enemyLayer?.setOpen(false);stopMainZoom();if(floorGuide)floorGuide.showDeck();else loadFloorGuide(generation,true);}
     if(action==='zoom-in')zoom(.75);if(action==='zoom-out')zoom(1.333);
     if(action==='retry-loot')ensureLoot();
+    if(action==='retry-verified-containers')ensureVerifiedContainers();
     if(action==='atlas-loot'){closeAtlas();showFilters(false);const details=[...selectionCard.querySelectorAll('.wm-poi-card')].find(n=>n.dataset.poiId===selectedPoi)?.querySelector('details');if(details){details.open=true;details.querySelector('summary').focus({preventScroll:true});}}
     if(action==='toggle-loot'){const details=button.closest('.wm-poi-card').querySelector('details');details.open=!details.open;}
     if(action==='select-filtered'){const panel=button.closest('.wm-type-panel');for(const input of panel.querySelectorAll('[data-type-title]:not([hidden]) [data-highlight-type]'))highlightTypes.add(input.dataset.highlightType);refreshPois();}if(action==='clear-highlights')setHighlightTypes([]);

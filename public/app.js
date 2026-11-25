@@ -48,9 +48,12 @@
   const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text != null) gameText(node, text); return node; };
   const known = value => value !== null && value !== undefined && value !== '';
   const valueText = (value, suffix = '') => known(value) ? String(value) + suffix : '未记录';
-  function art(icon, className, fallback = '◇') {
+  function art(icon, className, fallback = '◇', missingLabel = '') {
     const wrap = el('span', className);
-    const missing = () => { wrap.replaceChildren(el('span', 'missing-icon', fallback)); };
+    const missing = () => {
+      const label = missingLabel && (icon ? '图标暂不可用' : missingLabel);
+      wrap.replaceChildren(el('span', label ? 'missing-icon item-icon-fallback' : 'missing-icon', label || fallback));
+    };
     // Only local relative assets belong to this static handbook.
     if (typeof icon === 'string' && icon && !/^(?:[a-z]+:|\/\/|\/|\\)/i.test(icon) && !icon.split(/[\\/]/).includes('..')) {
       const img = el('img'); img.src = icon; img.alt = ''; img.loading = 'lazy'; img.decoding = 'async'; img.addEventListener('error', missing, { once: true }); wrap.append(img);
@@ -141,7 +144,7 @@
         itemName.append(' ', newItemBadge(item));
         button.setAttribute('aria-label', button.getAttribute('aria-label') + '，本版新增');
       }
-      button.append(art(item.icon, 'item-art'), itemName, el('span', 'item-type', item.subcategory || categoryName(item.category)));
+      button.append(art(item.icon, 'item-art', '◇', '暂无原生图标'), itemName, el('span', 'item-type', item.subcategory || categoryName(item.category)));
       if (!['default','name'].includes(state.sort)) {
         const value=sortValue(item,state.sort), field=sortFields.find(field=>field.key===state.sort), stat=item.stats?.find(stat=>'stat:'+stat.key===state.sort);
         const label=$('item-sort').selectedOptions[0].textContent;
@@ -205,47 +208,172 @@
     }).catch(error=>{itemMapLocationsPromise=null;throw error;});
   }
 
+  const locationBatch = 20;
+  function mapLocationGroup(points,open,staticBuild) {
+    const first=points[0],group=el('details','acquisition-group');
+    group.open=open;
+    const heading=el('span','source-group-heading');
+    heading.append(el('strong','',first.mapName+(first.floor?' · 办公室 '+first.floor+' 楼':'')),
+      el('span','source-group-count',points.length+' 处'));
+    const summary=el('summary');
+    summary.append(heading);
+    group.append(summary);
+
+    function appendRows(list,rows) {
+      for(const point of rows){
+        const row=el('li','item-map-point');
+        const label=point.label+(point.kind==='container'?' · 随机候选':'');
+        const link=el('a','inline-link',label+' · '+point.x+'，'+point.z);
+        if(point.nameKind==='wiki')link.title='容器名为 Wiki 识别名';
+        const base='/#maps/'+encodeURIComponent(point.mapId);
+        link.href=base+(point.floor?'/floor/'+point.floor:'')+'/poi/'+encodeURIComponent(point.pointId);
+        row.append(link);
+        list.append(row);
+      }
+    }
+    const makeList=()=>el('ul','source-group-content item-map-point-list');
+    const links=makeList();
+    appendRows(links,points.slice(0,locationBatch));
+    group.append(links);
+    if(points.length<=locationBatch)return group;
+    if(staticBuild){
+      const remaining=el('details','item-map-more-static');
+      const list=makeList();
+      appendRows(list,points.slice(locationBatch));
+      remaining.append(el('summary','','展开其余 '+(points.length-locationBatch)+' 处'),list);
+      group.append(remaining);
+      return group;
+    }
+    let shown=locationBatch;
+    const more=el('button','secondary-button item-map-more','显示更多（剩 '+(points.length-shown)+' 处）');
+    more.type='button';
+    more.addEventListener('click',()=>{
+      const next=points.slice(shown,shown+locationBatch);
+      const start=links.children.length;
+      appendRows(links,next);
+      links.children[start]?.firstElementChild?.focus({preventScroll:true});
+      shown+=next.length;
+      if(shown===points.length)more.remove();
+      else more.textContent='显示更多（剩 '+(points.length-shown)+' 处）';
+    });
+    group.append(more);
+    return group;
+  }
+
+  function renderItemMapLocations(section,points) {
+    if(!points.length){section.remove();return;}
+    const staticBuild=Boolean(window.WIKI_STATIC_BUILD);
+    const mapNames=new Map(points.map(point=>[point.mapId,point.mapName.replace(' · 时间线 ',' ')]));
+    const setOptions=(select,options)=>{
+      select.replaceChildren(...options.map(([value,text])=>{
+        const option=el('option','',text);
+        option.value=value;
+        return option;
+      }));
+    };
+    const label=(text,input)=>{
+      const wrapper=el('label','item-map-filter');
+      input.setAttribute('aria-label',text);
+      wrapper.append(el('span','',text),input);
+      return wrapper;
+    };
+    const mapSelect=el('select'),floorSelect=el('select'),sourceSelect=el('select'),query=el('input');
+    const sourceOf=point=>point.kind==='container'?'container':'ground';
+    mapSelect.dataset.locationMap='';
+    floorSelect.dataset.locationFloor='';
+    query.type='search';
+    query.placeholder='输入容器名或坐标';
+    const floorField=label('楼层',floorSelect),controls=el('div','item-map-filters');
+    const status=el('p','guide-note item-map-count');
+    status.setAttribute('role','status');
+    const results=el('div','item-map-results');
+    section.append(el('h3','detail-section-title','地图点位'));
+    if(!staticBuild&&points.length>1){
+      setOptions(mapSelect,[['','全部地图'],...mapNames]);
+      controls.append(label('地图',mapSelect),floorField);
+      if(new Set(points.map(sourceOf)).size>1){
+        setOptions(sourceSelect,[['','全部来源'],['ground','地面生成'],['container','容器搜刮']]);
+        controls.append(label('来源',sourceSelect));
+      }
+      controls.append(label('搜索点位',query));
+      section.append(controls,status);
+    }
+    section.append(results);
+    const searchable=s=>s.normalize('NFKC').toLowerCase();
+    const searchKeys=points.map(point=>searchable(point.label+' '+point.mapName+' x '+point.x+' z '+point.z));
+    function draw(){
+      const terms=searchable(query.value).split(/[\s，,/]+/).filter(Boolean);
+      const sources=new Map();
+      let count=0;
+      points.forEach((point,index)=>{
+        if(mapSelect.value&&point.mapId!==mapSelect.value)return;
+        if(floorSelect.value&&String(point.floor)!==floorSelect.value)return;
+        if(!terms.every(term=>searchKeys[index].includes(term)))return;
+        const source=sourceOf(point);
+        if(sourceSelect.value&&source!==sourceSelect.value)return;
+        if(!sources.has(source))sources.set(source,new Map());
+        const groups=sources.get(source),key=point.mapId+':'+(point.floor||'');
+        if(!groups.has(key))groups.set(key,[]);
+        groups.get(key).push(point);
+        count++;
+      });
+      results.replaceChildren();
+      status.textContent=count===points.length?'共 '+count+' 处点位':'显示 '+count+' / '+points.length+' 处点位';
+      const targeted=Boolean(mapSelect.value||floorSelect.value||sourceSelect.value||terms.length);
+      for(const source of ['ground','container']){
+        const groups=sources.get(source);
+        if(!groups)continue;
+        const groupBlock=el('div','item-map-source');
+        groupBlock.dataset.mapSource=source;
+        const container=source==='container';
+        groupBlock.append(el('h4','item-map-source-title',container?'容器搜刮':'地面生成'));
+        const list=el('div','acquisition-list');
+        for(const locations of groups.values()){
+          const open=count<=6||(targeted&&sources.size===1&&groups.size===1);
+          list.append(mapLocationGroup(locations,open,staticBuild));
+        }
+        const note=container?
+          '随机候选来自该容器的物资池。场景状态、搜刮结果和容器容量会影响实际所得。':
+          '地面物品生成后可拾取。随机候选并非每局都出现。';
+        groupBlock.append(list,el('p','guide-note',note));
+        results.append(groupBlock);
+      }
+      if(!count)results.append(el('p','guide-note','没有符合筛选条件的点位。'));
+      else if(points.some(point=>point.floor))results.append(el('p','guide-note','办公室楼层按地图导览区域标注。'));
+    }
+    function changeMap(){
+      const floors=[...new Set(points.filter(point=>point.mapId===mapSelect.value&&point.floor).map(point=>point.floor))].sort((a,b)=>a-b);
+      floorField.hidden=!floors.length;
+      setOptions(floorSelect,[['','全部楼层'],...floors.map(floor=>[String(floor),floor+' 楼'])]);
+      draw();
+    }
+    mapSelect.addEventListener('change',changeMap);
+    floorSelect.addEventListener('change',draw);
+    sourceSelect.addEventListener('change',draw);
+    query.addEventListener('input',draw);
+    changeMap();
+  }
+
   function mountItemMapLocations(body,itemId) {
     const section=el('section','item-map-locations');
     body.append(section);
-    readItemMapLocations().then(data=>{
-      body.dataset.mapLocations='ready';
-      const references=Object.hasOwn(data.items,itemId)?data.items[itemId]:[];
-      const groups=new Map();
-      for(const index of references){
-        const point=data.points[index];
-        if(!point)continue;
-        const key=point.mapId+':'+(point.floor||'');
-        if(!groups.has(key))groups.set(key,[]);
-        groups.get(key).push(point);
-      }
-      if(!groups.size){section.remove();return;}
-      section.append(el('h3','detail-section-title','地图点位'));
-      const list=el('div','acquisition-list');
-      for(const points of groups.values()){
-        const first=points[0],group=el('details','acquisition-group');
-        group.open=references.length<=6;
-        const heading=el('span','source-group-heading');
-        heading.append(el('strong','',first.mapName+(first.floor?' · 办公室 '+first.floor+' 楼':'')),
-          el('span','source-group-count',points.length+' 处'));
-        const summary=el('summary');
-        summary.append(heading);
-        const links=el('ul','source-group-content item-map-point-list');
-        for(const point of points){
-          const row=el('li','item-map-point');
-          const a=el('a','inline-link',point.label+' · '+point.x+'，'+point.z);
-          const base='/#maps/'+encodeURIComponent(point.mapId);
-          a.href=base+(point.floor?'/floor/'+point.floor:'')+'/poi/'+encodeURIComponent(point.pointId);
-          row.append(a);
-          links.append(row);
-        }
-        group.append(summary,links);
-        list.append(group);
-      }
-      const notes=['地面物品生成后可拾取。随机候选并非每局都出现。'];
-      if([...groups.values()].some(points=>points[0].floor))notes.push('办公室楼层按地图导览区域标注。');
-      section.append(list,el('p','guide-note',notes.join('')));
-    }).catch(()=>{section.remove();body.dataset.mapLocations='error';});
+    const load=()=>{
+      body.dataset.mapLocations='loading';
+      section.replaceChildren();
+      readItemMapLocations().then(data=>{
+        const refs=Object.hasOwn(data.items,itemId)?data.items[itemId]:[];
+        const points=refs.map(index=>data.points[index]).filter(Boolean);
+        renderItemMapLocations(section,points);
+        body.dataset.mapLocations='ready';
+      }).catch(()=>{
+        body.dataset.mapLocations='error';
+        const retry=el('button','secondary-button','重试');
+        retry.type='button';
+        retry.addEventListener('click',load,{once:true});
+        section.append(el('p','guide-note','地图点位暂时无法读取。'),retry);
+      });
+    };
+    load();
   }
 
   function acquisitionList(entries) {
@@ -335,7 +463,7 @@
     const category = el('p', 'detail-tag', [categoryName(item.category), item.subcategory].filter(Boolean).join(' / '));
     if (isNewItem(item)) category.append(' ', newItemBadge(item));
     heading.append(category, title);
-    hero.append(art(item.icon, 'detail-art'), heading);
+    hero.append(art(item.icon, 'detail-art', '◇', '暂无原生图标'), heading);
     const body = el('div', 'detail-body'),summary=detailsOnly?body:el('div','item-detail-summary');
     if(detailsOnly)fragment.append(hero,body);
     else{const layout=el('div','item-detail-layout');summary.append(hero);layout.append(summary,body);fragment.append(layout);}
@@ -417,7 +545,7 @@
   document.addEventListener('keydown', event => { if (event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName) && !$('detail').open) { event.preventDefault(); (window.Guide?.focusSearch || (()=>$('search').focus()))(); } });
   document.querySelector('.skip-link').addEventListener('click', event => { event.preventDefault(); $('main-content').focus(); $('main-content').scrollIntoView({block:'start'}); });
   window.addEventListener('hashchange', syncHash);
-  window.Wiki = {get data(){return state.data;}, el, art, getItem, plainText, openNewItems, isNewItem, newItemBadge, itemDetails, itemEffects, showItem, closeDetail, nativeStat, sortItems, sortValue};
+  window.Wiki = {get data(){return state.data;}, el, art, getItem, plainText, openNewItems, isNewItem, newItemBadge, itemDetails, readItemMapLocations, itemEffects, showItem, closeDetail, nativeStat, sortItems, sortValue};
   fetch('data/items.json',{cache:'no-cache'}).then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); }).then(data => {
     if (!Array.isArray(data.items) || !Array.isArray(data.categories)) throw new Error('资料格式不正确');
     state.data = data; itemIndex=new Map([...(data.archivedItems||[]),...data.items].map(i=>[String(i.id),i]));itemSearch=new Map(data.items.map(i=>[i.id,plainText([i.name,...(i.aliases||[]),i.id,i.description,i.subcategory,isNewItem(i)?'NEW 本版新增':''].filter(Boolean).join(' ')).toLocaleLowerCase()]));categoryGroups=new Map();data.items.forEach(i=>{if(!categoryGroups.has(i.category))categoryGroups.set(i.category,[]);categoryGroups.get(i.category).push(i);});const newItems = data.items.filter(isNewItem); if (newItems.length) categoryGroups.set('new', newItems); const meta = data.meta || {}; $('edition').textContent = (meta.edition==='EA'?'EA 物品 · '+(meta.currentReview?'静态复核 Build '+meta.currentReview.buildId:meta.acquisitionBuildId?'来源核对 Build '+meta.acquisitionBuildId:'Build '+meta.buildId):meta.version) || '资料版本待核实'; $('total-count').textContent = `${data.items.length} 件物品`;
