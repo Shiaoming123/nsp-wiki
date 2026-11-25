@@ -167,6 +167,14 @@ export function mountFloorGuide({host,stage,atlasUrl,atlas,atlasTexture,focusBou
     limitations.append(node('p','','探索建议：远层坐电梯，近层走楼梯；过不去换另一边。'));content.append(limitations,credit);
     notes.scrollTop=0;transitInspector.scrollTop=0;
   }
+  function floorAt(position){
+    const [x,,z]=position;
+    const matches=OFFICE_FLOORS.filter(floor=>{
+      const {min,max}=floorWorldBounds(floor,atlas);
+      return x>=min[0]&&x<=max[0]&&z>=min[2]&&z<=max[2];
+    });
+    return matches.length===1?matches[0].id:null;
+  }
   function selectFloor(id){
     const floor=OFFICE_FLOORS.find(f=>f.id===Number(id));if(disposed||!floor)return;
     clearRoutePreview();
@@ -224,5 +232,5 @@ export function mountFloorGuide({host,stage,atlasUrl,atlas,atlasTexture,focusBou
   listen(root,'keydown',event=>{const marker=event.target.closest('[data-transit-node]');if(marker&&['Enter',' '].includes(event.key)){event.preventDefault();event.stopPropagation();marker.dispatchEvent(new MouseEvent('click',{bubbles:true}));}else if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close();}});
   listen(mobile,'change',()=>{notes.open=!mobile.matches;fitFloor();});
   const observer=new ResizeObserver(()=>fitFloor());observer.observe(mapSpace);
-  return {showDeck,close,selectFloor,updateProjection,metrics:()=>({open:mode!=='closed',mode,layout,appearance:'native',floor:current,imageFailed,tower:towerView?.metrics()||null,towerError,plan:planView?.metrics()||null,planError,transit:{enabled:transitEnabled,selected:selectedTransit,nodeCount:OFFICE_TRANSIT.nodes.length,edgeCount:OFFICE_TRANSIT.edges.length,unresolved:OFFICE_TRANSIT.unresolved,points:OFFICE_TRANSIT.nodes.filter(n=>n.floor===current).map(n=>({id:n.id,atlas:n.atlas,uv:transitUV(n,OFFICE_FLOORS.find(f=>f.id===current)),position:n.position}))},floorCount:OFFICE_FLOORS.length,bounds:floorWorldBounds(OFFICE_FLOORS.find(f=>f.id===current),atlas)}),dispose(){if(disposed)return;close({restoreFocus:false});disposed=true;controller.abort();observer.disconnect();towerView?.dispose();planView?.dispose();root.remove();}};
+  return {showDeck,close,selectFloor,floorAt,updateProjection,metrics:()=>({open:mode!=='closed',mode,layout,appearance:'native',floor:current,imageFailed,tower:towerView?.metrics()||null,towerError,plan:planView?.metrics()||null,planError,transit:{enabled:transitEnabled,selected:selectedTransit,nodeCount:OFFICE_TRANSIT.nodes.length,edgeCount:OFFICE_TRANSIT.edges.length,unresolved:OFFICE_TRANSIT.unresolved,points:OFFICE_TRANSIT.nodes.filter(n=>n.floor===current).map(n=>({id:n.id,atlas:n.atlas,uv:transitUV(n,OFFICE_FLOORS.find(f=>f.id===current)),position:n.position}))},floorCount:OFFICE_FLOORS.length,bounds:floorWorldBounds(OFFICE_FLOORS.find(f=>f.id===current),atlas)}),dispose(){if(disposed)return;close({restoreFocus:false});disposed=true;controller.abort();observer.disconnect();towerView?.dispose();planView?.dispose();root.remove();}};
 }

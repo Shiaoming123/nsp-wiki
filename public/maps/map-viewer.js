@@ -78,6 +78,7 @@ export function createSilhouettePass(renderer) {
 }
 
 export function mountMapViewer(container, options = {}) {
+  let mapId=options.mapId,poiReady=Promise.resolve(),mapStatus='',routeNotice='',routePoint=null;
   const markerFont=getComputedStyle(container).fontFamily;
   const zoomReduced=matchMedia('(prefers-reduced-motion:reduce)');
   let zoomFrameTime=0,atlasZoom=null,atlasZoomFrame=0;
@@ -180,7 +181,10 @@ export function mountMapViewer(container, options = {}) {
     return lootRequest;
   }
   function markerImage(point){const box=typeBox(point.typeId);if(!box?.icon)return null;let img=markerImages.get(box.icon);if(!img){img=new Image();markerImages.set(box.icon,img);img.onload=()=>{invalidate();drawAtlas();};img.src='/'+box.icon;}return img.complete&&img.naturalWidth?img:null;}
-  function tell(text) {if (!disposed) status.textContent = text;}
+  function tell(text){
+    mapStatus=text;
+    if(!disposed)status.textContent=routeNotice?[routeNotice,text].filter(Boolean).join('\n'):text;
+  }
   function invalidate() {if (!disposed && !lost && !frame && renderer && !document.hidden) {frame=requestAnimationFrame(render);stats.rafPending=1;}}
   async function json(url, signal=controller.signal) {const mutable=/\/(?:maps|loot-links|container-loot|manifest|pois)\.json(?:\.gz)?$/.test(new URL(url).pathname);const response=await fetch(url,{signal,cache:mutable?'no-cache':'default'}); if(!response.ok) throw new Error(`${response.status} ${new URL(url).pathname}`);return readMapJson(response,signal);}
   const resolve = path => new URL(path,manifestUrl).href;
@@ -435,7 +439,8 @@ export function mountMapViewer(container, options = {}) {
   function refreshPois(){for(const counter of host.querySelectorAll('.wm-filter-count'))counter.textContent='已选 '+highlightTypes.size+' 类';for(const panel of panels)for(const input of panel.querySelectorAll('[data-highlight-type]'))input.checked=highlightTypes.has(input.dataset.highlightType);refreshSelection();syncMasks();drawAtlas();invalidate();}
   function setHighlightTypes(ids){highlightTypes.clear();for(const id of ids||[])if(types.some(t=>t.id===id))highlightTypes.add(id);refreshPois();}
   function selectPoi(id){if(!id)selectedPois.clear();else if(pois.some(p=>p.id===id)){if(selectedPois.has(id))selectedPois.delete(id);else selectedPois.add(id);}if(floorGuide?.metrics().mode==='detail')host.classList.toggle('wm-floor-loot-open',selectedPois.size>0);if(selectedPois.size&&matchMedia('(max-width:700px)').matches)showFilters(false);refreshSelection();syncMasks();drawAtlas();invalidate();}
-  function markerPois(){return pois.filter(point=>(point.spawn==='fixed'||point.presence?.kind==='known-configured-generation-anchor')&&(!activeFloorBounds||point.position[0]>=activeFloorBounds.min[0]&&point.position[0]<=activeFloorBounds.max[0]&&point.position[2]>=activeFloorBounds.min[2]&&point.position[2]<=activeFloorBounds.max[2]));}
+  function hasMapMarker(point){return point.spawn==='fixed'||point.presence?.kind==='known-configured-generation-anchor';}
+  function markerPois(){return pois.filter(point=>hasMapMarker(point)&&(!activeFloorBounds||point.position[0]>=activeFloorBounds.min[0]&&point.position[0]<=activeFloorBounds.max[0]&&point.position[2]>=activeFloorBounds.min[2]&&point.position[2]<=activeFloorBounds.max[2]));}
   function rectFor(bounds,canvas){const scale=Math.min(canvas.width/(bounds.max[0]-bounds.min[0]),canvas.height/(bounds.max[2]-bounds.min[2]));return{center:[(bounds.min[0]+bounds.max[0])/2,(bounds.min[2]+bounds.max[2])/2],scale};}
   function atlasRect(canvas){if(!manifest)return null;const view=canvas===miniCanvas?rectFor(miniBounds||atlasBounds||manifest.bounds,canvas):atlasView||rectFor(atlasBounds||manifest.bounds,canvas);return{...view,width:canvas.width,height:canvas.height};}
   function toAtlas(position,rect){const a=rect.rotation||0,c=Math.cos(a),s=Math.sin(a),dx=position[0]-rect.center[0],dz=position[2]-rect.center[1];return[rect.width/2+(dx*c+dz*s)*rect.scale,rect.height/2-(-dx*s+dz*c)*rect.scale];}
@@ -488,8 +493,52 @@ export function mountMapViewer(container, options = {}) {
       if(disposed||token!==generation)return;
       floorGuide??=mountFloorGuide({host,stage,atlasUrl:resolve(manifest.atlas.image),atlas:manifest.atlas,atlasTexture,focusBounds,projectSource,
         selectPoi:id=>{if(!pois.some(point=>point.id===id))return false;if(!selectedPois.has(id))selectPoi(id);host.classList.add('wm-floor-loot-open');return true;},onShow:()=>{host.classList.remove('wm-floor-loot-open');showFilters(false);cropFloor(null);},onHide:()=>{host.classList.remove('wm-floor-loot-open');cropFloor(null)}});
-      guideButton.title='玩家攻略记录，楼层对应待校准';guideButton.disabled=false;if(open)floorGuide.showDeck();
+      guideButton.title='玩家攻略记录，楼层对应待校准';guideButton.disabled=false;if(open)floorGuide.showDeck();return floorGuide;
     }catch(error){if(disposed||token!==generation)return;guideError='楼层攻略暂时无法读取，请重试。';guideButton.disabled=false;guideButton.textContent='重试楼层导览';guideButton.title=guideError;}
+  }
+  async function openLocation({pointId,floor,error},isCurrent){
+    const token=generation;
+    const current=()=>isCurrent()&&!disposed&&token===generation;
+    const reset=message=>{
+      if(routePoint||message){
+        floorGuide?.close({restoreFocus:false});
+        selectPoi(null);
+      }
+      if(routePoint&&!fallback){setViewMode('overview',false);fitMap();invalidate();}
+      routePoint=null;routeNotice=message;
+      tell(mapStatus);
+    };
+    if(!current())return;
+    if(!pointId){reset(error||'');return;}
+    await poiReady;
+    if(!current())return;
+    const point=pois.find(p=>p.id===pointId&&p.mapId===stats.mapId&&hasMapMarker(p));
+    if(point?.position?.length!==3||!point.position.every(Number.isFinite)){
+      reset('未找到该地图点位。');return;
+    }
+    let guide;
+    if(floor!==undefined){
+      if(stats.mapId!=='Origin08_1999'||!Number.isInteger(floor)||floor<1||floor>12){
+        reset('该地图不支持所选楼层。');return;
+      }
+      guide=floorGuide||await loadFloorGuide(token);
+      if(!current())return;
+      if(!guide){reset('楼层导览暂时无法载入。');return;}
+      if(guide.floorAt(point.position)!==floor){reset('该点位不在链接指定的楼层。');return;}
+    }
+    routePoint=point.id;routeNotice='';tell(mapStatus);
+    if(dialog.open)closeAtlas();
+    if(guide){
+      enemyLayer?.setOpen(false);
+      guide.selectFloor(floor);
+    }else{
+      floorGuide?.close({restoreFocus:false});
+      setViewMode('overview',false);
+      setFocus(point.position);
+      if(!fallback)height=targetHeight=Math.max(6,Math.min(height,manifest.camera?.height||24.35));
+    }
+    selectedPois.clear();
+    selectPoi(point.id);
   }
   function openAtlas(){stopMainZoom();cancelAtlasZoom();if(disposed||dialog.open||!manifest)return;floorGuide?.close({restoreFocus:false});atlasReturnFocus=document.activeElement;dialog.showModal();enemyLayer?.syncContainer();if(viewMode==='overview'&&camera){updateCamera();atlasView={rotation:rotation*Math.PI/2,center:[focus.x,-focus.z],scale:Math.max(1,stage.clientHeight)/(overviewCamera.top-overviewCamera.bottom)};}drawAtlas();atlasFitScale=rectFor(atlasBounds||manifest.bounds,atlasCanvas).scale;dialog.querySelector('[data-action="coordinate"]').textContent=viewMode==='overview'?'定位':'查看实景';dialog.querySelector('[data-coordinate="x"]').value=focus.x.toFixed(1);dialog.querySelector('[data-coordinate="z"]').value=(-focus.z).toFixed(1);dialog.querySelector('[data-action="close-atlas"]').focus();}
   function closeAtlas(){cancelAtlasZoom();if(dialog.open){if(viewMode==='overview'&&atlasView&&manifest&&sceneCamera&&!fallback){setFocus([atlasView.center[0],0,atlasView.center[1]]);height=targetHeight=stage.clientHeight/(atlasView.scale*4*Math.tan(sceneCamera.fov*Math.PI/360));zoomAnchor=null;invalidate();}dialog.close();}enemyLayer?.syncContainer();if(atlasReturnFocus?.isConnected)atlasReturnFocus.focus();else stage.focus();}
@@ -501,6 +550,7 @@ export function mountMapViewer(container, options = {}) {
   async function loadPois(data,token){if(!data.pois?.url){refreshPanels();refreshPois();return;}poiIndexPending=true;try{const loaded=await json(resolve(data.pois.url),mapController.signal);if(disposed||generation!==token)return;pois=loaded.points||[];categories=loaded.categories||[];types=loaded.types||[];for(const type of types)if(type.title==='储物箱'||type.title==='医疗箱')highlightTypes.add(type.id);refreshPanels();showFilters(filtersOpen,false);refreshPois();}catch(error){if(error.name!=='AbortError')tell(`点位索引未加载：${error.message}`);}finally{if(generation===token){poiIndexPending=false;invalidate();}}}
   async function changeMap(id) {
     if(disposed)throw aborted();
+    mapId=id;routePoint=null;routeNotice='';poiReady=Promise.resolve();
     const token=++generation;mapController?.abort();clearDetail();mapController=new AbortController();clearMap();tell('读取地图概览…');const entry=maps.find(map=>map.id===id);if(!entry)throw new Error('地图不存在');
     mapSelect.value=id;
     manifestUrl=new URL(entry.manifest,dataUrl).href;
@@ -511,7 +561,7 @@ export function mountMapViewer(container, options = {}) {
     for(const building of data.buildings||[])buildingSelect.add(new Option(`${building.name||building.id}${building.manualOnly?'（手动）':''}`,building.id));
     if(fallback){
       if(data.atlas?.image)try{await loadAtlas(data,token);}catch(error){if(error.name==='AbortError')throw error;atlasError=error.message;}
-      await loadPois(data,token);
+      await (poiReady=loadPois(data,token));
       tell(`WebGL2不可用，三维地图未加载。\n当前地图：${data.title||id}\n${data.buildings?.length?'建筑目录：\n'+data.buildings.map(building=>`${building.name||building.id}${building.manualOnly?'（仅手动索引，触发范围未验证）':''}`).join('\n'):'此地图未导出可核实的建筑索引。'}\n可使用地图和建筑下拉列表浏览目录。`);
       if(id==='Origin08_1999')loadFloorGuide(token);
       return;
@@ -526,7 +576,7 @@ export function mountMapViewer(container, options = {}) {
     if(data.atlas?.image){try{await loadAtlas(data,token);}catch(error){if(error.name==='AbortError')throw error;atlasError=error.message;dialog.querySelector('.wm-atlas-note').textContent='平面底图未加载，仅提供坐标与点位索引。';}}
     if(!backdrop){const overviewData=await json(resolve(data.overview.geometry),signal);if(disposed || token!==generation)throw aborted();overview=new THREE.Mesh(geometry(overviewData),new THREE.MeshBasicMaterial({vertexColors:!!overviewData.colors?.length,color:overviewData.colors?.length?0xffffff:0x87968a,side:THREE.FrontSide}));root.add(overview);}
     rotation=0;host.querySelector('[data-control="angle"]').value=0;host.querySelector('.wm-angle output').textContent='0°';fitMap();if(viewMode==='overview')height=targetHeight=fitHeight*.65;
-    const poiReady=loadPois(data,token);
+    poiReady=loadPois(data,token);
     if(queuedInterior!==undefined){const id=queuedInterior;queuedInterior=undefined;setInterior(id);}
     if(queuedFocus){const position=queuedFocus;queuedFocus=null;setFocus(position);}
     if(frame)cancelAnimationFrame(frame);frame=0;render();
@@ -648,5 +698,5 @@ export function mountMapViewer(container, options = {}) {
   }
   function projectSource(position){if(!camera)return null;updateCamera();const box=stage.getBoundingClientRect(),point=new THREE.Vector3(position[0],position[1],-position[2]).project(camera);return {x:box.left+(point.x+1)*box.width/2,y:box.top+(1-point.y)*box.height/2};}
   function groundAt(x,y){if(!camera)return null;updateCamera();const point=screenGround(camera,stage.getBoundingClientRect(),x,y,focus.y);return point?[point.x,point.y,-point.z]:null;}
-  return {ready,dispose,setViewMode,setInterior,setFocus,goTo,zoom,openAtlas,closeAtlas,selectPoi,togglePoiSelection:selectPoi,clearPoiSelection:()=>selectPoi(null),setHighlightTypes,setRotation,pick,rayScene:pick,projectSource,groundAt,setMap:id=>changeMap(id),metrics,element:host};
+  return {ready,dispose,mapId:()=>mapId,openLocation,setViewMode,setInterior,setFocus,goTo,zoom,openAtlas,closeAtlas,selectPoi,togglePoiSelection:selectPoi,clearPoiSelection:()=>selectPoi(null),setHighlightTypes,setRotation,pick,rayScene:pick,projectSource,groundAt,setMap:id=>changeMap(id),metrics,element:host};
 }

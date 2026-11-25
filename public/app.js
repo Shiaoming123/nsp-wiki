@@ -194,6 +194,60 @@
     const rate = low === high ? generationPercent(low) : `${generationPercent(low)}–${generationPercent(high)}`;
     block.append(el('p', 'source-probability guide-note', `预估概率：${rate}`));
   }
+  let itemMapLocationsPromise;
+  function readItemMapLocations() {
+    return itemMapLocationsPromise ||= fetch('/data/item-map-locations.json',{cache:'no-cache'}).then(response=>{
+      if(!response.ok)throw Error('地图点位暂时无法读取');
+      return response.json();
+    }).then(data=>{
+      if(data?.schemaVersion!==1||!Array.isArray(data.points)||!data.items)throw Error('地图点位资料格式不支持');
+      return data;
+    }).catch(error=>{itemMapLocationsPromise=null;throw error;});
+  }
+
+  function mountItemMapLocations(body,itemId) {
+    const section=el('section','item-map-locations');
+    body.append(section);
+    readItemMapLocations().then(data=>{
+      body.dataset.mapLocations='ready';
+      const references=Object.hasOwn(data.items,itemId)?data.items[itemId]:[];
+      const groups=new Map();
+      for(const index of references){
+        const point=data.points[index];
+        if(!point)continue;
+        const key=point.mapId+':'+(point.floor||'');
+        if(!groups.has(key))groups.set(key,[]);
+        groups.get(key).push(point);
+      }
+      if(!groups.size){section.remove();return;}
+      section.append(el('h3','detail-section-title','地图点位'));
+      const list=el('div','acquisition-list');
+      for(const points of groups.values()){
+        const first=points[0],group=el('details','acquisition-group');
+        group.open=references.length<=6;
+        const heading=el('span','source-group-heading');
+        heading.append(el('strong','',first.mapName+(first.floor?' · 办公室 '+first.floor+' 楼':'')),
+          el('span','source-group-count',points.length+' 处'));
+        const summary=el('summary');
+        summary.append(heading);
+        const links=el('ul','source-group-content item-map-point-list');
+        for(const point of points){
+          const row=el('li','item-map-point');
+          const a=el('a','inline-link',point.label+' · '+point.x+'，'+point.z);
+          const base='/#maps/'+encodeURIComponent(point.mapId);
+          a.href=base+(point.floor?'/floor/'+point.floor:'')+'/poi/'+encodeURIComponent(point.pointId);
+          row.append(a);
+          links.append(row);
+        }
+        group.append(summary,links);
+        list.append(group);
+      }
+      const notes=['地面物品生成后可拾取。随机候选并非每局都出现。'];
+      if([...groups.values()].some(points=>points[0].floor))notes.push('办公室楼层按地图导览区域标注。');
+      section.append(list,el('p','guide-note',notes.join('')));
+    }).catch(()=>{section.remove();body.dataset.mapLocations='error';});
+  }
+
   function acquisitionList(entries) {
     entries=entries.filter(entry=>entry.kind!=='unknown'&&!String(entry.kind||'').includes('unverified'));
     const estimatedDetails = {
@@ -321,6 +375,7 @@
     if (!detailsOnly) {
     const sources=acquisitionList(Array.isArray(item.acquisition)?item.acquisition:[]);
     if(sources.childElementCount)body.append(el('h3','detail-section-title','获取方式'),sources);
+    mountItemMapLocations(body,item.id);
     }
     window.Guide?.enhanceItem(body, item, detailsOnly);
     if(!detailsOnly)fragment.dataset.detailLayout=body.querySelector('.native-stats,.attack-mode-list,.item-hidden-stats,.item-special-effects,.use-effects')?'detailed':'brief';

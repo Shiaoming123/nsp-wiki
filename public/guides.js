@@ -307,7 +307,22 @@
     const mir=item.mirror || (!isEA&&cache.mirror?.items.find(x=>x.id===item.id)?.tiers);if(mir&&Object.values(mir).some(t=>t.chancePct>0)){heading(body,'升级镜柜抽奖参考');body.append(el('p','guide-note','0.7.2初始镜柜用于出售物资，抽奖需设施升级。下列为此前配置的理论概率，当前版本完整生成后处理与领取频率仍待验证。'));const table=el('table','guide-table');['low','mid','high'].forEach((k,i)=>{const t=mir[k],row=el('tr');row.append(el('th','',['低档 · 500–4,999','中档 · 5,000–14,999','高档 · 15,000+'][i]),el('td','',`${percent(t?.chancePct)}${t?.chancePct>0?' · '+quantity(t):' · 不产出'}`));table.append(row);});body.append(table,link('查看完整兑换表与规则','#mirror'));}
     if(item.guideLinks?.length){heading(body,'相关攻略');const wrap=el('div','related-links');item.guideLinks.forEach(x=>wrap.append(link(enemyLinkName(x.name,x.route),x.route)));body.append(wrap);}
   }
-  async function routeContent(){guideDialog?.close(false);if(!window.Wiki.data)return;const n=++serial;let parts;try{parts=location.hash.slice(1).split('/').map(decodeURIComponent);}catch{parts=['invalid'];}const kind=parts[0]||'home';
+  function mapLocation(parts){
+    if(parts.length<=2)return {};
+    if(parts[1]&&parts.length===4&&parts[2]==='poi'&&parts[3])return {pointId:parts[3]};
+    if(parts[1]&&parts.length===6&&parts[2]==='floor'&&/^(?:[1-9]|1[0-2])$/.test(parts[3])&&parts[4]==='poi'&&parts[5])return {floor:Number(parts[3]),pointId:parts[5]};
+    return {error:'地图定位链接格式无效。'};
+  }
+  async function routeContent(){guideDialog?.close(false);if(!window.Wiki.data)return;const n=++serial;
+    const segments=location.hash.slice(1).split('/');
+    let parts;
+    try{parts=segments.map(decodeURIComponent);}catch{
+      if(segments[0]==='maps'&&segments.length>2){
+        try{parts=[...segments.slice(0,2).map(decodeURIComponent),'invalid'];}catch{}
+      }
+      parts??=['invalid'];
+    }
+    const kind=parts[0]||'home';
     if(detailOrigin&&location.hash===detailOrigin.hash){restoreDetail();return;}
     if(kind==='item'){window.WikiNavigation.sync(page);return;}
     try{
@@ -324,6 +339,25 @@
     if(target!=='quests'&&kind!=='item'){suppliesDrawer?.dispose();suppliesDrawer=null;}if(target!=='workshop'){workshopMount?.dispose();workshopMount=null;}if(target!=='maps'||kind==='item'){mapMount?.dispose();mapMount=null;}if(target!=='quests'&&kind!=='item')cancelQuestWheel();document.body.classList.toggle('quest-immersive',target==='quests'||kind==='item'&&page==='quests');if(kind==='item'){if(!['quests','enemies','mirror','corruption','npcs','recipes','loot'].includes(page))page='items';$('item-page').hidden=page!=='items';$('guide-root').hidden=page==='items';window.WikiNavigation.sync(page);return;}
     if($('detail').open)$('detail').close();if(page==='loot'&&target==='loot'&&$('guide-root').querySelector('.loot-containers')&&parts[1]===$('guide-root').dataset.lootMapId&&(!parts[2]||window.WikiLoot.focus($('guide-root'),parts[2]))){return;}if(page==='quests'&&target==='quests'&&$('quest-sidebar')){if(kind==='quest'){const m=cache.quests.missions.find(x=>x.id===parts[1]);if(m){if(m.id!==selectedQuest||!$('quest-detail-title'))showQuest(m);}else showUnavailableQuest(parts[1]);}else{clearQuest(false);if(parts[1]==='guide')showQuestGuide();}return;}$('guide-root').classList.remove('quest-page','tier-page','mechanics-page','traffic-page');page=Object.hasOwn(titles,target)?target:'items';Guide.baseRoute=`#${page}`;$('item-page').hidden=page!=='items';$('guide-root').hidden=page==='items';window.WikiNavigation.sync(page);document.title=page==='items'?'查无此地攻略：物品、任务、敌怪与地图 | NSP Wiki':`查无此地${titles[page]} | NSP Wiki`;if(page==='items'){if(kind==='items'&&parts[1]==='new'){Guide.baseRoute='#items/new';window.Wiki.openNewItems();}const missing=!['items','catalog',''].includes(kind);$('status').hidden=!missing;if(missing)$('status').textContent='此攻略链接不存在。';return;}
     if(page==='home'){window.WikiNavigation.renderHome($('guide-root'));return;}
+    if(page==='maps'){
+      const mapId=parts[1]||undefined;
+      const isCurrent=()=>n===serial;
+      let viewer=mapMount;
+      try{
+        if(!mapId||viewer?.mapId()!==mapId){
+          viewer?.dispose();mapMount=null;
+          $('guide-root').replaceChildren(el('p','status','正在载入地图…'));
+          const module=await import('./maps/map-viewer.js');
+          if(!isCurrent())return;
+          $('guide-root').replaceChildren();
+          viewer=mapMount=module.mountMapViewer($('guide-root'),{mapId,dataUrl:new URL('./maps/data/maps.json',location.href).href});
+          window.webMap=viewer;
+        }
+        await viewer.ready.catch(error=>{if(!viewer.metrics().fallback||!viewer.metrics().mapId)throw error;});
+        if(isCurrent())await viewer.openLocation(mapLocation(parts),isCurrent);
+      }catch(error){if(isCurrent()&&error.name!=='AbortError'){mapMount?.dispose();mapMount=null;$('guide-root').replaceChildren(el('p','status error','地图载入失败：'+error.message));}}
+      return;
+    }
     $('guide-root').replaceChildren(el('p','status','正在载入攻略…'));
     if(page==='articles'){try{const mounted=await window.WikiArticles.mount($('guide-root'),{kind,id:parts[1]||'',isCurrent:()=>page==='articles'});if(n!==serial){mounted.dispose();return;}articleMount=mounted;}catch(error){if(n===serial)$('guide-root').replaceChildren(el('p','status error',error.message));}return;}
     if(page==='traffic'){const root=$('guide-root');root.classList.add('traffic-page');await window.WikiTraffic.mount(root);return;}
@@ -341,18 +375,6 @@
         workshopMount=module.mountWorkshop($('guide-root'),['legacy','previous','historical'].includes(parts[1])?parts[1]:'current');
         await workshopMount.ready;
       }catch(error){if(n===serial)$('guide-root').replaceChildren(el('p','status error','工坊载入失败：'+error.message),link('尝试打开旧版工坊','#workshop/legacy'));}
-      return;
-    }
-    if(page==='maps'){
-      mapMount?.dispose();mapMount=null;
-      try{
-        const module=await import('./maps/map-viewer.js');
-        if(n!==serial||page!=='maps')return;
-        $('guide-root').replaceChildren();
-        mapMount=module.mountMapViewer($('guide-root'),{mapId:parts[1]||undefined,dataUrl:new URL('./maps/data/maps.json',location.href).href});
-        window.webMap=mapMount;
-        await mapMount.ready;
-      }catch(e){if(n===serial&&e.name!=='AbortError'&&!mapMount?.metrics().fallback){mapMount?.dispose();mapMount=null;$('guide-root').replaceChildren(el('p','status error','地图载入失败：'+e.message));}}
       return;
     }
     if(page==='corruption'){try{await window.Corruption.mount($('guide-root'),{affixId:kind==='affix'?parts[1]:undefined});}catch{$('guide-root').replaceChildren(el('p','status error','腐化资料载入失败，请刷新重试。'));}return;}
