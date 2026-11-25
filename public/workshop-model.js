@@ -26,10 +26,13 @@ export function evaluateModifiers(base, mods = [], ceil = false, combined = fals
   return ceil ? Math.ceil(value) : value;
 }
 
-export function currentWorkshopRules(legacy, corruption) {
+export function currentWorkshopRules(legacy, corruption, {historical=false}={}) {
   const projection=corruption.workshopProjection, review=corruption.meta.latestReview;
   if(projection?.schemaVersion!==1||projection.buildId!==corruption.meta.buildId||projection?.baseRulesIdentity!==legacy.meta.rulesIdentity||
     !/^[a-f0-9]{64}$/.test(projection?.rulesIdentity||''))throw Error('现行工坊资料版本不一致');
+  const base=historical?null:projection.baseEquipment;
+  if(base&&(base.schemaVersion!==1||base.buildId!==projection.buildId||base.priorRulesIdentity!==projection.rulesIdentity||
+    !/^[a-f0-9]{64}$/.test(base.rulesIdentity||'')))throw Error('现行工坊部件资料版本不一致');
   const records=new Map(corruption.affixes.map(record=>[record.id,record]));
   const affixes=Object.fromEntries(Object.entries(projection.affixes).map(([id,affix])=>{
     const record=records.get(id);
@@ -39,12 +42,12 @@ export function currentWorkshopRules(legacy, corruption) {
   const items=Object.fromEntries(Object.entries(legacy.items).map(([id,item])=>{
     const binding=corruption.itemApplicability[id];
     if(!binding||binding.affixIds.some(key=>!Object.hasOwn(affixes,key)))throw Error('现行工坊部件词条缺失');
-    return [id,{...item,affixIds:binding.affixIds,initialConflicts:binding.groupIds.flatMap(group=>projection.poolConflicts[group]||[])}];
+    return [id,{...item,...base?.items[id],affixIds:binding.affixIds,initialConflicts:binding.groupIds.flatMap(group=>projection.poolConflicts[group]||[])}];
   }));
-  return {...legacy,items,affixes,meta:{...legacy.meta,buildId:projection.buildId,rulesIdentity:projection.rulesIdentity,
+  return {...legacy,items,affixes,nativeLogics:{...legacy.nativeLogics,...base?.nativeLogics},meta:{...legacy.meta,buildId:projection.buildId,rulesIdentity:base?.rulesIdentity||projection.rulesIdentity,
     assemblySha256:corruption.meta.assemblySha256,bundleSha256:corruption.meta.bundleSha256,configTableSha256:corruption.meta.configTableSha256,
-    combinedModifiers:true,partialUpdate:{buildId:legacy.meta.partialUpdate.buildId,scope:'基础装备参数与槽位沿用既有核对版本，腐化候选、常驻词条参数及属性合并按现行规则'},
-    latestReview:{...review,notice:`当前试装使用 ${review.gameVersion}（Build ${projection.buildId}）的腐化候选、词条参数和常驻属性合并规则。装备基础与接口沿用既有资料，触发型效果单独列出。`}}};
+    combinedModifiers:true,partialUpdate:base?{buildId:base.buildId,scope:base.affixLimitOnly?'已核对现行词条上限。装备基础与接口沿用既有资料。':'装备基础参数、原生动作、固有效果、接口与腐化规则已静态复核。原生贴图沿用既有资料。'}:{buildId:legacy.meta.partialUpdate.buildId,scope:'基础装备参数与槽位沿用既有核对版本，腐化候选、常驻词条参数及属性合并按现行规则'},
+    latestReview:{...review,notice:`当前试装使用 ${review.gameVersion}（Build ${projection.buildId}）的腐化候选、词条参数和常驻属性合并规则。${base?(base.affixLimitOnly?'已核对词条数量上限。':'已复核装备基础参数、固有效果与接口。'):'装备基础与接口沿用既有资料。'}触发型效果单独列出。`}}};
 }
 
 export function tagMatch(left, right) {

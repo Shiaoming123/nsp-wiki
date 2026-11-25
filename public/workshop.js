@@ -6,7 +6,7 @@ import {statDifference,createComparisons,createTrialRecovery,applyPostedTrial,co
 import {renderWorkshopImage,copyWorkshopImage,downloadWorkshopImage} from './workshop-image.js';
 
 let dataPromise, assemblyPromise;
-const editions={current:{drafts:new Map(),currentId:''},legacy:{drafts:new Map(),currentId:''}};
+const editions={current:{drafts:new Map(),currentId:''},legacy:{drafts:new Map(),currentId:''},historical:{drafts:new Map(),currentId:''}};
 const storage = {getItem:key=>localStorage.getItem(key), setItem:(key,value)=>localStorage.setItem(key,value)};
 
 function currentNativeEffects(part){
@@ -40,7 +40,6 @@ export function mountWorkshop(root, mode='current') {
   const legacy=mode==='legacy', edition=editions[mode];
   const drafts=edition.drafts;
   let currentId=edition.currentId;
-  const recoveryStorage=legacy?storage:{getItem:key=>storage.getItem(key+'-current'),setItem:(key,value)=>storage.setItem(key+'-current',value)};
   let disposed = false, diagramObserver=null, diagramFrame=0, imageOperation=null, postsMount=null;
   const ready = start();
   return {ready, dispose(){edition.currentId=currentId;disposed=true;postsMount?.dispose();imageOperation?.abort();diagramObserver?.disconnect();cancelAnimationFrame(diagramFrame);}};
@@ -50,8 +49,15 @@ export function mountWorkshop(root, mode='current') {
       if (!response.ok) throw Error('工坊资料暂时无法读取');
       return response.json();
     }).then(value=>{if(!value.meta?.latestReview?.notice||!value.meta?.latestReview?.announcementUrl)throw Error('工坊版本说明不完整');return value;}).catch(error=>{dataPromise=null;throw error;}));
-    const data=legacy?oldRules:currentWorkshopRules(oldRules,await window.Corruption.load());
-    const assemblyData=await (assemblyPromise ||= fetch('/data/assembly-ui.json',{cache:'no-cache'}).then(response=>{if(!response.ok)throw Error('原生装配图暂时无法读取');return response.json();}).catch(error=>{assemblyPromise=null;throw error;}));
+    const corruption=legacy?null:await window.Corruption.load();
+    const projection=corruption?.workshopProjection, base=projection?.baseEquipment;
+    const historical=mode==='historical';
+    const data=legacy?oldRules:currentWorkshopRules(oldRules,corruption,{historical});
+    const recoverySuffix=historical||!base?'-current':'-equipment';
+    const recoveryStorage=legacy?storage:{getItem:key=>storage.getItem(key+recoverySuffix),setItem:(key,value)=>storage.setItem(key+recoverySuffix,value)};
+    const oldAssembly=await (assemblyPromise ||= fetch('/data/assembly-ui.json',{cache:'no-cache'}).then(response=>{if(!response.ok)throw Error('原生装配图暂时无法读取');return response.json();}).catch(error=>{assemblyPromise=null;throw error;}));
+    const assemblyData=base&&!historical?{...oldAssembly,items:{...oldAssembly.items,
+      ...Object.fromEntries(Object.entries(base.assemblyItems).map(([id,part])=>[id,{...oldAssembly.items[id],...part}]))}}:oldAssembly;
     if (disposed) return;
     const engine = createEngine(data), {el,art,getItem,nativeStat} = window.Wiki;
     const reportModel=createReportModel({rules:data,items:window.Wiki.data.items});let liveReport=null;
@@ -72,7 +78,12 @@ export function mountWorkshop(root, mode='current') {
     const editionLink=el('a','inline-link',legacy?'切到现行试装':'查看旧版试装');
     editionLink.href=legacy?'#workshop':'#workshop/legacy';
     versionLinks.append(editionLink);
-    section.dataset.workshopRules=legacy?'legacy':'current';
+    if(historical){
+      const link=el('a','inline-link','切到现行试装');link.href='#workshop';versionLinks.append(link);
+    }else if(base){
+      const link=el('a','inline-link','查看上一版试装');link.href='#workshop/historical';versionLinks.append(link);
+    }
+    section.dataset.workshopRules=mode;
     const corruptionLink=el('a','inline-link','查看现行词条与候选部件');
     corruptionLink.href='#corruption';
     const mechanicsLink=el('a','inline-link','查看数值变化说明');
@@ -129,6 +140,8 @@ export function mountWorkshop(root, mode='current') {
     function checkPostEdition(stored){
       if(supportsIdentity(stored.rulesIdentity))return;
       if(!legacy&&legacyIdentities.has(stored.rulesIdentity))throw Error('请切到旧版试装，再应用这份方案。');
+      if(base&&!historical&&stored.rulesIdentity===projection.rulesIdentity)throw Error('请切到上一版试装，再应用这份方案。');
+      if(base&&historical&&stored.rulesIdentity===base.rulesIdentity)throw Error('请切到现行试装，再应用这份方案。');
       throw Error(legacy?'请选择这份方案对应的试装版本。':'暂不支持这份方案的规则版本。');
     }
     async function applyPostedBuild(stored){
