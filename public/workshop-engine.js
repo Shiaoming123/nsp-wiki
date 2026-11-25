@@ -266,7 +266,7 @@ export function createEngine(data) {
     if (!validation.shapeValid) return {status:'invalid',values:{},validation,directCapacity:resultValue(NaN,'装配结构无效'),assemblyCapacity:resultValue(NaN,'装配结构无效'),conditionalEffects:[]};
     const values = new Map(), conditionalEffects = [], unknownFields = new Map();
     const acquire = key => { if (!values.has(key)) values.set(key,{base:0,mods:[],ceil:key==='capacity'}); return values.get(key); };
-    const current = key => { const v=acquire(key); try {return evaluateModifiers(v.base,v.mods,v.ceil);} catch {return NaN;} };
+    const current = key => { const v=acquire(key); try {return evaluateModifiers(v.base,v.mods,v.ceil,data.meta?.combinedModifiers);} catch {return NaN;} };
     const add = (key,action,value) => acquire(key).mods.push({action,value:f(value)});
     const rootItem=itemOf(build);
     for (const [key,value] of Object.entries(paramsOf(rootItem))) acquire(key).base=f(value);
@@ -288,7 +288,7 @@ export function createEngine(data) {
       for (const logic of logics(node)) {
         if (logic.nativeValueStatus==='unknown') for (const key of logic.affectedKeys || [...values.keys()]) unknownFields.set(key,'特殊词条的常驻数值行为尚未核实');
         if (logic.runtimeActions?.length) conditionalEffects.push({path:[...path],affixId:logic.id || null,
-          text:logic.description || logic.playerConditionText || '此部件还有运行时触发效果，具体表现待核实。'});
+          text:logic.activationExclusions?.[node.itemId] || logic.description || logic.playerConditionText || '此部件还有运行时触发效果，具体表现待核实。'});
         if (isClass(logic,'Contagion')) {
           const mul=contagionMul(node.contagionProgress);
           for (const key of [...values.keys()]) {

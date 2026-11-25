@@ -1,13 +1,12 @@
 import {createEngine} from './workshop-engine.js';
 import {composeWeapon} from './workshop-assembly.js';
-import {readPlans, savePlans} from './workshop-model.js';
+import {readPlans, savePlans, currentWorkshopRules} from './workshop-model.js';
 import {createReportModel} from './workshop-report.js';
 import {statDifference,createComparisons,createTrialRecovery,applyPostedTrial,comparisonReason} from './workshop-state.js';
 import {renderWorkshopImage,copyWorkshopImage,downloadWorkshopImage} from './workshop-image.js';
 
 let dataPromise, assemblyPromise;
-const drafts = new Map();
-let currentId = '';
+const editions={current:{drafts:new Map(),currentId:''},legacy:{drafts:new Map(),currentId:''}};
 const storage = {getItem:key=>localStorage.getItem(key), setItem:(key,value)=>localStorage.setItem(key,value)};
 
 function currentNativeEffects(part){
@@ -37,22 +36,29 @@ function renderWorkshopReport(report,{el,art}){
 }
 function differenceLabel(difference,el,inline=false){const marker=difference.tone==='better'?'↑ ':difference.tone==='worse'?'↓ ':'';const label=el('span','workshop-difference '+difference.tone+(inline?' native-difference':''),inline?' ('+marker+difference.text+')':' '+difference.text);label.setAttribute('aria-label',difference.text+(difference.tone==='better'?' 改善':difference.tone==='worse'?' 下降':' 中性'));return label;}
 
-export function mountWorkshop(root) {
+export function mountWorkshop(root, mode='current') {
+  const legacy=mode==='legacy', edition=editions[mode];
+  const drafts=edition.drafts;
+  let currentId=edition.currentId;
+  const recoveryStorage=legacy?storage:{getItem:key=>storage.getItem(key+'-current'),setItem:(key,value)=>storage.setItem(key+'-current',value)};
   let disposed = false, diagramObserver=null, diagramFrame=0, imageOperation=null, postsMount=null;
   const ready = start();
-  return {ready, dispose(){disposed=true;postsMount?.dispose();imageOperation?.abort();diagramObserver?.disconnect();cancelAnimationFrame(diagramFrame);}};
+  return {ready, dispose(){edition.currentId=currentId;disposed=true;postsMount?.dispose();imageOperation?.abort();diagramObserver?.disconnect();cancelAnimationFrame(diagramFrame);}};
 
   async function start() {
-    const data = await (dataPromise ||= fetch('/data/workshop.json',{cache:'no-cache'}).then(response=>{
+    const oldRules = await (dataPromise ||= fetch('/data/workshop.json',{cache:'no-cache'}).then(response=>{
       if (!response.ok) throw Error('工坊资料暂时无法读取');
       return response.json();
     }).then(value=>{if(!value.meta?.latestReview?.notice||!value.meta?.latestReview?.announcementUrl)throw Error('工坊版本说明不完整');return value;}).catch(error=>{dataPromise=null;throw error;}));
+    const data=legacy?oldRules:currentWorkshopRules(oldRules,await window.Corruption.load());
     const assemblyData=await (assemblyPromise ||= fetch('/data/assembly-ui.json',{cache:'no-cache'}).then(response=>{if(!response.ok)throw Error('原生装配图暂时无法读取');return response.json();}).catch(error=>{assemblyPromise=null;throw error;}));
     if (disposed) return;
     const engine = createEngine(data), {el,art,getItem,nativeStat} = window.Wiki;
     const reportModel=createReportModel({rules:data,items:window.Wiki.data.items});let liveReport=null;
-    const comparisons=createComparisons(reportModel),recovery=createTrialRecovery(storage,reportModel);
+    const comparisons=createComparisons(reportModel),recovery=createTrialRecovery(recoveryStorage,reportModel);
     const rulesIdentity = data.meta.rulesIdentity;
+    const legacyIdentities=new Set([oldRules.meta.rulesIdentity,oldRules.meta.previousRulesIdentity].filter(Boolean));
+    const supportsIdentity=id=>id===rulesIdentity||(legacy&&legacyIdentities.has(id));
     const itemName = id => getItem(id)?.name || '物品';
     const affixes = data.affixes;
     let build = currentId && drafts.get(currentId), selectedPath = [], selectedSlot = null, paletteSlot=null, partQuery = '';
@@ -63,12 +69,16 @@ export function mountWorkshop(root) {
     const versionNotice=el('aside','guide-note workshop-version-note');
     versionNotice.append(el('p','',data.meta.latestReview.notice));
     const versionLinks=el('div','related-links');
+    const editionLink=el('a','inline-link',legacy?'切到现行试装':'查看旧版试装');
+    editionLink.href=legacy?'#workshop':'#workshop/legacy';
+    versionLinks.append(editionLink);
+    section.dataset.workshopRules=legacy?'legacy':'current';
     const corruptionLink=el('a','inline-link','查看现行词条与候选部件');
     corruptionLink.href='#corruption';
     const mechanicsLink=el('a','inline-link','查看数值变化说明');
     mechanicsLink.href='#mechanic/corruption';
     versionLinks.append(corruptionLink,mechanicsLink);
-    const announcementLink=el('a','inline-link','查看 Steam 0.7.2 公告');
+    const announcementLink=el('a','inline-link','查看 Steam '+data.meta.latestReview.gameVersion+' 公告');
     announcementLink.href=data.meta.latestReview.announcementUrl;announcementLink.target='_blank';announcementLink.rel='noopener noreferrer';
     versionLinks.append(announcementLink);
     versionNotice.append(versionLinks);
@@ -116,7 +126,13 @@ export function mountWorkshop(root) {
       if(build)drafts.set(currentId,build);weaponSelect.value=currentId;nameInput.value=input?.name||'';
       selectedPath=[];selectedSlot=null;paletteSlot=null;partQuery='';draw(true);
     }
+    function checkPostEdition(stored){
+      if(supportsIdentity(stored.rulesIdentity))return;
+      if(!legacy&&legacyIdentities.has(stored.rulesIdentity))throw Error('请切到旧版试装，再应用这份方案。');
+      throw Error(legacy?'请选择这份方案对应的试装版本。':'暂不支持这份方案的规则版本。');
+    }
     async function applyPostedBuild(stored){
+      checkPostEdition(stored);
       if(!active())throw Error('已离开工坊，未替换试装或恢复快照。');
       if(busy)throw Error('请等待当前操作完成');
       if(plans.blocked)throw Error(plans.message);
@@ -129,7 +145,7 @@ export function mountWorkshop(root) {
       catch(error){status.textContent=error.message;}
     }
     function addComparison(input){try{comparisons.add(input);drawComparison();status.textContent='已加入完整配装快照，后续编辑不会改变此列。';}catch(error){status.textContent=error.message;}}
-    function comparePostedBuild(stored){if(!active())throw Error('已离开工坊');const checked=reportModel.postedInput(stored);comparisons.add({...checked.input,rulesIdentity:stored.rulesIdentity});drawComparison();comparison.scrollIntoView({block:'start'});}
+    function comparePostedBuild(stored){checkPostEdition(stored);if(!active())throw Error('已离开工坊');const checked=reportModel.postedInput(stored);comparisons.add({...checked.input,rulesIdentity:stored.rulesIdentity});drawComparison();comparison.scrollIntoView({block:'start'});}
     function drawComparison(){
       comparison.replaceChildren();comparison.append(el('h2','','配装对比看板'));
       const entries=comparisons.entries;if(!entries.length){comparison.append(el('p','guide-note','从当前试装、本地方案或配装帖子加入完整快照。首列默认为基准，可切换。'));return;}
@@ -372,7 +388,7 @@ export function mountWorkshop(root) {
     }
     function drawAffixes(host,path){
       const editor=el('section','workshop-affixes'), item=data.items[host.itemId];
-      const head=el('div','workshop-section-head');head.append(el('h2','',itemName(host.itemId)),el('span','',item.affixIds.length?'旧版试装 · 腐化词条':'部件设置'));editor.append(head);
+      const head=el('div','workshop-section-head');head.append(el('h2','',itemName(host.itemId)),el('span','',item.affixIds.length?(legacy?'旧版试装 · 腐化词条':'现行试装 · 腐化词条'):'部件设置'));editor.append(head);
       editor.append(itemProperties(host.itemId));
       if(item.typeMask===data.enums.EquipType.Bullet&&path.length){
         const capacity=engine.directCapacity(engine.nodeAt(build,path.slice(0,-1)));
@@ -384,19 +400,22 @@ export function mountWorkshop(root) {
       const list=el('ol','workshop-affix-list');
       host.affixes.forEach((id,index)=>{
         const affix=affixes[id],row=el('li'),copy=el('div');copy.append(el('strong','',affix?.name||'词条'),el('p','',affix?.description||''));
+        const exclusion=affix?.activationExclusions?.[host.itemId];
+        if(exclusion)copy.append(el('p','guide-note',exclusion));
         const actions=el('div','workshop-affix-actions');
         const up=button('↑',()=>mutate(next=>{const values=engine.nodeAt(next,path).affixes;[values[index-1],values[index]]=[values[index],values[index-1]];},'affix-select-'+pathKey(path)));up.disabled=index===0;up.setAttribute('aria-label','上移第'+(index+1)+'个词条');
         const remove=button('移除',()=>mutate(next=>engine.nodeAt(next,path).affixes.splice(index,1),'affix-select-'+pathKey(path),path));remove.setAttribute('aria-label','移除第'+(index+1)+'个词条');actions.append(up,remove);row.append(copy,actions);list.append(row);
       });editor.append(list);
+      if(item.initialConflicts?.some(group=>group.filter(id=>host.affixes.includes(id)).length>1))editor.append(el('p','guide-note','同组词条不会在一次生成时同时抽中。单槽重洗后的并存情况待实测。'));
       if(item.affixIds.length){
-      editor.append(el('p','guide-note','旧版试装的候选与数值基于 EA Build '+data.meta.buildId+(data.meta.partialUpdate?'，部件含 Build '+data.meta.partialUpdate.buildId+' 局部补充。':'。')));
-      const options=el('select');options.dataset.focus='affix-select-'+pathKey(path);options.setAttribute('aria-label','选择适用腐化词条');options.append(el('option','','旧版试装 · 选择适用词条'));
+      if(legacy)editor.append(el('p','guide-note','旧版试装的候选与数值基于 EA Build '+data.meta.buildId+(data.meta.partialUpdate?'，部件含 Build '+data.meta.partialUpdate.buildId+' 局部补充。':'。')));
+      const options=el('select');options.dataset.focus='affix-select-'+pathKey(path);options.setAttribute('aria-label','选择适用腐化词条');options.append(el('option','',legacy?'旧版试装 · 选择适用词条':'选择现行词条'));
       for(const id of item.affixIds){const option=el('option','',affixes[id].name);option.value=id;options.append(option);}options.firstChild.value='';
       const add=button('增加词条',()=>{if(options.value)mutate(next=>engine.nodeAt(next,path).affixes.push(options.value),'affix-select-'+pathKey(path));});
       add.disabled=!item.affixIds.length||host.affixes.length>=item.affixLimit;
       const tools=el('div','workshop-affix-tools');tools.append(options,add,el('span','guide-note',`${host.affixes.length} / ${item.affixLimit} 个词条`));editor.append(tools);
       }
-      editor.append(currentAffixCandidates(host));
+      if(legacy)editor.append(currentAffixCandidates(host));
       if(path.length){const parentPath=path.slice(0,-1), index=path.at(-1);editor.append(button('卸下此部件及其下属部件',()=>{selectedPath=[];selectedSlot=null;mutate(next=>{const parent=engine.nodeAt(next,parentPath);parent.children=parent.children.filter(child=>child.slotIndex!==index);},'main');},'workshop-remove'));}
       (inspectorRoot||workspace).append(editor);
     }
@@ -443,9 +462,10 @@ export function mountWorkshop(root) {
       finally{busy=false;if(active()){drawRecords();draw();records.querySelector('summary').focus();}}
     }
     function drawRecords(){
-      recordList.replaceChildren();records.querySelector('summary').textContent=`本地方案 · ${plans.records.length}`;
-      if(!plans.records.length)recordList.append(el('p','guide-note','保存的方案保留在当前浏览器。'));
-      for(const record of [...plans.records].reverse()){
+      const editionRecords=plans.records.filter(record=>supportsIdentity(record.rulesIdentity));
+      recordList.replaceChildren();records.querySelector('summary').textContent=`本地方案 · ${editionRecords.length}`;
+      if(!editionRecords.length)recordList.append(el('p','guide-note','保存的方案保留在当前浏览器。'));
+      for(const record of [...editionRecords].reverse()){
         const row=el('div','workshop-record'),name=el('strong');name.textContent=record.name;
         const load=button('载入',()=>{
           const validation=validatePlan(record.build);

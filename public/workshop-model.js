@@ -1,26 +1,50 @@
 export const storageKey = 'nsp-weapon-workshop-v1';
 
 const f32 = Math.fround;
-export function evaluateModifiers(base, mods = [], ceil = false) {
+export function evaluateModifiers(base, mods = [], ceil = false, combined = false) {
   let value = f32(base), min = -3.4028234663852886e38, max = 3.4028234663852886e38, global = 0;
   for (const mod of mods) {
     if (mod.enabled === false) continue;
     const amount = f32(mod.value);
     switch (mod.action) {
-      case 'Expand': value = evaluateModifiers(value, mod.source.mods, !!mod.source.ceil); if (ceil) value = Math.ceil(value); break;
+      case 'Expand': value = evaluateModifiers(value, mod.source.mods, !!mod.source.ceil, combined); if (ceil) value = Math.ceil(value); break;
       case 'Set': value = amount; break;
       case 'Add': value = f32(value + amount); break;
-      case 'Mul': value = f32(value + f32(Math.abs(value) * amount)); break;
+      case 'Mul':
+        if (combined) global = f32(global + amount);
+        else value = f32(value + f32(Math.abs(value) * amount));
+        break;
       case 'Min': min = amount; break;
       case 'Max': max = amount; break;
       case 'GlobalMul': global = f32(global + amount); break;
       default: throw Error('未知原生修正类型');
     }
   }
-  value = f32(value + f32(Math.abs(value) * global));
+  value = f32(value + f32(Math.abs(value) * (combined ? Math.max(-1, global) : global)));
   if (min > max) return NaN;
   value = Math.min(max, Math.max(min, value));
   return ceil ? Math.ceil(value) : value;
+}
+
+export function currentWorkshopRules(legacy, corruption) {
+  const projection=corruption.workshopProjection, review=corruption.meta.latestReview;
+  if(projection?.schemaVersion!==1||projection.buildId!==corruption.meta.buildId||projection?.baseRulesIdentity!==legacy.meta.rulesIdentity||
+    !/^[a-f0-9]{64}$/.test(projection?.rulesIdentity||''))throw Error('现行工坊资料版本不一致');
+  const records=new Map(corruption.affixes.map(record=>[record.id,record]));
+  const affixes=Object.fromEntries(Object.entries(projection.affixes).map(([id,affix])=>{
+    const record=records.get(id);
+    if(!record||record.archived)throw Error('现行工坊词条定义缺失');
+    return [id,{...affix,id,name:record.name,description:record.description,activationExclusions:record.activationExclusions}];
+  }));
+  const items=Object.fromEntries(Object.entries(legacy.items).map(([id,item])=>{
+    const binding=corruption.itemApplicability[id];
+    if(!binding||binding.affixIds.some(key=>!Object.hasOwn(affixes,key)))throw Error('现行工坊部件词条缺失');
+    return [id,{...item,affixIds:binding.affixIds,initialConflicts:binding.groupIds.flatMap(group=>projection.poolConflicts[group]||[])}];
+  }));
+  return {...legacy,items,affixes,meta:{...legacy.meta,buildId:projection.buildId,rulesIdentity:projection.rulesIdentity,
+    assemblySha256:corruption.meta.assemblySha256,bundleSha256:corruption.meta.bundleSha256,configTableSha256:corruption.meta.configTableSha256,
+    combinedModifiers:true,partialUpdate:{buildId:legacy.meta.partialUpdate.buildId,scope:'基础装备参数与槽位沿用既有核对版本，腐化候选、常驻词条参数及属性合并按现行规则'},
+    latestReview:{...review,notice:`当前试装使用 ${review.gameVersion}（Build ${projection.buildId}）的腐化候选、词条参数和常驻属性合并规则。装备基础与接口沿用既有资料，触发型效果单独列出。`}}};
 }
 
 export function tagMatch(left, right) {

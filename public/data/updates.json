@@ -6,6 +6,49 @@
   },
   "records": [
     {
+      "id": "wiki-20261125-workshop-072",
+      "kind": "wiki",
+      "date": "2026-11-25",
+      "version": "20261125-workshop-072",
+      "title": "武器工坊现行词条试装",
+      "publication": "主站版本 20261125-workshop-072",
+      "verification": "Build 26889039 腐化配置、属性计算和工坊回归核对",
+      "verifiedBuild": "26889039",
+      "summary": "默认试装使用现行候选和词条常驻属性计算。支持切回旧版查看原有方案。",
+      "source": {
+        "label": "Wiki 更新记录",
+        "url": "/updates/"
+      },
+      "changes": [
+        {
+          "module": "workshop",
+          "title": "现行候选与属性",
+          "after": "雄狮 M90 可选一锤定音，已撤下的旧版候选移出当前下拉。现行常驻修正按 0.7.2 系列规则合并，条件型效果单独说明。",
+          "links": [
+            {
+              "label": "武器工坊",
+              "route": "#workshop"
+            },
+            {
+              "label": "一锤定音",
+              "route": "#affix/ItemBuff_OneOpening"
+            }
+          ]
+        },
+        {
+          "module": "workshop",
+          "title": "旧版试装",
+          "after": "旧方案可在旧版试装中加载。现行与旧版方案分别保存并按各自规则生成报告。",
+          "links": [
+            {
+              "label": "武器工坊",
+              "route": "#workshop"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "wiki-20261124-072-hotfixes",
       "kind": "wiki",
       "date": "2026-11-24",

@@ -338,9 +338,9 @@
       try{
         const module=await import('./workshop.js');
         if(n!==serial||page!=='workshop')return;
-        workshopMount=module.mountWorkshop($('guide-root'));
+        workshopMount=module.mountWorkshop($('guide-root'),parts[1]==='legacy'?'legacy':'current');
         await workshopMount.ready;
-      }catch(error){if(n===serial)$('guide-root').replaceChildren(el('p','status error','工坊载入失败：'+error.message));}
+      }catch(error){if(n===serial)$('guide-root').replaceChildren(el('p','status error','工坊载入失败：'+error.message),link('尝试打开旧版工坊','#workshop/legacy'));}
       return;
     }
     if(page==='maps'){
